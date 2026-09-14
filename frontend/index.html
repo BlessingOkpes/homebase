@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+// Auto-detect API URL — works locally and on Render
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000/api'
+  : window.location.origin + '/api';
+</script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HomeBase — Affordable Housing for 9–5 Workers</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --orange:#E8600A;--orange-mid:#F07A2A;--orange-light:#F9A05A;
+  --orange-pale:#FEF0E6;--orange-faint:#FFF8F3;
+  --brown:#7A3000;--brown-mid:#A84400;
+  --white:#FFFFFF;--offwhite:#FFFAF6;
+  --gray:#9A8070;--border:#F0D5C0;--dark:#2D1500;--mid:#6B4030;
+  --green:#2E9E6B;--green-bg:#D4F4E4;
+  --blue:#1E4DA1;--blue-bg:#E8F0FE;
+  --red:#D94F4F;--red-bg:#FDE8E8;
+  --yellow:#F0A500;--yellow-bg:#FEF3D0;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;color:var(--dark);background:var(--white);overflow-x:hidden}
+
+/* ═══ PAGE ROUTER ═══ */
+.pg{display:none!important}
+.pg.on{display:block!important}
+
+/* ═══ SHARED NAV ═══ */
+.nav{position:fixed;top:0;left:0;right:0;z-index:999;height:64px;padding:0 5%;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,0.97);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);transition:box-shadow .3s;font-family:'DM Sans',sans-serif}
+.nav.scrolled{box-shadow:0 4px 20px rgba(232,96,10,0.1)}
+.nav-brand{display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none}
+.nav-logo{width:38px;height:38px;background:linear-gradient(135deg,var(--orange),var(--orange-light));
+  border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.nav-name{font-family:'Playfair Display',serif;font-size:22px;color:var(--brown)}
+.nav-links{display:flex;align-items:center;gap:26px;list-style:none}
+.nav-links a{font-size:14px;font-weight:500;color:var(--mid);cursor:pointer;text-decoration:none;transition:color .2s;position:relative}
+.nav-links a::after{content:'';position:absolute;bottom:-3px;left:0;right:0;height:2px;background:var(--orange);transform:scaleX(0);transition:transform .25s}
+.nav-links a:hover{color:var(--orange)}.nav-links a:hover::after{transform:scaleX(1)}
+.nav-acts{display:flex;align-items:center;gap:10px}
+.btn-out{padding:8px 18px;border:1.5px solid var(--orange);border-radius:9px;background:transparent;
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--orange);cursor:pointer;transition:all .2s}
+.btn-out:hover{background:var(--orange-pale)}
+.btn-solid{padding:8px 20px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:#fff;cursor:pointer;
+  box-shadow:0 3px 14px rgba(232,96,10,0.3);transition:transform .2s,box-shadow .2s}
+.btn-solid:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(232,96,10,0.4)}
+.hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px}
+.hamburger span{width:23px;height:2px;background:var(--brown);border-radius:2px}
+.mob-menu{display:none;flex-direction:column;position:fixed;top:64px;left:0;right:0;
+  background:#fff;padding:16px 5%;border-bottom:1px solid var(--border);
+  box-shadow:0 8px 24px rgba(232,96,10,0.08);z-index:998;gap:12px}
+.mob-menu.open{display:flex}
+.mob-menu a{font-size:14px;color:var(--mid);text-decoration:none;font-weight:500;
+  padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer}
+
+/* ═══ GLOBAL TOAST ═══ */
+.toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--dark);color:#fff;
+  padding:12px 20px;border-radius:11px;font-size:13px;font-weight:500;
+  box-shadow:0 6px 24px rgba(0,0,0,0.2);transform:translateY(70px);opacity:0;
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .35s;max-width:320px;font-family:'DM Sans',sans-serif}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--green)}.toast.danger{background:var(--red)}.toast.warn{background:var(--yellow)}
+
+/* ══════════════════════════════════════
+   PAGE 1: LANDING
+══════════════════════════════════════ */
+#pg-landing{padding-top:0}
+.hero{min-height:100vh;display:flex;align-items:center;padding:100px 5% 60px;
+  background:linear-gradient(150deg,var(--orange-faint) 0%,var(--white) 65%);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-150px;right:-150px;width:600px;height:600px;
+  background:radial-gradient(circle,rgba(232,96,10,0.08) 0%,transparent 65%);border-radius:50%;pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-100px;left:-80px;width:400px;height:400px;
+  background:radial-gradient(circle,rgba(240,122,42,0.06) 0%,transparent 65%);border-radius:50%;pointer-events:none}
+.hero-in{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;
+  max-width:1200px;margin:0 auto;width:100%;position:relative;z-index:1}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--orange-pale);
+  border:1px solid var(--border);border-radius:50px;padding:6px 16px;
+  font-size:13px;font-weight:500;color:var(--orange);margin-bottom:20px}
+.hero-badge .dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.6}}
+.hero-text h1{font-family:'Playfair Display',serif;font-size:clamp(34px,4.5vw,58px);
+  line-height:1.15;color:var(--dark);margin-bottom:20px}
+.hero-text h1 .accent{color:var(--orange)}
+.hero-text h1 .ul{position:relative;display:inline-block}
+.hero-text h1 .ul::after{content:'';position:absolute;bottom:2px;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--orange),var(--orange-light));border-radius:2px;opacity:.5}
+.hero-text p{font-size:17px;color:var(--mid);line-height:1.75;max-width:480px;margin-bottom:34px}
+.hero-cta{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.btn-hero{padding:14px 30px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));
+  color:#fff;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;
+  cursor:pointer;box-shadow:0 6px 24px rgba(232,96,10,0.35);transition:transform .2s,box-shadow .2s}
+.btn-hero:hover{transform:translateY(-3px);box-shadow:0 10px 32px rgba(232,96,10,0.45)}
+.btn-ghost-hero{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:500;
+  color:var(--mid);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .2s}
+.btn-ghost-hero:hover{color:var(--orange)}
+.play-ico{width:42px;height:42px;border-radius:50%;background:#fff;
+  box-shadow:0 4px 14px rgba(232,96,10,0.15);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.hero-trust{display:flex;align-items:center;gap:14px;margin-top:28px}
+.t-avs{display:flex}
+.t-avs span{width:30px;height:30px;border-radius:50%;border:2px solid #fff;
+  background:linear-gradient(135deg,var(--orange-light),var(--orange-mid));
+  display:flex;align-items:center;justify-content:center;font-size:12px;margin-left:-7px}
+.t-avs span:first-child{margin-left:0}
+.t-txt{font-size:13px;color:var(--mid)}.t-txt strong{color:var(--dark)}
+.hero-vis{position:relative}
+.hero-card{background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(232,96,10,0.12);
+  overflow:hidden;border:1px solid var(--border)}
+.hc-img{height:190px;background:linear-gradient(135deg,var(--orange-pale),#fcd9bc);
+  display:flex;align-items:center;justify-content:center;font-size:60px;position:relative}
+.hc-afford{position:absolute;top:12px;left:12px;background:var(--green);color:#fff;
+  font-size:10px;font-weight:700;padding:4px 10px;border-radius:50px;text-transform:uppercase}
+.hc-body{padding:18px}
+.hc-loc{font-size:11px;color:var(--gray);margin-bottom:5px}
+.hc-ttl{font-size:16px;font-weight:600;color:var(--dark);margin-bottom:8px}
+.hc-meta{display:flex;gap:14px;margin-bottom:12px}
+.hc-meta span{font-size:12px;color:var(--mid)}
+.hc-pr{display:flex;align-items:center;justify-content:space-between}
+.hc-price{font-size:19px;font-weight:700;color:var(--orange)}
+.hc-price span{font-size:12px;font-weight:400;color:var(--gray)}
+.fw{position:absolute;background:#fff;border-radius:13px;box-shadow:0 8px 28px rgba(232,96,10,0.13);
+  padding:13px 16px;border:1px solid var(--border);display:flex;align-items:center;gap:10px;
+  animation:floatY 3s ease-in-out infinite}
+.fw.w1{top:-18px;right:-18px}.fw.w2{bottom:38px;left:-26px;animation-delay:1.5s}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.fw-ico{font-size:22px}.fw-lbl{font-size:10px;color:var(--gray)}.fw-val{font-size:13px;font-weight:600;color:var(--dark)}
+
+.stats-band{background:linear-gradient(135deg,var(--orange),var(--brown-mid));padding:48px 5%}
+.stats-in{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:32px;text-align:center}
+.sn{font-family:'Playfair Display',serif;font-size:40px;color:#fff;display:block;margin-bottom:5px}
+.sp2{font-size:24px;color:rgba(255,255,255,.7)}
+.sl{font-size:13px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.8px}
+
+.lp-sec{padding:80px 5%}
+.lp-in{max-width:1100px;margin:0 auto}
+.sec-tag{display:inline-block;background:var(--orange-pale);color:var(--orange);
+  font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;
+  padding:5px 13px;border-radius:50px;margin-bottom:12px}
+.sec-ttl{font-family:'Playfair Display',serif;font-size:clamp(26px,3vw,40px);
+  color:var(--dark);line-height:1.2;margin-bottom:12px}
+.sec-sub{font-size:15px;color:var(--mid);max-width:500px;line-height:1.7;margin-bottom:48px}
+
+.steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.step-card{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:30px 24px;
+  text-align:center;transition:transform .3s,box-shadow .3s,border-color .3s;cursor:default}
+.step-card:hover{transform:translateY(-5px);box-shadow:0 14px 36px rgba(232,96,10,0.1);border-color:var(--orange-light)}
+.step-num{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--orange-mid));
+  color:#fff;font-family:'Playfair Display',serif;font-size:20px;display:flex;align-items:center;justify-content:center;
+  margin:0 auto 18px;box-shadow:0 4px 14px rgba(232,96,10,0.3)}
+.step-ico{font-size:30px;margin-bottom:12px}
+.step-ttl{font-size:16px;font-weight:600;color:var(--dark);margin-bottom:8px}
+.step-desc{font-size:13px;color:var(--mid);line-height:1.65}
+
+.feat-sec{padding:80px 5%;background:var(--orange-faint)}
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1100px;margin:0 auto}
+.feat-card{background:#fff;border-radius:16px;padding:32px 26px;border:1.5px solid var(--border);
+  transition:transform .3s,box-shadow .3s}
+.feat-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(232,96,10,0.09)}
+.feat-card.hl{background:linear-gradient(145deg,var(--orange),var(--orange-mid));border-color:transparent}
+.feat-ico-wrap{width:50px;height:50px;border-radius:13px;background:var(--orange-pale);
+  display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:18px}
+.feat-card.hl .feat-ico-wrap{background:rgba(255,255,255,.2)}
+.feat-ttl{font-size:17px;font-weight:600;color:var(--dark);margin-bottom:9px}
+.feat-card.hl .feat-ttl{color:#fff}
+.feat-desc{font-size:13px;color:var(--mid);line-height:1.7}
+.feat-card.hl .feat-desc{color:rgba(255,255,255,.78)}
+.feat-list{list-style:none;margin-top:16px;display:flex;flex-direction:column;gap:7px}
+.feat-list li{font-size:12px;color:var(--mid);display:flex;align-items:center;gap:7px}
+.feat-card.hl .feat-list li{color:rgba(255,255,255,.78)}
+.feat-list li::before{content:'✓';width:16px;height:16px;border-radius:50%;background:var(--orange-pale);
+  color:var(--orange);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.feat-card.hl .feat-list li::before{background:rgba(255,255,255,.2);color:#fff}
+
+.calc-sec{padding:80px 5%}
+.calc-in{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.afford-calc{background:#fff;border:1.5px solid var(--border);border-radius:18px;padding:32px;
+  box-shadow:0 10px 36px rgba(232,96,10,0.08)}
+.calc-ttl{font-size:15px;font-weight:600;color:var(--dark);margin-bottom:20px;display:flex;align-items:center;gap:7px}
+.calc-lbl{font-size:12px;font-weight:500;color:var(--mid);display:block;margin-bottom:7px}
+.calc-wrap{position:relative;margin-bottom:18px}
+.calc-pfx{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;color:var(--orange)}
+.calc-wrap input{width:100%;padding:11px 12px 11px 30px;border:1.5px solid var(--border);border-radius:9px;
+  font-family:'DM Sans',sans-serif;font-size:14px;color:var(--dark);background:var(--offwhite);outline:none;
+  transition:border-color .2s,box-shadow .2s}
+.calc-wrap input:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(232,96,10,0.1);background:#fff}
+.calc-res{background:var(--orange-faint);border-radius:11px;padding:16px 18px;margin-bottom:14px;border:1px solid var(--border)}
+.calc-res-lbl{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.calc-res-val{font-family:'Playfair Display',serif;font-size:30px;color:var(--orange)}
+.calc-res-val span{font-size:13px;font-weight:400;color:var(--gray);font-family:'DM Sans',sans-serif}
+.calc-note{font-size:11px;color:var(--gray);line-height:1.5}
+.btn-calc{width:100%;padding:12px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;
+  border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;
+  margin-top:14px;transition:transform .2s,box-shadow .2s;box-shadow:0 4px 14px rgba(232,96,10,0.25)}
+.btn-calc:hover{transform:translateY(-2px);box-shadow:0 7px 20px rgba(232,96,10,0.35)}
+
+.testi-sec{padding:80px 5%;background:var(--orange-faint)}
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1100px;margin:0 auto}
+.testi-card{background:#fff;border-radius:16px;padding:26px;border:1.5px solid var(--border);
+  transition:transform .3s,box-shadow .3s}
+.testi-card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(232,96,10,0.08)}
+.testi-stars{color:var(--orange);font-size:14px;margin-bottom:12px;letter-spacing:2px}
+.testi-q{font-size:13px;color:var(--mid);line-height:1.75;margin-bottom:18px;font-style:italic}
+.testi-auth{display:flex;align-items:center;gap:10px}
+.testi-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--orange-light),var(--orange-mid));
+  display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.testi-name{font-size:13px;font-weight:600;color:var(--dark)}
+.testi-role{font-size:11px;color:var(--gray);margin-top:1px}
+
+.cta-sec{padding:80px 5%;background:linear-gradient(145deg,var(--brown),var(--orange),var(--orange-mid));
+  text-align:center;position:relative;overflow:hidden}
+.cta-sec h2{font-family:'Playfair Display',serif;font-size:clamp(26px,3.5vw,44px);
+  color:#fff;margin-bottom:14px;position:relative;z-index:1}
+.cta-sec p{font-size:15px;color:rgba(255,255,255,.78);max-width:460px;margin:0 auto 32px;
+  line-height:1.7;position:relative;z-index:1}
+.cta-btns{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;position:relative;z-index:1}
+.btn-cta-w{padding:13px 30px;background:#fff;color:var(--orange);border:none;border-radius:10px;
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;
+  box-shadow:0 6px 18px rgba(0,0,0,0.15);transition:transform .2s,box-shadow .2s}
+.btn-cta-w:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(0,0,0,0.2)}
+.btn-cta-g{padding:13px 30px;background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.5);
+  border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:background .2s}
+.btn-cta-g:hover{background:rgba(255,255,255,.12)}
+
+footer{background:var(--dark);padding:52px 5% 26px}
+.ft-in{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px}
+.ft-logo-row{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+.ft-logo-ico{width:34px;height:34px;background:linear-gradient(135deg,var(--orange),var(--orange-light));
+  border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.ft-logo-name{font-family:'Playfair Display',serif;font-size:19px;color:#fff}
+.ft-brand-p{font-size:12px;color:rgba(255,255,255,.4);line-height:1.7;max-width:240px}
+.ft-col h4{font-size:12px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px}
+.ft-col ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+.ft-col ul li a{font-size:12px;color:rgba(255,255,255,.4);text-decoration:none;cursor:pointer;transition:color .2s}
+.ft-col ul li a:hover{color:var(--orange-light)}
+.ft-bot{max-width:1100px;margin:0 auto;padding-top:22px;border-top:1px solid rgba(255,255,255,.08);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.ft-bot p{font-size:11px;color:rgba(255,255,255,.3)}
+.ft-bot-links{display:flex;gap:18px}
+.ft-bot-links a{font-size:11px;color:rgba(255,255,255,.4);text-decoration:none;transition:color .2s;cursor:pointer}
+.ft-bot-links a:hover{color:var(--orange-light)}
+
+/* ══════════════════════════════════════
+   PAGE 2: AUTH
+══════════════════════════════════════ */
+#pg-auth{padding-top:64px}
+.auth-wrap{min-height:calc(100vh - 64px);display:grid;grid-template-columns:1fr 1fr}
+.auth-left{background:linear-gradient(145deg,var(--brown) 0%,var(--orange) 55%,var(--orange-light) 100%);
+  display:flex;flex-direction:column;justify-content:space-between;padding:48px 52px;position:relative;overflow:hidden}
+.auth-left::before{content:'';position:absolute;top:-120px;right:-120px;width:500px;height:500px;
+  background:radial-gradient(circle,rgba(255,255,255,.12) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+.al-brand{display:flex;align-items:center;gap:11px;z-index:1}
+.al-ico{width:42px;height:42px;background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.35);
+  border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.al-name{font-family:'Playfair Display',serif;font-size:24px;color:#fff}
+.al-hero{z-index:1}
+.al-hero h1{font-family:'Playfair Display',serif;font-size:clamp(28px,3vw,44px);color:#fff;line-height:1.2;margin-bottom:18px}
+.al-hero h1 span{color:rgba(255,255,255,.85);text-decoration:underline;text-decoration-color:rgba(255,255,255,.4)}
+.al-hero p{font-size:14px;color:rgba(255,255,255,.72);line-height:1.7;max-width:340px}
+.al-stats{display:flex;gap:28px;z-index:1}
+.al-stat-num{font-family:'Playfair Display',serif;font-size:26px;color:#fff}
+.al-stat-lbl{font-size:11px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.7px}
+.al-div{width:1px;background:rgba(255,255,255,.2);align-self:stretch}
+.al-cards{position:absolute;right:-18px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:12px;z-index:1}
+.al-card{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(10px);
+  border-radius:13px;padding:12px 16px;width:180px;display:flex;align-items:center;gap:10px;transition:transform .3s}
+.al-card:hover{transform:translateX(-4px)}
+.al-card-ico{width:35px;height:35px;border-radius:9px;background:rgba(255,255,255,.18);
+  display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.al-card-lbl{font-size:11px;color:rgba(255,255,255,.55)}
+.al-card-val{font-size:13px;font-weight:600;color:#fff;margin-top:1px}
+.auth-right{display:flex;align-items:center;justify-content:center;padding:48px 36px;background:#fff;position:relative}
+.auth-right::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--brown),var(--orange-light))}
+.auth-form-wrap{width:100%;max-width:400px}
+.auth-tabs{display:flex;background:var(--orange-pale);border-radius:11px;padding:5px;margin-bottom:32px;position:relative}
+.tab-sl{position:absolute;top:5px;left:5px;height:calc(100% - 10px);width:calc(50% - 5px);
+  background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(232,96,10,0.12);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.tab-sl.reg{transform:translateX(calc(100% + 5px))}
+.tab-btn{flex:1;padding:10px;border:none;background:transparent;border-radius:8px;
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--gray);cursor:pointer;position:relative;z-index:1;transition:color .3s}
+.tab-btn.on{color:var(--brown);font-weight:600}
+.auth-panel{display:none}
+.auth-panel.on{display:block}
+.form-ttl{font-family:'Playfair Display',serif;font-size:24px;color:var(--dark);margin-bottom:5px}
+.form-sub{font-size:13px;color:var(--mid);margin-bottom:24px;line-height:1.5}
+.inp-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--mid);margin-bottom:6px}
+.field .iw{position:relative}
+.field .ii{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;opacity:.45}
+.field input,.field select{width:100%;padding:11px 12px 11px 38px;border:1.5px solid var(--border);border-radius:9px;
+  font-family:'DM Sans',sans-serif;font-size:13px;color:var(--dark);background:var(--offwhite);outline:none;appearance:none;
+  transition:border-color .2s,box-shadow .2s,background .2s}
+.field input:focus,.field select:focus{border-color:var(--orange);background:#fff;box-shadow:0 0 0 3px rgba(232,96,10,0.1)}
+.field input.err{border-color:var(--red)}
+.tpw{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;opacity:.45;transition:opacity .2s}
+.tpw:hover{opacity:.8}
+.emsg{font-size:11px;color:var(--red);margin-top:4px;display:none}
+.emsg.on{display:block}
+.role-sel{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px}
+.role-lbl{font-size:12px;font-weight:500;color:var(--mid);margin-bottom:7px;display:block}
+.role-btn{padding:11px;border:1.5px solid var(--border);border-radius:9px;background:var(--offwhite);cursor:pointer;
+  text-align:center;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:5px;font-family:'DM Sans',sans-serif}
+.role-btn .ri{font-size:20px}.role-btn .rl{font-size:12px;font-weight:500;color:var(--mid)}
+.role-btn:hover{border-color:var(--orange-light);background:var(--orange-pale)}
+.role-btn.sel{border-color:var(--orange);background:var(--orange-pale)}.role-btn.sel .rl{color:var(--brown);font-weight:600}
+.forgot-row{display:flex;justify-content:flex-end;margin:-8px 0 16px}
+.forgot-lnk{font-size:12px;color:var(--orange);text-decoration:none;cursor:pointer;transition:color .2s}
+.forgot-lnk:hover{color:var(--brown)}
+.check-row{display:flex;align-items:flex-start;gap:9px;margin-bottom:20px}
+.check-row input[type=checkbox]{width:15px;height:15px;flex-shrink:0;margin-top:2px;accent-color:var(--orange);cursor:pointer}
+.check-row label{font-size:12px;color:var(--mid);line-height:1.5;cursor:pointer}
+.check-row label a{color:var(--orange);text-decoration:none}
+.btn-auth{width:100%;padding:13px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;border:none;
+  border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;
+  box-shadow:0 4px 16px rgba(232,96,10,0.28);transition:transform .2s,box-shadow .2s}
+.btn-auth:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(232,96,10,0.38)}
+.btn-auth.loading{opacity:.75;pointer-events:none}
+.divider{display:flex;align-items:center;gap:10px;margin:18px 0}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.divider span{font-size:11px;color:var(--gray);white-space:nowrap}
+.soc-row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.btn-soc{padding:10px;border:1.5px solid var(--border);border-radius:9px;background:#fff;
+  font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:var(--dark);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:7px;transition:border-color .2s,background .2s}
+.btn-soc:hover{border-color:var(--orange-light);background:var(--orange-pale)}
+.str-bar{display:flex;gap:4px;margin-top:6px}
+.str-seg{flex:1;height:3px;border-radius:3px;background:var(--border);transition:background .3s}
+.str-seg.weak{background:var(--red)}.str-seg.fair{background:var(--yellow)}.str-seg.strong{background:var(--green)}
+.str-txt{font-size:10px;margin-top:3px;color:var(--gray)}
+
+/* ══════════════════════════════════════
+   PAGE 3: SEARCH
+══════════════════════════════════════ */
+#pg-search{padding-top:64px}
+.srch-wrap{display:flex;min-height:calc(100vh - 64px)}
+.sidebar{width:290px;min-width:290px;background:#fff;border-right:1px solid var(--border);
+  height:calc(100vh - 64px);position:sticky;top:64px;overflow-y:auto;padding:22px 18px;
+  display:flex;flex-direction:column;gap:20px;transition:left .3s}
+.sidebar::-webkit-scrollbar{width:3px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.flt-hdr{display:flex;align-items:center;justify-content:space-between}
+.flt-ttl{font-size:14px;font-weight:600;color:var(--dark)}
+.flt-clr{font-size:12px;color:var(--orange);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif}
+.flt-grp{display:flex;flex-direction:column;gap:9px}
+.flt-gt{font-size:10px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.8px}
+.inc-box{background:var(--orange-faint);border:1px solid var(--border);border-radius:11px;padding:14px}
+.inc-box label{font-size:11px;font-weight:500;color:var(--mid);display:block;margin-bottom:7px}
+.inc-w{position:relative}
+.inc-pfx{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:600;color:var(--orange)}
+.inc-w input{width:100%;padding:8px 9px 8px 24px;border:1.5px solid var(--border);border-radius:7px;
+  font-family:'DM Sans',sans-serif;font-size:12px;color:var(--dark);background:#fff;outline:none;transition:border-color .2s}
+.inc-w input:focus{border-color:var(--orange)}
+.inc-res{margin-top:9px;padding:7px 11px;background:#fff;border-radius:7px;font-size:11px;color:var(--mid)}
+.inc-res strong{color:var(--orange);font-size:13px}
+.range-w{display:flex;flex-direction:column;gap:7px}
+.range-lr{display:flex;justify-content:space-between;font-size:10px;color:var(--gray)}
+.range-v{font-size:12px;font-weight:600;color:var(--dark);text-align:center}
+input[type=range]{width:100%;accent-color:var(--orange);cursor:pointer}
+.chk-opts{display:flex;flex-direction:column;gap:7px}
+.chk-opt{display:flex;align-items:center;gap:9px;cursor:pointer}
+.chk-opt input{accent-color:var(--orange);width:14px;height:14px;cursor:pointer}
+.chk-opt span{font-size:12px;color:var(--mid)}
+.pill-opts{display:flex;flex-wrap:wrap;gap:7px}
+.pill{padding:5px 12px;border:1.5px solid var(--border);border-radius:50px;font-size:11px;font-weight:500;
+  color:var(--mid);cursor:pointer;background:#fff;font-family:'DM Sans',sans-serif;transition:all .2s}
+.pill:hover{border-color:var(--orange-light);color:var(--orange)}
+.pill.on{border-color:var(--orange);background:var(--orange-pale);color:var(--brown);font-weight:600}
+.div-ln{height:1px;background:var(--border)}
+.btn-apply{width:100%;padding:11px;border:none;border-radius:9px;
+  background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;
+  box-shadow:0 4px 12px rgba(232,96,10,0.25);transition:transform .2s,box-shadow .2s}
+.btn-apply:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(232,96,10,0.35)}
+.srch-main{flex:1;padding:22px;overflow-y:auto}
+.res-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+.res-cnt{font-size:17px;font-weight:600;color:var(--dark)}
+.res-sub{font-size:12px;color:var(--gray)}
+.tb-right{display:flex;align-items:center;gap:10px}
+.sort-sel{padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;
+  font-family:'DM Sans',sans-serif;font-size:12px;color:var(--mid);background:#fff;outline:none;cursor:pointer}
+.sort-sel:focus{border-color:var(--orange)}
+.view-tog{display:flex;background:#fff;border:1.5px solid var(--border);border-radius:8px;overflow:hidden}
+.vbtn{padding:7px 10px;border:none;background:transparent;cursor:pointer;font-size:14px;transition:background .2s}
+.vbtn.on{background:var(--orange-pale)}
+.act-tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px}
+.ftag{display:flex;align-items:center;gap:5px;background:var(--orange-pale);border:1px solid var(--border);
+  border-radius:50px;padding:4px 11px;font-size:11px;font-weight:500;color:var(--brown)}
+.ftag button{background:none;border:none;cursor:pointer;font-size:12px;color:var(--orange);line-height:1;padding:0}
+.ftag button:hover{color:var(--red)}
+.prop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:20px}
+.prop-grid.lv{grid-template-columns:1fr}
+.prop-card{background:#fff;border-radius:14px;border:1.5px solid var(--border);overflow:hidden;
+  transition:transform .3s,box-shadow .3s,border-color .3s;cursor:pointer;animation:fadeCard .4s ease both}
+.prop-card:hover{transform:translateY(-4px);box-shadow:0 14px 36px rgba(232,96,10,0.1);border-color:var(--orange-light)}
+@keyframes fadeCard{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.prop-img{height:185px;position:relative;overflow:hidden;background:linear-gradient(135deg,var(--orange-pale),#fcd9bc);
+  display:flex;align-items:center;justify-content:center;font-size:52px}
+.prop-bgs{position:absolute;top:10px;left:10px;display:flex;gap:5px;flex-wrap:wrap}
+.badge{font-size:9px;font-weight:700;padding:3px 9px;border-radius:50px;text-transform:uppercase;letter-spacing:.4px}
+.bg-org{background:var(--orange);color:#fff}.bg-grn{background:var(--green);color:#fff}
+.bg-brn{background:var(--brown-mid);color:#fff}
+.prop-save-btn{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;
+  background:rgba(255,255,255,.9);border:none;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;
+  transition:transform .2s;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.prop-save-btn:hover{transform:scale(1.1)}
+.aff-strip{padding:4px 12px;font-size:10px;font-weight:600;color:#fff;display:flex;align-items:center;gap:5px}
+.aff-strip.ok{background:linear-gradient(90deg,var(--green),#38b27a)}
+.aff-strip.ov{background:linear-gradient(90deg,var(--red),#e06060)}
+.prop-body{padding:14px}
+.prop-loc{font-size:11px;color:var(--gray);margin-bottom:4px}
+.prop-ttl{font-size:15px;font-weight:600;color:var(--dark);margin-bottom:9px;line-height:1.3}
+.prop-meta{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.prop-mi{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--mid)}
+.prop-ft{display:flex;align-items:center;justify-content:space-between;padding-top:11px;border-top:1px solid var(--border)}
+.prop-pm{font-size:18px;font-weight:700;color:var(--orange)}
+.prop-ps{font-size:10px;color:var(--gray)}
+.btn-view{padding:7px 14px;border:none;border-radius:7px;background:var(--orange-pale);color:var(--orange);
+  font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:background .2s,transform .2s}
+.btn-view:hover{background:var(--orange);color:#fff;transform:translateY(-1px)}
+.prop-grid.lv .prop-card{display:grid;grid-template-columns:220px 1fr}
+.prop-grid.lv .prop-img{height:100%;min-height:150px;border-radius:0}
+.pag{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:36px;padding-bottom:28px}
+.pag-btn{width:36px;height:36px;border-radius:8px;border:1.5px solid var(--border);background:#fff;
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--mid);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s}
+.pag-btn:hover{border-color:var(--orange-light);color:var(--orange)}
+.pag-btn.on{background:var(--orange);border-color:var(--orange);color:#fff;font-weight:600}
+.mob-flt-btn{display:none;position:fixed;bottom:22px;left:22px;z-index:300;padding:11px 18px;
+  background:var(--orange);color:#fff;border:none;border-radius:50px;font-family:'DM Sans',sans-serif;
+  font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 6px 22px rgba(232,96,10,0.35);align-items:center;gap:7px}
+.pm-ov{position:fixed;inset:0;z-index:500;background:rgba(45,21,0,.5);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+.pm-ov.open{opacity:1;pointer-events:all}
+.pm-modal{background:#fff;border-radius:18px;width:100%;max-width:680px;max-height:88vh;overflow-y:auto;
+  box-shadow:0 24px 60px rgba(232,96,10,0.15);transform:translateY(28px);transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+.pm-ov.open .pm-modal{transform:translateY(0)}
+.pm-img{height:220px;background:linear-gradient(135deg,var(--orange-pale),#fcd9bc);display:flex;
+  align-items:center;justify-content:center;font-size:76px;position:relative;border-radius:18px 18px 0 0;overflow:hidden}
+.pm-close{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;
+  background:rgba(255,255,255,.9);border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:transform .2s}
+.pm-close:hover{transform:scale(1.1)}
+.pm-body{padding:24px}
+.pm-ttl{font-family:'Playfair Display',serif;font-size:22px;color:var(--dark);margin-bottom:5px}
+.pm-loc{font-size:13px;color:var(--gray);margin-bottom:18px}
+.pm-mg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.pm-mi{background:var(--offwhite);border-radius:9px;padding:11px;text-align:center}
+.pm-mi-ico{font-size:18px;margin-bottom:3px}
+.pm-mi-lbl{font-size:10px;color:var(--gray)}
+.pm-mi-val{font-size:13px;font-weight:600;color:var(--dark);margin-top:1px}
+.pm-st{font-size:13px;font-weight:600;color:var(--dark);margin-bottom:8px}
+.pm-desc{font-size:13px;color:var(--mid);line-height:1.75;margin-bottom:20px}
+.pm-ams{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:20px}
+.am-tag{padding:5px 13px;background:var(--orange-faint);border:1px solid var(--border);
+  border-radius:50px;font-size:11px;color:var(--orange);font-weight:500}
+.pm-pr-row{display:flex;align-items:center;justify-content:space-between;padding:18px;
+  background:var(--orange-faint);border-radius:11px;margin-bottom:18px}
+.pm-pr-big{font-family:'Playfair Display',serif;font-size:26px;color:var(--orange)}
+.pm-pr-note{font-size:11px;color:var(--gray);margin-top:1px}
+.pm-aff-badge{padding:7px 14px;border-radius:50px;font-size:11px;font-weight:600}
+.pm-aff-badge.good{background:var(--green-bg);color:var(--green)}
+.pm-aff-badge.over{background:var(--red-bg);color:var(--red)}
+.pm-acts{display:flex;gap:10px}
+.btn-pm-p{flex:1;padding:12px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;border:none;
+  border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;
+  transition:transform .2s,box-shadow .2s;box-shadow:0 4px 14px rgba(232,96,10,0.25)}
+.btn-pm-p:hover{transform:translateY(-2px);box-shadow:0 7px 20px rgba(232,96,10,0.35)}
+.btn-pm-s{padding:12px 18px;border:1.5px solid var(--border);border-radius:10px;background:#fff;
+  font-family:'DM Sans',sans-serif;font-size:13px;color:var(--mid);cursor:pointer;transition:border-color .2s}
+.btn-pm-s:hover{border-color:var(--orange-light)}
+
+/* ══════════════════════════════════════
+   PAGE 4: DASHBOARD
+══════════════════════════════════════ */
+#pg-dash{padding-top:64px}
+.dash-wrap{display:flex;min-height:calc(100vh - 64px)}
+.dash-nav{width:230px;min-width:230px;background:linear-gradient(180deg,var(--brown) 0%,var(--dark) 100%);
+  height:calc(100vh - 64px);position:sticky;top:64px;display:flex;flex-direction:column;overflow-y:auto}
+.dn-menu{flex:1;padding:16px 10px;display:flex;flex-direction:column;gap:3px}
+.dn-sec{font-size:9px;font-weight:600;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;padding:12px 12px 4px}
+.dn-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:500;
+  color:rgba(255,255,255,.6);cursor:pointer;text-decoration:none;transition:all .2s}
+.dn-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.dn-item.on{background:rgba(232,96,10,.3);color:#fff;font-weight:600;border-left:3px solid var(--orange)}
+.dn-ico{font-size:16px;width:19px;text-align:center;flex-shrink:0}
+.dn-badge{margin-left:auto;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:50px}
+.dn-bot{padding:12px 10px;border-top:1px solid rgba(255,255,255,.1)}
+.dn-user{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;background:rgba(255,255,255,.07)}
+.dn-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--orange-light),var(--orange-mid));
+  display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.dn-uname{font-size:12px;font-weight:600;color:#fff}
+.dn-urole{font-size:10px;color:rgba(255,255,255,.45);margin-top:1px}
+.dash-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.dash-topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 22px;height:60px;
+  display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(232,96,10,0.05)}
+.dt-title{font-size:15px;font-weight:600;color:var(--dark)}
+.dt-sub{font-size:11px;color:var(--gray)}
+.dt-right{display:flex;align-items:center;gap:9px}
+.notif-btn{width:35px;height:35px;border-radius:9px;background:var(--offwhite);border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;position:relative;transition:background .2s}
+.notif-btn:hover{background:var(--orange-pale)}
+.notif-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;background:var(--red);border-radius:50%;border:2px solid #fff}
+.btn-record{padding:8px 15px;border:none;border-radius:8px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));
+  color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;
+  box-shadow:0 3px 10px rgba(232,96,10,0.25);transition:transform .2s,box-shadow .2s;display:flex;align-items:center;gap:5px}
+.btn-record:hover{transform:translateY(-2px);box-shadow:0 5px 16px rgba(232,96,10,0.35)}
+.dash-content{padding:22px;flex:1;overflow-y:auto}
+.sum-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:22px}
+.sum-card{background:#fff;border-radius:13px;padding:18px;border:1.5px solid var(--border);
+  display:flex;flex-direction:column;gap:10px;transition:transform .2s,box-shadow .2s}
+.sum-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(232,96,10,0.08)}
+.sum-card.org-card{background:linear-gradient(145deg,var(--orange),var(--orange-mid));border-color:transparent}
+.sc-top{display:flex;align-items:center;justify-content:space-between}
+.sc-ico{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.ic-o{background:var(--orange-pale)}.ic-g{background:var(--green-bg)}.ic-b{background:var(--blue-bg)}.ic-w{background:rgba(255,255,255,.2)}
+.sc-bdg{font-size:10px;font-weight:600;padding:3px 8px;border-radius:50px}
+.sb-up{background:var(--green-bg);color:var(--green)}.sb-ok{background:var(--orange-pale);color:var(--orange)}.sb-wt{background:rgba(255,255,255,.2);color:rgba(255,255,255,.9)}
+.sc-lbl{font-size:11px;color:var(--gray)}.sc-val{font-family:'Playfair Display',serif;font-size:24px;color:var(--dark)}.sc-hint{font-size:10px;color:var(--gray);margin-top:-4px}
+.org-card .sc-lbl,.org-card .sc-hint{color:rgba(255,255,255,.65)}.org-card .sc-val{color:#fff}
+.two-col{display:grid;grid-template-columns:1fr 320px;gap:18px;margin-bottom:18px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:18px}
+.card{background:#fff;border-radius:13px;border:1.5px solid var(--border);overflow:hidden}
+.card-hd{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.ch-ttl{font-size:13px;font-weight:600;color:var(--dark);display:flex;align-items:center;gap:6px}
+.ch-act{font-size:11px;color:var(--orange);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;transition:color .2s}
+.ch-act:hover{color:var(--brown)}
+.pay-tbl{width:100%;border-collapse:collapse}
+.pay-tbl th{font-size:9px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.6px;
+  padding:10px 18px;text-align:left;border-bottom:1px solid var(--border);background:var(--offwhite)}
+.pay-tbl td{padding:12px 18px;font-size:12px;color:var(--mid);border-bottom:1px solid var(--border)}
+.pay-tbl tr:last-child td{border-bottom:none}
+.pay-tbl tr:hover td{background:var(--orange-faint)}
+.pay-mo{font-weight:600;color:var(--dark);font-size:12px}
+.pc-d{display:flex;align-items:center;gap:7px}
+.pc-av{width:26px;height:26px;border-radius:7px;background:var(--orange-pale);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.sbadge{padding:3px 9px;border-radius:50px;font-size:10px;font-weight:600;display:inline-flex;align-items:center;gap:3px}
+.s-paid{background:var(--green-bg);color:var(--green)}.s-pend{background:var(--yellow-bg);color:var(--yellow)}.s-over{background:var(--red-bg);color:var(--red)}
+.act-row{display:flex;gap:5px}
+.bsm{padding:4px 10px;border-radius:6px;font-size:10px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;border:1.5px solid transparent;transition:all .2s}
+.bsm-o{background:var(--orange-pale);color:var(--orange);border-color:var(--orange-pale)}.bsm-o:hover{background:var(--orange);color:#fff}
+.bsm-g{background:transparent;color:var(--gray);border-color:var(--border)}.bsm-g:hover{border-color:var(--orange-light);color:var(--orange)}
+.due-list{padding:13px 16px;display:flex;flex-direction:column;gap:9px}
+.due-item{display:flex;align-items:center;gap:11px;padding:11px;border-radius:10px;border:1.5px solid var(--border);background:var(--offwhite);transition:border-color .2s}
+.due-item:hover{border-color:var(--orange-light)}
+.due-item.urg{border-color:var(--red);background:#fff8f8}
+.due-item.sn{border-color:var(--yellow);background:#fffbf0}
+.due-item.ok{border-color:var(--green);background:#f3fcf7}
+.due-ico{font-size:20px;flex-shrink:0}
+.due-info{flex:1}.due-ttl{font-size:12px;font-weight:600;color:var(--dark)}.due-addr{font-size:10px;color:var(--gray);margin-top:1px}
+.due-right{text-align:right}.due-amt{font-size:12px;font-weight:700;color:var(--dark)}
+.due-days{font-size:10px;font-weight:600;margin-top:2px}
+.dd-urg{color:var(--red)}.dd-sn{color:var(--yellow)}.dd-ok{color:var(--green)}
+.bdg-body{padding:16px 18px}
+.brow{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.blbl{font-size:12px;font-weight:500;color:var(--mid)}.bval{font-size:12px;font-weight:600;color:var(--dark)}
+.prog-track{height:8px;background:var(--border);border-radius:50px;overflow:hidden;margin-bottom:12px}
+.prog-fill{height:100%;border-radius:50px;transition:width 1.2s ease;background:linear-gradient(90deg,var(--orange),var(--orange-light))}
+.prog-note{font-size:11px;color:var(--gray);margin-bottom:14px;line-height:1.5}
+.bb-list{display:flex;flex-direction:column;gap:8px}
+.bb-row{display:flex;align-items:center;gap:8px}
+.bb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}.bb-lbl{font-size:11px;color:var(--mid);flex:1}.bb-val{font-size:11px;font-weight:600;color:var(--dark)}
+.bb-tot{border-top:1px solid var(--border);padding-top:8px;margin-top:2px}.bb-tot .bb-lbl{font-weight:600;color:var(--dark)}
+.chart-body{padding:16px 18px}
+.chart-bars{display:flex;align-items:flex-end;gap:5px;height:80px}
+.chart-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.chart-bar{width:100%;border-radius:4px 4px 0 0;cursor:pointer;position:relative;transition:opacity .2s}
+.chart-bar:hover{opacity:.8}
+.chart-bar::after{content:attr(data-tip);position:absolute;top:-24px;left:50%;transform:translateX(-50%);
+  background:var(--dark);color:#fff;font-size:9px;padding:2px 6px;border-radius:4px;white-space:nowrap;
+  pointer-events:none;opacity:0;transition:opacity .2s}
+.chart-bar:hover::after{opacity:1}
+.chart-mo{font-size:9px;color:var(--gray)}
+.chart-legend{display:flex;gap:12px;margin-top:10px}
+.cl-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--mid)}
+.cl-dot{width:7px;height:7px;border-radius:50%}
+.notif-body{padding:13px 16px;display:flex;flex-direction:column;gap:7px}
+.notif-item{display:flex;align-items:flex-start;gap:9px;padding:10px;border-radius:8px;background:var(--offwhite);border:1px solid var(--border)}
+.notif-item.unread{background:var(--orange-faint);border-color:var(--border)}
+.ni-dot{width:6px;height:6px;border-radius:50%;background:var(--orange);flex-shrink:0;margin-top:5px}
+.ni-dot.read{background:transparent;border:1.5px solid var(--border)}
+.ni-text{font-size:11px;color:var(--mid);line-height:1.5}.ni-text strong{color:var(--dark)}
+.ni-time{font-size:10px;color:var(--gray);margin-top:2px}
+.pay-modal-ov{position:fixed;inset:0;z-index:500;background:rgba(45,21,0,.5);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+.pay-modal-ov.open{opacity:1;pointer-events:all}
+.pay-modal{background:#fff;border-radius:16px;width:100%;max-width:440px;
+  box-shadow:0 24px 60px rgba(232,96,10,0.15);transform:translateY(26px);transition:transform .35s cubic-bezier(.34,1.56,.64,1);overflow:hidden}
+.pay-modal-ov.open .pay-modal{transform:translateY(0)}
+.pay-modal-hd{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.pay-modal-hd h3{font-size:15px;font-weight:600;color:var(--dark)}
+.pay-modal-x{background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray);transition:color .2s}
+.pay-modal-x:hover{color:var(--dark)}
+.pay-modal-bd{padding:20px;display:flex;flex-direction:column;gap:13px}
+.ff{display:flex;flex-direction:column;gap:5px}
+.ff label{font-size:11px;font-weight:500;color:var(--mid)}
+.ff input,.ff select,.ff textarea{padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;
+  font-family:'DM Sans',sans-serif;font-size:12px;color:var(--dark);background:var(--offwhite);outline:none;
+  transition:border-color .2s,box-shadow .2s}
+.ff input:focus,.ff select:focus,.ff textarea:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(232,96,10,0.1);background:#fff}
+.ff-row{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.pay-modal-ft{padding:13px 22px;border-top:1px solid var(--border);display:flex;gap:9px}
+.btn-save-pay{flex:1;padding:10px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;border:none;
+  border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;
+  transition:transform .2s,box-shadow .2s;box-shadow:0 3px 12px rgba(232,96,10,0.22)}
+.btn-save-pay:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(232,96,10,0.32)}
+.btn-cancel-pay{padding:10px 16px;border:1.5px solid var(--border);border-radius:8px;background:#fff;
+  font-family:'DM Sans',sans-serif;font-size:13px;color:var(--mid);cursor:pointer;transition:border-color .2s}
+.btn-cancel-pay:hover{border-color:var(--orange-light)}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:1024px){
+  .hero-in,.calc-in{grid-template-columns:1fr}.hero-vis,.al-cards{display:none}
+  .auth-wrap{grid-template-columns:1fr}.auth-left{display:none}
+  .sum-grid{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}
+  .three-col{grid-template-columns:1fr 1fr}.feat-grid,.testi-grid{grid-template-columns:1fr 1fr}
+  .ft-in{grid-template-columns:1fr 1fr}.stats-in{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:768px){
+  .nav-links,.nav-acts{display:none}.hamburger{display:flex}
+  .steps-grid,.feat-grid,.testi-grid{grid-template-columns:1fr}
+  .srch-wrap{flex-direction:column}.sidebar{position:fixed;left:-300px;top:64px;z-index:150;height:calc(100vh - 64px)}
+  .sidebar.open{left:0;box-shadow:4px 0 24px rgba(232,96,10,0.12)}.mob-flt-btn{display:flex}
+  .prop-grid.lv .prop-card{grid-template-columns:1fr}.prop-grid.lv .prop-img{height:160px;min-height:unset;border-radius:0}
+  .dash-nav{display:none}.three-col{grid-template-columns:1fr}
+}
+@media(max-width:480px){
+  .sum-grid{grid-template-columns:1fr}.inp-row,.ff-row,.role-sel,.soc-row{grid-template-columns:1fr}
+  .pm-mg{grid-template-columns:repeat(2,1fr)}.ft-in{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ SHARED NAV ═══ -->
+<nav class="nav" id="mainNav">
+  <div class="nav-brand" onclick="go('landing')">
+    <div class="nav-logo">🏠</div>
+    <span class="nav-name">HomeBase</span>
+  </div>
+  <ul class="nav-links">
+    <li><a onclick="go('landing')">Home</a></li>
+    <li><a onclick="go('search')">Find Housing</a></li>
+    <li><a onclick="go('dash')">Dashboard</a></li>
+    <li><a onclick="go('landing');setTimeout(()=>document.querySelector('.calc-sec')?.scrollIntoView({behavior:'smooth'}),100)">Calculator</a></li>
+  </ul>
+  <div class="nav-acts" id="navActs">
+    <button class="btn-out" onclick="go('auth')" id="signInBtn">Sign In</button>
+    <button class="btn-solid" onclick="go('auth')" id="getStartedBtn">Get Started Free</button>
+  </div>
+  <button class="hamburger" onclick="document.getElementById('mobMenu').classList.toggle('open')">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="mob-menu" id="mobMenu">
+  <a onclick="go('landing');document.getElementById('mobMenu').classList.remove('open')">Home</a>
+  <a onclick="go('search');document.getElementById('mobMenu').classList.remove('open')">Find Housing</a>
+  <a onclick="go('dash');document.getElementById('mobMenu').classList.remove('open')">Dashboard</a>
+  <a onclick="go('auth');document.getElementById('mobMenu').classList.remove('open')">Sign In</a>
+  <a onclick="go('auth');document.getElementById('mobMenu').classList.remove('open')" style="color:var(--orange);font-weight:600">Get Started Free →</a>
+</div>
+<div class="toast" id="gToast"></div>
+
+<!-- ═══════════════════════════════════
+     PAGE 1 — LANDING
+═══════════════════════════════════ -->
+<div class="pg on" id="pg-landing">
+  <section class="hero">
+    <div class="hero-in">
+      <div class="hero-text">
+        <div class="hero-badge"><span class="dot"></span>12,000+ affordable listings available now</div>
+        <h1>Find housing that fits your <span class="accent"><span class="ul">salary</span></span>,<br/>not your stress.</h1>
+        <p>HomeBase is built exclusively for 9–5 workers. Search affordable rentals based on your income, calculate what you can safely afford, and manage rent payments — all in one place.</p>
+        <div class="hero-cta">
+          <button class="btn-hero" onclick="go('search')">Start Your Search →</button>
+          <button class="btn-ghost-hero" onclick="document.querySelector('.lp-sec')?.scrollIntoView({behavior:'smooth'})">
+            <div class="play-ico">▶</div> See how it works
+          </button>
+        </div>
+        <div class="hero-trust">
+          <div class="t-avs"><span>👩</span><span>👨</span><span>👩</span><span>👨</span></div>
+          <div class="t-txt">Trusted by <strong>8,400+</strong> workers across the country</div>
+        </div>
+      </div>
+      <div class="hero-vis">
+        <div class="hero-card">
+          <div class="hc-img">🏡<div class="hc-afford">✓ Affordable</div></div>
+          <div class="hc-body">
+            <div class="hc-loc">📍 Lekki Phase 1, Lagos</div>
+            <div class="hc-ttl">Modern 2-Bedroom Flat</div>
+            <div class="hc-meta"><span>🛏 2 Beds</span><span>🚿 1 Bath</span><span>📐 65 m²</span></div>
+            <div class="hc-pr">
+              <div class="hc-price">₦85,000 <span>/month</span></div>
+              <button style="padding:7px 14px;background:var(--orange-pale);color:var(--orange);border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif" onclick="go('search')">View</button>
+            </div>
+          </div>
+        </div>
+        <div class="fw w1"><div class="fw-ico">✅</div><div><div class="fw-lbl">Within budget</div><div class="fw-val">28% of salary</div></div></div>
+        <div class="fw w2"><div class="fw-ico">🔔</div><div><div class="fw-lbl">Reminder</div><div class="fw-val">Due in 3 days</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="stats-band">
+    <div class="stats-in">
+      <div><span class="sn">12k<span class="sp2">+</span></span><span class="sl">Verified Listings</span></div>
+      <div><span class="sn">8.4k<span class="sp2">+</span></span><span class="sl">Workers Housed</span></div>
+      <div><span class="sn">30<span class="sp2">%</span></span><span class="sl">Income Rule Applied</span></div>
+      <div><span class="sn">98<span class="sp2">%</span></span><span class="sl">Satisfaction Rate</span></div>
+    </div>
+  </div>
+
+  <section class="lp-sec">
+    <div class="lp-in">
+      <div class="sec-tag">How It Works</div>
+      <h2 class="sec-ttl">Three simple steps to your next home</h2>
+      <p class="sec-sub">No confusing processes. No hidden fees. A clear guided path from salary to signed lease.</p>
+      <div class="steps-grid">
+        <div class="step-card"><div class="step-num">1</div><div class="step-ico">💰</div><div class="step-ttl">Enter Your Salary</div><div class="step-desc">Tell us your monthly salary. Our engine instantly calculates the maximum rent you should pay using the trusted 30% income rule.</div></div>
+        <div class="step-card"><div class="step-num">2</div><div class="step-ico">🔍</div><div class="step-ttl">Search Filtered Listings</div><div class="step-desc">Browse only properties that match your budget. Filter by location, rooms, and commute distance. No irrelevant results.</div></div>
+        <div class="step-card"><div class="step-num">3</div><div class="step-ico">📅</div><div class="step-ttl">Manage Rent Payments</div><div class="step-desc">Track every payment, set reminders, and download receipts — all from your personal dashboard. Never miss rent again.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="feat-sec">
+    <div class="lp-in">
+      <div class="sec-tag">Core Features</div>
+      <h2 class="sec-ttl">Everything a salary earner needs</h2>
+      <p class="sec-sub" style="margin-bottom:40px">Built around the three biggest problems 9–5 workers face with housing.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat-card"><div class="feat-ico-wrap">🔍</div><div class="feat-ttl">Smart Housing Search</div><div class="feat-desc">Search thousands of verified listings filtered for your salary level and location preferences.</div><ul class="feat-list"><li>Salary-based filtering</li><li>Commute distance</li><li>Save & compare</li><li>Direct landlord contact</li></ul></div>
+      <div class="feat-card hl"><div class="feat-ico-wrap">💡</div><div class="feat-ttl">Affordability Calculator</div><div class="feat-desc">Know exactly what you can afford before you start searching using the 30% salary rule.</div><ul class="feat-list"><li>Instant calculation</li><li>Salary-to-rent breakdown</li><li>Auto-applies as filter</li><li>Save to profile</li></ul></div>
+      <div class="feat-card"><div class="feat-ico-wrap">💳</div><div class="feat-ttl">Rent Payment Manager</div><div class="feat-desc">Stay on top of every payment with your personal rent dashboard that tracks history and sends reminders.</div><ul class="feat-list"><li>Payment history log</li><li>Due date reminders</li><li>PDF receipts</li><li>Overdue alerts</li></ul></div>
+    </div>
+  </section>
+
+  <section class="calc-sec">
+    <div class="calc-in">
+      <div>
+        <div class="sec-tag">Affordability Tool</div>
+        <h2 class="sec-ttl">How much rent can<br/>you actually afford?</h2>
+        <p style="font-size:15px;color:var(--mid);line-height:1.75;margin-bottom:24px">Financial experts recommend spending no more than <strong>30%</strong> of your gross monthly salary on rent.</p>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mid)"><span style="font-size:18px">✅</span>Helps you avoid financial stress</div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mid)"><span style="font-size:18px">✅</span>Filters search results automatically</div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mid)"><span style="font-size:18px">✅</span>Based on internationally accepted standard</div>
+        </div>
+      </div>
+      <div class="afford-calc">
+        <div class="calc-ttl">🧮 Rent Affordability Calculator</div>
+        <label class="calc-lbl">Your Monthly Gross Salary</label>
+        <div class="calc-wrap"><span class="calc-pfx">₦</span><input type="number" id="lpInp" placeholder="e.g. 250000" oninput="lpCalc()"/></div>
+        <div class="calc-res"><div class="calc-res-lbl">Your Recommended Max Rent</div><div class="calc-res-val" id="lpRes">₦0 <span>/month</span></div></div>
+        <div class="calc-note" id="lpNote">Enter your monthly salary to see your safe rental budget.</div>
+        <button class="btn-calc" onclick="go('search')">Search Listings Within My Budget →</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="testi-sec">
+    <div class="lp-in">
+      <div class="sec-tag">Testimonials</div>
+      <h2 class="sec-ttl">Workers who found their home with HomeBase</h2>
+      <p class="sec-sub" style="margin-bottom:40px">Real stories from real salary earners who stopped overpaying for rent.</p>
+    </div>
+    <div class="testi-grid" style="max-width:1100px;margin:0 auto">
+      <div class="testi-card"><div class="testi-stars">★★★★★</div><div class="testi-q">"Before HomeBase, I was spending 45% of my salary on rent. The calculator showed me exactly what I could afford and I found a great flat within a week."</div><div class="testi-auth"><div class="testi-av">👩</div><div><div class="testi-name">Adaeze Okonkwo</div><div class="testi-role">Civil Servant, Abuja</div></div></div></div>
+      <div class="testi-card"><div class="testi-stars">★★★★★</div><div class="testi-q">"The rent payment dashboard is a game changer. I get reminders 7 days before due date and my landlord is very happy with me!"</div><div class="testi-auth"><div class="testi-av">👨</div><div><div class="testi-name">Emeka Nwachukwu</div><div class="testi-role">Bank Officer, Lagos</div></div></div></div>
+      <div class="testi-card"><div class="testi-stars">★★★★★</div><div class="testi-q">"HomeBase filtered everything by my salary and showed me only what I could afford. Found my apartment in 3 days!"</div><div class="testi-auth"><div class="testi-av">👩</div><div><div class="testi-name">Funmilayo Adedeji</div><div class="testi-role">Nurse, Ibadan</div></div></div></div>
+    </div>
+  </section>
+
+  <section class="cta-sec">
+    <h2>Ready to find your affordable home?</h2>
+    <p>Join thousands of salary earners who have taken control of their housing and rent payments with HomeBase.</p>
+    <div class="cta-btns">
+      <button class="btn-cta-w" onclick="go('auth')">Create Free Account →</button>
+      <button class="btn-cta-g" onclick="go('search')">Browse Listings</button>
+    </div>
+  </section>
+
+  <footer>
+    <div class="ft-in">
+      <div><div class="ft-logo-row"><div class="ft-logo-ico">🏠</div><span class="ft-logo-name">HomeBase</span></div><p class="ft-brand-p">Affordable housing discovery and rent management built exclusively for Nigeria's 9–5 salary earners.</p></div>
+      <div class="ft-col"><h4>Product</h4><ul><li><a onclick="go('search')">Housing Search</a></li><li><a>Affordability Calculator</a></li><li><a onclick="go('dash')">Rent Dashboard</a></li><li><a>Notifications</a></li></ul></div>
+      <div class="ft-col"><h4>Company</h4><ul><li><a>About Us</a></li><li><a>How It Works</a></li><li><a>Blog</a></li><li><a>Contact</a></li></ul></div>
+      <div class="ft-col"><h4>Legal</h4><ul><li><a>Privacy Policy</a></li><li><a>Terms of Service</a></li><li><a>Cookie Policy</a></li><li><a>Support</a></li></ul></div>
+    </div>
+    <div class="ft-bot"><p>© 2026 HomeBase. All rights reserved.</p><div class="ft-bot-links"><a>Twitter</a><a>Instagram</a><a>LinkedIn</a></div></div>
+  </footer>
+</div>
+
+<!-- ═══════════════════════════════════
+     PAGE 2 — AUTH
+═══════════════════════════════════ -->
+<div class="pg" id="pg-auth">
+  <div class="auth-wrap">
+    <div class="auth-left">
+      <div class="al-brand"><div class="al-ico">🏠</div><span class="al-name">HomeBase</span></div>
+      <div class="al-hero">
+        <h1>Your <span>affordable home</span> is one search away.</h1>
+        <p>HomeBase helps 9–5 salary earners find housing that fits your salary and keeps your rent payments organised — all in one place.</p>
+      </div>
+      <div class="al-stats">
+        <div><div class="al-stat-num">12k+</div><div class="al-stat-lbl">Listings</div></div>
+        <div class="al-div"></div>
+        <div><div class="al-stat-num">8.4k</div><div class="al-stat-lbl">Housed</div></div>
+        <div class="al-div"></div>
+        <div><div class="al-stat-num">30%</div><div class="al-stat-lbl">Salary Rule</div></div>
+      </div>
+      <div class="al-cards">
+        <div class="al-card"><div class="al-card-ico">📍</div><div><div class="al-card-lbl">New Listing</div><div class="al-card-val">2-Bed · ₦85k/mo</div></div></div>
+        <div class="al-card"><div class="al-card-ico">✅</div><div><div class="al-card-lbl">Rent Paid</div><div class="al-card-val">June 2026</div></div></div>
+        <div class="al-card"><div class="al-card-ico">🔔</div><div><div class="al-card-lbl">Reminder</div><div class="al-card-val">Due in 3 days</div></div></div>
+      </div>
+    </div>
+    <div class="auth-right">
+      <div class="auth-form-wrap">
+        <div class="auth-tabs">
+          <div class="tab-sl" id="tabSl"></div>
+          <button class="tab-btn on" id="lgTab" onclick="switchTab('lg')">Sign In</button>
+          <button class="tab-btn" id="rgTab" onclick="switchTab('rg')">Create Account</button>
+        </div>
+        <!-- LOGIN -->
+        <div class="auth-panel on" id="lgPanel">
+          <h2 class="form-ttl">Welcome back 👋</h2>
+          <p class="form-sub">Sign in to your HomeBase account to continue your housing journey.</p>
+          <div class="field"><label>Email Address</label><div class="iw"><span class="ii">✉️</span><input type="email" id="lgEmail" placeholder="you@example.com"/></div><div class="emsg" id="lgEmailErr">Enter a valid email.</div></div>
+          <div class="field"><label>Password</label><div class="iw"><span class="ii">🔒</span><input type="password" id="lgPw" placeholder="Your password"/><button class="tpw" type="button" onclick="tglPw('lgPw',this)">👁️</button></div><div class="emsg" id="lgPwErr">Password required.</div></div>
+          <div class="forgot-row"><span class="forgot-lnk">Forgot password?</span></div>
+          <button class="btn-auth" id="lgBtn" onclick="doLogin()">Sign In to HomeBase</button>
+          <div class="divider"><span>or continue with</span></div>
+          <div class="soc-row">
+            <button class="btn-soc" onclick="gToast('Google sign-in coming soon!','')"><svg width="15" height="15" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Google</button>
+            <button class="btn-soc" onclick="gToast('Facebook sign-in coming soon!','')"><svg width="15" height="15" viewBox="0 0 24 24"><path fill="#1877F2" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>Facebook</button>
+          </div>
+        </div>
+        <!-- REGISTER -->
+        <div class="auth-panel" id="rgPanel">
+          <h2 class="form-ttl">Join HomeBase 🏡</h2>
+          <p class="form-sub">Create your free account and start finding housing that fits your salary.</p>
+          <span class="role-lbl">I am a:</span>
+          <div class="role-sel">
+            <button class="role-btn sel" id="roleTenant" onclick="selRole('tenant')"><span class="ri">👤</span><span class="rl">Tenant / Worker</span></button>
+            <button class="role-btn" id="roleLandlord" onclick="selRole('landlord')"><span class="ri">🏢</span><span class="rl">Landlord / Agent</span></button>
+          </div>
+          <div class="inp-row">
+            <div class="field"><label>First Name</label><div class="iw"><span class="ii">👤</span><input type="text" id="rgFirst" placeholder="John"/></div><div class="emsg" id="rgFirstErr">Required.</div></div>
+            <div class="field"><label>Last Name</label><div class="iw"><span class="ii">👤</span><input type="text" id="rgLast" placeholder="Doe"/></div><div class="emsg" id="rgLastErr">Required.</div></div>
+          </div>
+          <!-- Phone is PRIMARY for landlords -->
+          <div class="field"><label>Phone Number <span style="color:var(--orange);font-size:11px">(Primary contact — required)</span></label><div class="iw"><span class="ii">📱</span><input type="tel" id="rgPhone" placeholder="+234 801 234 5678"/></div><div class="emsg" id="rgPhoneErr">Phone number is required.</div></div>
+          <div class="field"><label>Email Address <span id="emailOptLabel" style="color:var(--gray);font-size:11px">(optional for landlords)</span></label><div class="iw"><span class="ii">✉️</span><input type="email" id="rgEmail" placeholder="you@example.com"/></div><div class="emsg" id="rgEmailErr">Enter a valid email.</div></div>
+          <div class="field"><label>Password</label><div class="iw"><span class="ii">🔒</span><input type="password" id="rgPw" placeholder="Create a strong password" oninput="chkStr(this.value)"/><button class="tpw" type="button" onclick="tglPw('rgPw',this)">👁️</button></div><div class="str-bar"><div class="str-seg" id="s1"></div><div class="str-seg" id="s2"></div><div class="str-seg" id="s3"></div><div class="str-seg" id="s4"></div></div><div class="str-txt" id="strTxt"></div><div class="emsg" id="rgPwErr">Min 8 characters.</div></div>
+          <div class="check-row"><input type="checkbox" id="agreeT"/><label for="agreeT">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a> of HomeBase.</label></div>
+          <button class="btn-auth" id="rgBtn" onclick="doReg()">Create My Account</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PAGE 3 — HOUSING SEARCH
+═══════════════════════════════════ -->
+<div class="pg" id="pg-search">
+  <div class="srch-wrap">
+    <aside class="sidebar" id="srchSidebar">
+      <div class="flt-hdr"><span class="flt-ttl">🔧 Filters</span><button class="flt-clr" onclick="clrFilters()">Clear all</button></div>
+      <div class="flt-grp">
+        <div class="flt-gt">My Monthly Salary</div>
+        <div class="inc-box"><label>Enter salary to set budget</label><div class="inc-w"><span class="inc-pfx">₦</span><input type="number" id="srchSalary" placeholder="e.g. 250,000" oninput="updBudget()"/></div><div class="inc-res" id="budgetRes">Max rent: <strong>—</strong></div></div>
+      </div>
+      <div class="div-ln"></div>
+      <div class="flt-grp">
+        <div class="flt-gt">Price Range (Monthly)</div>
+        <div class="range-w"><div class="range-v" id="priceRangeV">₦0 — ₦500,000</div><input type="range" id="maxPriceR" min="10000" max="500000" step="5000" value="500000" oninput="updRange(this.value)"/><div class="range-lr"><span>₦10k</span><span>₦500k</span></div></div>
+      </div>
+      <div class="div-ln"></div>
+      <div class="flt-grp">
+        <div class="flt-gt">Bedrooms</div>
+        <div class="pill-opts">
+          <button class="pill on" onclick="tglPill(this)">Any</button>
+          <button class="pill" onclick="tglPill(this)">Self-con</button>
+          <button class="pill" onclick="tglPill(this)">1 Bed</button>
+          <button class="pill" onclick="tglPill(this)">2 Beds</button>
+          <button class="pill" onclick="tglPill(this)">3 Beds</button>
+          <button class="pill" onclick="tglPill(this)">4+ Beds</button>
+        </div>
+      </div>
+      <div class="div-ln"></div>
+      <div class="flt-grp">
+        <div class="flt-gt">Property Type</div>
+        <div class="pill-opts">
+          <button class="pill on" onclick="tglPill(this)">All Types</button>
+          <button class="pill" onclick="tglPill(this)">Flat</button>
+          <button class="pill" onclick="tglPill(this)">Duplex</button>
+          <button class="pill" onclick="tglPill(this)">Self-Contain</button>
+          <button class="pill" onclick="tglPill(this)">Bungalow</button>
+        </div>
+      </div>
+      <div class="div-ln"></div>
+      <div class="flt-grp">
+        <div class="flt-gt">Location</div>
+        <div class="chk-opts">
+          <label class="chk-opt"><input type="checkbox" checked/><span>Lagos</span></label>
+          <label class="chk-opt"><input type="checkbox" checked/><span>Abuja</span></label>
+          <label class="chk-opt"><input type="checkbox"/><span>Port Harcourt</span></label>
+          <label class="chk-opt"><input type="checkbox"/><span>Ibadan</span></label>
+          <label class="chk-opt"><input type="checkbox"/><span>Kano</span></label>
+        </div>
+      </div>
+      <div class="div-ln"></div>
+      <div class="flt-grp">
+        <div class="flt-gt">Amenities</div>
+        <div class="chk-opts">
+          <label class="chk-opt"><input type="checkbox"/><span>🔌 24hr Power</span></label>
+          <label class="chk-opt"><input type="checkbox"/><span>💧 Running Water</span></label>
+          <label class="chk-opt"><input type="checkbox"/><span>🔒 Security / Gate</span></label>
+          <label class="chk-opt"><input type="checkbox"/><span>🚗 Car Parking</span></label>
+          <label class="chk-opt"><input type="checkbox"/><span>📶 Internet Ready</span></label>
+        </div>
+      </div>
+      <div class="div-ln"></div>
+      <button class="btn-apply" onclick="applyFlt()">Apply Filters</button>
+    </aside>
+    <main class="srch-main">
+      <div class="res-topbar">
+        <div><div class="res-cnt" id="resCnt">24 Properties Found</div><div class="res-sub">Showing listings in Lagos & Abuja</div></div>
+        <div class="tb-right">
+          <select class="sort-sel" onchange="sortProps(this.value)">
+            <option value="aff">Most Affordable</option>
+            <option value="asc">Price: Low to High</option>
+            <option value="desc">Price: High to Low</option>
+            <option value="new">Newest</option>
+          </select>
+          <div class="view-tog">
+            <button class="vbtn on" id="gridBtn" onclick="setView('grid')">⊞</button>
+            <button class="vbtn" id="listBtn" onclick="setView('list')">☰</button>
+          </div>
+        </div>
+      </div>
+      <div class="act-tags" id="actTags">
+        <div class="ftag">Lagos <button onclick="this.parentElement.remove()">×</button></div>
+        <div class="ftag">Abuja <button onclick="this.parentElement.remove()">×</button></div>
+        <div class="ftag">Under ₦500k <button onclick="this.parentElement.remove()">×</button></div>
+      </div>
+      <div class="prop-grid" id="propGrid"></div>
+      <div class="pag"><button class="pag-btn">‹</button><button class="pag-btn on">1</button><button class="pag-btn">2</button><button class="pag-btn">3</button><button class="pag-btn">›</button></div>
+    </main>
+  </div>
+  <button class="mob-flt-btn" onclick="document.getElementById('srchSidebar').classList.toggle('open')">🔧 Filters</button>
+</div>
+
+<!-- Property Modal -->
+<div class="pm-ov" id="pmOv" onclick="if(event.target===this)closePM()">
+  <div class="pm-modal">
+    <div class="pm-img" id="pmImg"><button class="pm-close" onclick="closePM()">✕</button></div>
+    <div class="pm-body">
+      <h2 class="pm-ttl" id="pmTtl"></h2>
+      <div class="pm-loc" id="pmLoc"></div>
+      <div class="pm-mg" id="pmMg"></div>
+      <div class="pm-st">About this property</div>
+      <div class="pm-desc" id="pmDesc"></div>
+      <div class="pm-st">Amenities</div>
+      <div class="pm-ams" id="pmAms"></div>
+      <div class="pm-pr-row"><div><div class="pm-pr-big" id="pmPrice"></div><div class="pm-pr-note">per month</div></div><div class="pm-aff-badge" id="pmBadge"></div></div>
+      <div class="pm-acts">
+        <button class="btn-pm-p" id="contactBtn" onclick="revealContact()">📞 Contact Landlord</button>
+        <button class="btn-pm-s" onclick="gToast('Saved to favourites ❤️','success')">♡ Save</button>
+      </div>
+      <div id="contactReveal" style="display:none;margin-top:14px;padding:16px;background:var(--orange-faint);border:1.5px solid var(--border);border-radius:12px">
+        <div style="font-size:12px;font-weight:600;color:var(--brown);margin-bottom:10px">📋 Landlord Contact Details</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:18px">📱</span>
+          <div>
+            <div style="font-size:11px;color:var(--gray)">Phone Number</div>
+            <div style="font-size:14px;font-weight:600;color:var(--dark)" id="landlordPhone">+234 801 234 5678</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <span style="font-size:18px">📍</span>
+          <div>
+            <div style="font-size:11px;color:var(--gray)">Property Address</div>
+            <div style="font-size:13px;font-weight:500;color:var(--dark)" id="landlordAddr">15 Admiralty Way, Lekki Phase 1, Lagos</div>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border);border-radius:9px;padding:12px">
+          <div style="font-size:11px;color:var(--orange);font-weight:600;margin-bottom:4px">⚠️ Important — Please Read</div>
+          <div style="font-size:11px;color:var(--mid);line-height:1.6">Visit the property <strong>in person</strong> before making any payment. Collect bank details <strong>directly from the landlord</strong> face-to-face. HomeBase never displays or handles bank account numbers for your security.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PAGE 4 — DASHBOARD
+═══════════════════════════════════ -->
+<div class="pg" id="pg-dash">
+  <div class="dash-wrap">
+    <aside class="dash-nav">
+      <div class="dn-menu">
+        <div class="dn-sec">Main</div>
+        <a class="dn-item" onclick="go('landing')"><span class="dn-ico">🏠</span>Home</a>
+        <a class="dn-item on"><span class="dn-ico">💳</span>Rent Payments</a>
+        <a class="dn-item" onclick="go('search')"><span class="dn-ico">🔍</span>Find Housing</a>
+        <a class="dn-item"><span class="dn-ico">📁</span>My Lease</a>
+        <div class="dn-sec">Manage</div>
+        <a class="dn-item"><span class="dn-ico">🔔</span>Reminders<span class="dn-badge">3</span></a>
+        <a class="dn-item"><span class="dn-ico">🧾</span>Receipts</a>
+        <a class="dn-item"><span class="dn-ico">📈</span>Reports</a>
+        <a class="dn-item"><span class="dn-ico">❤️</span>Saved Homes</a>
+        <div class="dn-sec">Account</div>
+        <a class="dn-item"><span class="dn-ico">⚙️</span>Settings</a>
+        <a class="dn-item" onclick="go('auth')"><span class="dn-ico">🚪</span>Sign Out</a>
+      </div>
+      <div class="dn-bot"><div class="dn-user"><div class="dn-av">👤</div><div><div class="dn-uname">Emeka Nwachukwu</div><div class="dn-urole">Bank Officer · Lagos</div></div></div></div>
+    </aside>
+    <div class="dash-main">
+      <div class="dash-topbar">
+        <div><div class="dt-title">Rent Payment Dashboard</div><div class="dt-sub">June 2026 · Lekki Phase 1, Lagos</div></div>
+        <div class="dt-right">
+          <div class="notif-btn" onclick="gToast('You have 3 unread notifications 🔔','')">🔔<div class="notif-dot"></div></div>
+          <button class="btn-record" onclick="openPayModal()">+ Record Payment</button>
+        </div>
+      </div>
+      <div class="dash-content">
+        <div class="sum-grid">
+          <div class="sum-card org-card"><div class="sc-top"><div class="sc-ico ic-w">💳</div><span class="sc-bdg sb-wt">On Track</span></div><div class="sc-lbl">Next Rent Due</div><div class="sc-val">₦85,000</div><div class="sc-hint">July 1, 2026 · 29 days left</div></div>
+          <div class="sum-card"><div class="sc-top"><div class="sc-ico ic-g">✅</div><span class="sc-bdg sb-up">All Paid</span></div><div class="sc-lbl">Payments This Year</div><div class="sc-val">6</div><div class="sc-hint">Jan – Jun 2026 on time</div></div>
+          <div class="sum-card"><div class="sc-top"><div class="sc-ico ic-o">💰</div><span class="sc-bdg sb-ok">30% ✓</span></div><div class="sc-lbl">Total Paid (2026)</div><div class="sc-val">₦510k</div><div class="sc-hint">January – June 2026</div></div>
+          <div class="sum-card"><div class="sc-top"><div class="sc-ico ic-g">🏆</div><span class="sc-bdg sb-up">Great!</span></div><div class="sc-lbl">Overdue Payments</div><div class="sc-val">0</div><div class="sc-hint">Perfect streak!</div></div>
+        </div>
+        <div class="two-col">
+          <div class="card"><div class="card-hd"><span class="ch-ttl">📋 Payment History</span><button class="ch-act" onclick="gToast('Downloading PDF... 🧾','success')">Export PDF</button></div><div style="overflow-x:auto"><table class="pay-tbl"><thead><tr><th>Month</th><th>Property</th><th>Amount</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody id="payBody"></tbody></table></div></div>
+          <div class="card"><div class="card-hd"><span class="ch-ttl">📅 Upcoming Dues</span><button class="ch-act" onclick="gToast('Reminder set! 🔔','success')">+ Reminder</button></div>
+            <div class="due-list">
+              <div class="due-item urg"><div class="due-ico">🚨</div><div class="due-info"><div class="due-ttl">Electricity Bill</div><div class="due-addr">Lekki, Lagos</div></div><div class="due-right"><div class="due-amt">₦8,500</div><div class="due-days dd-urg">Due in 2 days</div></div></div>
+              <div class="due-item sn"><div class="due-ico">⚠️</div><div class="due-info"><div class="due-ttl">Service Charge</div><div class="due-addr">Lekki, Lagos</div></div><div class="due-right"><div class="due-amt">₦12,000</div><div class="due-days dd-sn">Due in 7 days</div></div></div>
+              <div class="due-item ok"><div class="due-ico">💧</div><div class="due-info"><div class="due-ttl">Water Bill</div><div class="due-addr">Lekki, Lagos</div></div><div class="due-right"><div class="due-amt">₦3,200</div><div class="due-days dd-ok">Due in 15 days</div></div></div>
+              <div class="due-item ok"><div class="due-ico">🏠</div><div class="due-info"><div class="due-ttl">Monthly Rent</div><div class="due-addr">Lekki, Lagos</div></div><div class="due-right"><div class="due-amt">₦85,000</div><div class="due-days dd-ok">Due in 29 days</div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="three-col">
+          <div class="card"><div class="card-hd"><span class="ch-ttl">💡 Budget Overview</span><button class="ch-act">Edit</button></div>
+            <div class="bdg-body">
+              <div class="brow"><span class="blbl">Monthly Salary</span><span class="bval">₦283,333</span></div>
+              <div class="brow"><span class="blbl">Max Safe Rent (30%)</span><span class="bval" style="color:var(--orange)">₦85,000 ✓</span></div>
+              <div class="prog-track"><div class="prog-fill" style="width:30%"></div></div>
+              <div class="prog-note">You are spending exactly 30% of your salary on rent — within the safe affordability threshold.</div>
+              <div class="bb-list">
+                <div class="bb-row"><div class="bb-dot" style="background:var(--orange)"></div><div class="bb-lbl">Rent</div><div class="bb-val">₦85,000</div></div>
+                <div class="bb-row"><div class="bb-dot" style="background:var(--yellow)"></div><div class="bb-lbl">Electricity</div><div class="bb-val">₦8,500</div></div>
+                <div class="bb-row"><div class="bb-dot" style="background:var(--blue)"></div><div class="bb-lbl">Water</div><div class="bb-val">₦3,200</div></div>
+                <div class="bb-row"><div class="bb-dot" style="background:var(--green)"></div><div class="bb-lbl">Service Charge</div><div class="bb-val">₦12,000</div></div>
+                <div class="bb-row bb-tot"><div class="bb-dot" style="background:var(--dark)"></div><div class="bb-lbl">Total Housing</div><div class="bb-val">₦108,700</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card"><div class="card-hd"><span class="ch-ttl">📈 Payment Trend</span><span style="font-size:10px;color:var(--gray)">2026</span></div><div class="chart-body"><div class="chart-bars" id="chartBars"></div><div class="chart-legend"><div class="cl-item"><div class="cl-dot" style="background:var(--orange)"></div>Paid</div><div class="cl-item"><div class="cl-dot" style="background:var(--border)"></div>Upcoming</div></div></div></div>
+          <div class="card"><div class="card-hd"><span class="ch-ttl">🔔 Notifications</span><button class="ch-act" onclick="markRead()">Mark all read</button></div>
+            <div class="notif-body">
+              <div class="notif-item unread"><div class="ni-dot"></div><div><div class="ni-text"><strong>Rent reminder:</strong> ₦85,000 due in 29 days.</div><div class="ni-time">2 hours ago</div></div></div>
+              <div class="notif-item unread"><div class="ni-dot"></div><div><div class="ni-text"><strong>Electricity bill</strong> ₦8,500 due in 2 days!</div><div class="ni-time">5 hours ago</div></div></div>
+              <div class="notif-item unread"><div class="ni-dot"></div><div><div class="ni-text"><strong>June rent</strong> marked as paid. Receipt ready.</div><div class="ni-time">1 day ago</div></div></div>
+              <div class="notif-item"><div class="ni-dot read"></div><div><div class="ni-text">New listing in <strong>Surulere</strong> matches your salary budget.</div><div class="ni-time">3 days ago</div></div></div>
+              <div class="notif-item"><div class="ni-dot read"></div><div><div class="ni-text"><strong>May rent</strong> paid! 6-month streak 🎉</div><div class="ni-time">1 month ago</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pay Modal -->
+<div class="pay-modal-ov" id="payModalOv" onclick="if(event.target===this)closePayModal()">
+  <div class="pay-modal">
+    <div class="pay-modal-hd"><h3>💳 Record Rent Payment</h3><button class="pay-modal-x" onclick="closePayModal()">✕</button></div>
+    <div class="pay-modal-bd">
+      <!-- Info banner -->
+      <div style="background:var(--orange-faint);border:1.5px solid var(--border);border-radius:10px;padding:12px;display:flex;gap:10px;align-items:flex-start">
+        <span style="font-size:18px;flex-shrink:0">ℹ️</span>
+        <div style="font-size:11px;color:var(--mid);line-height:1.6">Your payment will be marked <strong>Pending Confirmation</strong> until your landlord verifies it. Make sure you have paid the landlord directly (cash or bank transfer) before logging it here.</div>
+      </div>
+      <div class="ff-row">
+        <div class="ff"><label>Payment Month</label><select><option>July 2026</option><option>August 2026</option></select></div>
+        <div class="ff"><label>Payment Type</label><select><option>Monthly Rent</option><option>Electricity Bill</option><option>Water Bill</option><option>Service Charge</option></select></div>
+      </div>
+      <div class="ff"><label>Property / Address</label><input type="text" value="Modern 2-Bedroom Flat, Lekki Phase 1"/></div>
+      <div class="ff-row">
+        <div class="ff"><label>Amount (₦)</label><input type="number" placeholder="e.g. 85000"/></div>
+        <div class="ff"><label>Date Paid</label><input type="date" id="payDate"/></div>
+      </div>
+      <div class="ff"><label>Payment Method</label><select><option>Bank Transfer</option><option>Cash</option><option>POS</option></select></div>
+      <div class="ff"><label>Reference No. (optional)</label><input type="text" placeholder="e.g. TRF2026070185 or Teller No."/></div>
+      <div class="ff"><label>Notes (optional)</label><textarea rows="2" placeholder="e.g. Paid at Access Bank Lekki branch"></textarea></div>
+      <div style="background:var(--yellow-bg);border:1px solid var(--yellow);border-radius:9px;padding:10px 12px;font-size:11px;color:#7a5500">
+        ⏳ <strong>Status after submission:</strong> Pending — your landlord will confirm or reject this payment claim.
+      </div>
+    </div>
+    <div class="pay-modal-ft"><button class="btn-cancel-pay" onclick="closePayModal()">Cancel</button><button class="btn-save-pay" onclick="savePay()">Submit Payment Claim</button></div>
+  </div>
+</div>
+
+<script>
+// ── PAGE ROUTER ──────────────────────────────────────
+function go(p){
+  document.querySelectorAll('.pg').forEach(x=>x.classList.remove('on'));
+  document.getElementById('pg-'+p).classList.add('on');
+  window.scrollTo(0,0);
+  document.getElementById('mobMenu').classList.remove('open');
+  if(p==='search') setTimeout(renderProps,80);
+  if(p==='dash') setTimeout(()=>{renderPayTable();renderChart();},80);
+}
+window.addEventListener('scroll',()=>document.getElementById('mainNav').classList.toggle('scrolled',window.scrollY>10));
+
+// ── TOAST ─────────────────────────────────────────────
+function gToast(msg,type){
+  const t=document.getElementById('gToast');
+  t.textContent=msg;t.className='toast '+(type||'');t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+// ── LANDING CALC ──────────────────────────────────────
+function lpCalc(){
+  const v=parseFloat(document.getElementById('lpInp').value)||0;
+  const mx=v*0.3;
+  document.getElementById('lpRes').innerHTML=v>0?'₦'+mx.toLocaleString('en-NG',{maximumFractionDigits:0})+' <span>/month</span>':'₦0 <span>/month</span>';
+  document.getElementById('lpNote').textContent=v>0?`Based on your salary of ₦${v.toLocaleString('en-NG')}/month, spend no more than ₦${mx.toLocaleString('en-NG')} on rent.`:'Enter your monthly salary to see your safe rental budget.';
+}
+
+// ── AUTH ──────────────────────────────────────────────
+function switchTab(t){
+  const sl=document.getElementById('tabSl');
+  document.getElementById('lgPanel').classList.toggle('on',t==='lg');
+  document.getElementById('rgPanel').classList.toggle('on',t==='rg');
+  document.getElementById('lgTab').classList.toggle('on',t==='lg');
+  document.getElementById('rgTab').classList.toggle('on',t==='rg');
+  sl.classList.toggle('reg',t==='rg');
+}
+function selRole(r){
+  document.getElementById('roleTenant').classList.toggle('sel',r==='tenant');
+  document.getElementById('roleLandlord').classList.toggle('sel',r==='landlord');
+  const lbl = document.getElementById('emailOptLabel');
+  if(lbl) lbl.style.display = r==='landlord' ? 'inline' : 'none';
+}
+function tglPw(id,btn){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';btn.textContent=i.type==='password'?'👁️':'🙈'}
+function chkStr(v){
+  const segs=['s1','s2','s3','s4'].map(s=>document.getElementById(s));
+  const txt=document.getElementById('strTxt');
+  segs.forEach(s=>s.className='str-seg');
+  let sc=0;if(v.length>=8)sc++;if(/[A-Z]/.test(v))sc++;if(/[0-9]/.test(v))sc++;if(/[^A-Za-z0-9]/.test(v))sc++;
+  const cls=['','weak','fair','strong','strong'],lbl=['','Weak','Fair','Good','Strong'];
+  for(let i=0;i<sc;i++)segs[i].classList.add(cls[sc]);
+  txt.textContent=v.length?lbl[sc]:'';
+}
+function valEmail(e){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)}
+async function doLogin(){
+  const e=document.getElementById('lgEmail').value.trim(), p=document.getElementById('lgPw').value;
+  document.getElementById('lgEmailErr').classList.remove('on');
+  document.getElementById('lgPwErr').classList.remove('on');
+  let ok=true;
+  if(!e){document.getElementById('lgEmailErr').classList.add('on');ok=false;}
+  if(!p){document.getElementById('lgPwErr').classList.add('on');ok=false;}
+  if(!ok)return;
+  const btn=document.getElementById('lgBtn');
+  btn.classList.add('loading');btn.textContent='Signing in…';
+  try {
+    const res  = await fetch(API + '/auth/login',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({identifier:e, password:p})
+    });
+    const data = await res.json();
+    if(data.success){
+      localStorage.setItem('hb_token', data.token);
+      localStorage.setItem('hb_user',  JSON.stringify(data.user));
+      gToast('Welcome back, '+data.user.first_name+'! 👋','success');
+      setTimeout(()=>{
+        if(data.user.role==='admin')       window.location.href='HomeBase_Admin.html';
+        else if(data.user.role==='landlord') window.location.href='HomeBase_Landlord.html';
+        else                                 window.location.href='HomeBase_Tenant.html';
+      },900);
+    } else {
+      gToast(data.message||'Invalid credentials','danger');
+    }
+  } catch(err){
+    // Demo fallback — backend not running
+    gToast('Demo mode: Redirecting to Tenant Dashboard...','success');
+    localStorage.setItem('hb_token','demo_token');
+    localStorage.setItem('hb_user', JSON.stringify({first_name:'Emeka',last_name:'Nwachukwu',role:'tenant',phone_number:'+234 801 234 5678',email:e}));
+    setTimeout(()=>window.location.href='HomeBase_Tenant.html', 900);
+  } finally {
+    btn.classList.remove('loading');btn.textContent='Sign In to HomeBase';
+  }
+}
+async function doReg(){
+  const f=document.getElementById('rgFirst').value.trim(), l=document.getElementById('rgLast').value.trim();
+  const ph=document.getElementById('rgPhone').value.trim();
+  const e=document.getElementById('rgEmail').value.trim(), p=document.getElementById('rgPw').value;
+  const ag=document.getElementById('agreeT').checked;
+  const isLandlord=document.getElementById('roleLandlord').classList.contains('sel');
+  ['rgFirstErr','rgLastErr','rgEmailErr','rgPwErr','rgPhoneErr'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('on');});
+  let ok=true;
+  if(!f){document.getElementById('rgFirstErr').classList.add('on');ok=false;}
+  if(!l){document.getElementById('rgLastErr').classList.add('on');ok=false;}
+  if(!ph){const el=document.getElementById('rgPhoneErr');if(el)el.classList.add('on');ok=false;}
+  if(!isLandlord && !valEmail(e)){document.getElementById('rgEmailErr').classList.add('on');ok=false;}
+  if(p.length<8){document.getElementById('rgPwErr').classList.add('on');ok=false;}
+  if(!ag){gToast('Please agree to the Terms of Service','danger');ok=false;}
+  if(!ok)return;
+  const btn=document.getElementById('rgBtn');
+  btn.classList.add('loading');btn.textContent='Creating account…';
+  const role = isLandlord ? 'landlord' : 'tenant';
+  try {
+    const res  = await fetch(API + '/auth/register',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({first_name:f, last_name:l, phone_number:ph, email:e||null, password:p, role})
+    });
+    const data = await res.json();
+    if(data.success){
+      localStorage.setItem('hb_token', data.token);
+      localStorage.setItem('hb_user',  JSON.stringify(data.user));
+      gToast('Account created! Welcome to HomeBase 🎉','success');
+      setTimeout(()=>{
+        if(role==='landlord') window.location.href='HomeBase_Landlord.html';
+        else                  window.location.href='HomeBase_Tenant.html';
+      },900);
+    } else {
+      gToast(data.message||'Registration failed. Try again.','danger');
+    }
+  } catch(err){
+    // Demo fallback
+    gToast('Demo mode: Account created! 🎉','success');
+    localStorage.setItem('hb_token','demo_token');
+    localStorage.setItem('hb_user', JSON.stringify({first_name:f,last_name:l,role,phone_number:ph,email:e}));
+    setTimeout(()=>{
+      if(role==='landlord') window.location.href='HomeBase_Landlord.html';
+      else                  window.location.href='HomeBase_Tenant.html';
+    }, 900);
+  } finally {
+    btn.classList.remove('loading');btn.textContent='Create My Account';
+  }
+}
+
+// ── SEARCH PAGE ───────────────────────────────────────
+const PROPS=[
+  {id:1,e:'🏠',t:'Modern 2-Bedroom Flat',loc:'Lekki Phase 1, Lagos',p:85000,beds:2,baths:1,sz:65,type:'Flat',tag:'Affordable',tc:'bg-grn',desc:'A well-maintained 2-bedroom flat in Lekki Phase 1. Large windows, tiled floors, functional kitchen. Close to banks, markets, and bus stops.',am:['24hr Power','Running Water','Security','Car Parking']},
+  {id:2,e:'🏡',t:'Cosy Self-Contain Room',loc:'Surulere, Lagos',p:35000,beds:0,baths:1,sz:25,type:'Self-Contain',tag:'Best Value',tc:'bg-grn',desc:'A compact affordable self-contain room perfect for single salary earners. Clean, secure compound with reliable water supply.',am:['Running Water','Security']},
+  {id:3,e:'🏢',t:'Spacious 3-Bedroom Duplex',loc:'Maitama, Abuja',p:180000,beds:3,baths:2,sz:120,type:'Duplex',tag:'New Listing',tc:'bg-org',desc:'An executive 3-bedroom duplex in the prestigious Maitama district. Fully tiled, fitted kitchen, expansive living area.',am:['24hr Power','Running Water','Security','Car Parking','Furnished','Internet']},
+  {id:4,e:'🏠',t:'1-Bedroom Flat with Parking',loc:'Yaba, Lagos',p:55000,beds:1,baths:1,sz:40,type:'Flat',tag:'Affordable',tc:'bg-grn',desc:'A clean 1-bedroom flat in lively Yaba. Close to university, hospitals, and tech hubs. Private bathroom, kitchen, and allocated parking.',am:['Running Water','Car Parking','Security']},
+  {id:5,e:'🏘',t:'Room & Parlour — Workers Special',loc:'Kubwa, Abuja',p:28000,beds:1,baths:1,sz:30,type:'Room & Parlour',tag:'Workers Special',tc:'bg-brn',desc:'Specifically offered for civil servants and salary earners. Very close to the FCT civil service secretariat.',am:['Running Water','Security']},
+  {id:6,e:'🏗',t:'Modern Studio Apartment',loc:'Victoria Island, Lagos',p:130000,beds:0,baths:1,sz:35,type:'Self-Contain',tag:'New Listing',tc:'bg-org',desc:'A brand new studio apartment on Victoria Island with contemporary finishes, air conditioning, and a rooftop common area.',am:['24hr Power','Running Water','Security','Car Parking','Furnished','Internet']},
+  {id:7,e:'🏠',t:'2-Bedroom Bungalow with Garden',loc:'Bodija, Ibadan',p:42000,beds:2,baths:1,sz:70,type:'Bungalow',tag:'Affordable',tc:'bg-grn',desc:'A charming 2-bedroom bungalow with a small garden in quiet Bodija. Perfect for young families with flexible payment options.',am:['Running Water','Security','Car Parking']},
+  {id:8,e:'🏢',t:'Executive 1-Bedroom Serviced Flat',loc:'Wuse 2, Abuja',p:95000,beds:1,baths:1,sz:50,type:'Flat',tag:'Popular',tc:'bg-brn',desc:'A fully serviced 1-bedroom flat in Wuse 2 with 24-hour electricity, daily cleaning, and high-speed internet included.',am:['24hr Power','Running Water','Security','Car Parking','Furnished','Internet']},
+  {id:9,e:'🏡',t:'3-Bedroom Terrace House',loc:'Gwarinpa, Abuja',p:120000,beds:3,baths:2,sz:95,type:'Duplex',tag:'Affordable',tc:'bg-grn',desc:'A well-structured 3-bedroom terrace house in Gwarinpa estate. Good roads, functional drainage, and a family-friendly environment.',am:['Running Water','Security','Car Parking']},
+  {id:10,e:'🏠',t:'Mini Flat — Single Worker Friendly',loc:'Ikeja, Lagos',p:48000,beds:1,baths:1,sz:32,type:'Flat',tag:'Best Value',tc:'bg-grn',desc:'A neatly finished mini flat ideal for single salary earners in Ikeja. Minutes from the airport and major bus routes.',am:['Running Water','Security','24hr Power']},
+  {id:11,e:'🏗',t:'Luxury 4-Bedroom Duplex',loc:'Banana Island, Lagos',p:450000,beds:4,baths:3,sz:200,type:'Duplex',tag:'New Listing',tc:'bg-org',desc:'A stunning luxury duplex on Banana Island with high-end finishes, private pool, and panoramic views of Lagos lagoon.',am:['24hr Power','Running Water','Security','Car Parking','Furnished','Internet']},
+  {id:12,e:'🏘',t:'2-Bedroom Flat Near Market',loc:'Enugu State',p:22000,beds:2,baths:1,sz:55,type:'Flat',tag:'Budget Pick',tc:'bg-grn',desc:'An affordable 2-bedroom flat in Enugu close to Ogbete market. Suited for market workers and salary earners.',am:['Running Water','Security']},
+];
+const fn=n=>'₦'+n.toLocaleString('en-NG');
+let srchBudget=0,savedIds=new Set();
+function updBudget(){const v=parseFloat(document.getElementById('srchSalary').value)||0;srchBudget=v*0.3;document.getElementById('budgetRes').innerHTML=v>0?'Max rent: <strong>'+fn(srchBudget)+'/mo</strong>':'Max rent: <strong>—</strong>';}
+function updRange(v){document.getElementById('priceRangeV').textContent='₦0 — '+fn(parseInt(v));}
+function tglPill(el){const p=el.closest('.pill-opts');p.querySelectorAll('.pill').forEach(x=>x.classList.remove('on'));el.classList.add('on');}
+function clrFilters(){document.getElementById('srchSalary').value='';document.getElementById('budgetRes').innerHTML='Max rent: <strong>—</strong>';srchBudget=0;document.getElementById('maxPriceR').value=500000;document.getElementById('priceRangeV').textContent='₦0 — ₦500,000';renderProps(PROPS);gToast('Filters cleared','');}
+async function applyFlt(){
+  const mx=parseInt(document.getElementById('maxPriceR').value);
+  const city=document.querySelector('.chk-opts input:checked+span')?.textContent||'';
+  try {
+    let url=API + '/properties?';
+    if(mx) url+=`max_price=${mx}&`;
+    if(city) url+=`city=${city}&`;
+    const res=await fetch(url);
+    const data=await res.json();
+    if(data.success && data.data.length){
+      const mapped=data.data.map(p=>({
+        id:p.property_id, e:'🏠', t:p.title, loc:`${p.city}, ${p.state}`,
+        p:parseFloat(p.monthly_rent), beds:p.bedrooms, baths:p.bathrooms,
+        sz:p.size_sqm||50, type:p.property_type, tag:'Live', tc:'bg-grn',
+        desc:p.description||'A great property in a good location.',
+        am:p.amenities||[]
+      }));
+      renderProps(mapped);
+      document.getElementById('resCnt').textContent=mapped.length+' Properties Found';
+      gToast('Filters applied — '+mapped.length+' results','success');
+      return;
+    }
+  } catch(err){ console.warn('API not available — using local data'); }
+  // Fallback to local data
+  let f=PROPS.filter(p=>p.p<=mx);
+  if(srchBudget>0)f.sort((a,b)=>(b.p<=srchBudget)-(a.p<=srchBudget));
+  renderProps(f);
+  document.getElementById('resCnt').textContent=f.length+' Properties Found';
+  gToast('Filters applied — '+f.length+' results','success');
+  if(window.innerWidth<=768)document.getElementById('srchSidebar').classList.remove('open');
+}
+function sortProps(v){let s=[...PROPS];if(v==='asc')s.sort((a,b)=>a.p-b.p);else if(v==='desc')s.sort((a,b)=>b.p-a.p);else if(v==='new')s.sort((a,b)=>b.id-a.id);else s.sort((a,b)=>a.p-b.p);renderProps(s);}
+function setView(v){const g=document.getElementById('propGrid');g.classList.toggle('lv',v==='list');document.getElementById('gridBtn').classList.toggle('on',v==='grid');document.getElementById('listBtn').classList.toggle('on',v==='list');}
+function renderProps(arr){
+  arr=arr||PROPS;const g=document.getElementById('propGrid');if(!g)return;g.innerHTML='';
+  if(!arr.length){g.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px 20px"><div style="font-size:56px;margin-bottom:14px">🔍</div><div style="font-size:18px;font-weight:600">No properties found</div><div style="font-size:13px;color:var(--gray);margin-top:6px">Try adjusting your filters</div></div>';return;}
+  arr.forEach((p,i)=>{
+    const isA=srchBudget>0&&p.p<=srchBudget,isO=srchBudget>0&&p.p>srchBudget;
+    const pct=srchBudget>0?Math.round((p.p/(srchBudget/0.3))*100):null;
+    const sv=savedIds.has(p.id);
+    const c=document.createElement('div');c.className='prop-card';c.style.animationDelay=(i*0.05)+'s';c.onclick=()=>openPM(p);
+    c.innerHTML=`<div class="prop-img"><span>${p.e}</span><div class="prop-bgs"><span class="badge ${p.tc}">${p.tag}</span></div><button class="prop-save-btn${sv?' saved':''}" onclick="event.stopPropagation();tglSave(${p.id},this)">${sv?'❤️':'♡'}</button></div>${isA?`<div class="aff-strip ok">✓ Within your salary budget (${pct}% of salary)</div>`:isO?`<div class="aff-strip ov">⚠ Over your salary budget</div>`:''}<div class="prop-body"><div class="prop-loc">📍 ${p.loc}</div><div class="prop-ttl">${p.t}</div><div class="prop-meta"><div class="prop-mi">🛏 ${p.beds===0?'Studio':p.beds+' Bed'+(p.beds>1?'s':'')}</div><div class="prop-mi">🚿 ${p.baths} Bath</div><div class="prop-mi">📐 ${p.sz} m²</div><div class="prop-mi">🏷 ${p.type}</div></div><div class="prop-ft"><div><div class="prop-pm">${fn(p.p)}</div><div class="prop-ps">per month</div></div><button class="btn-view" onclick="event.stopPropagation();openPM(window['_pd${p.id}'])">View Details</button></div></div>`;
+    window['_pd'+p.id]=p;g.appendChild(c);
+  });
+}
+function tglSave(id,btn){if(savedIds.has(id)){savedIds.delete(id);btn.textContent='♡';gToast('Removed from favourites','');}else{savedIds.add(id);btn.textContent='❤️';gToast('Saved to favourites ❤️','success');}}
+function openPM(p){
+  window._currentPropId = p.id;
+  document.getElementById('pmImg').innerHTML=`<span style="font-size:74px">${p.e}</span><button class="pm-close" onclick="closePM()">✕</button>`;
+  document.getElementById('pmTtl').textContent=p.t;
+  document.getElementById('pmLoc').innerHTML='📍 '+p.loc;
+  document.getElementById('pmMg').innerHTML=`<div class="pm-mi"><div class="pm-mi-ico">🛏</div><div class="pm-mi-lbl">Bedrooms</div><div class="pm-mi-val">${p.beds===0?'Studio':p.beds}</div></div><div class="pm-mi"><div class="pm-mi-ico">🚿</div><div class="pm-mi-lbl">Bathrooms</div><div class="pm-mi-val">${p.baths}</div></div><div class="pm-mi"><div class="pm-mi-ico">📐</div><div class="pm-mi-lbl">Size</div><div class="pm-mi-val">${p.sz} m²</div></div><div class="pm-mi"><div class="pm-mi-ico">🏷</div><div class="pm-mi-lbl">Type</div><div class="pm-mi-val">${p.type}</div></div>`;
+  document.getElementById('pmDesc').textContent=p.desc;
+  document.getElementById('pmAms').innerHTML=p.am.map(a=>`<span class="am-tag">${a}</span>`).join('');
+  document.getElementById('pmPrice').textContent=fn(p.p);
+  const b=document.getElementById('pmBadge');
+  if(srchBudget>0){b.textContent=p.p<=srchBudget?'✓ Within salary budget':'⚠ Over salary budget';b.className='pm-aff-badge '+(p.p<=srchBudget?'good':'over');}else{b.textContent='';b.className='';}
+  document.getElementById('pmOv').classList.add('open');document.body.style.overflow='hidden';
+}
+function closePM(){
+  document.getElementById('pmOv').classList.remove('open');
+  document.body.style.overflow='';
+  const panel=document.getElementById('contactReveal');
+  const btn=document.getElementById('contactBtn');
+  if(panel){panel.style.display='none';}
+  if(btn){btn.textContent='📞 Contact Landlord';btn.style.background='';}
+}
+
+// ── DASHBOARD ─────────────────────────────────────────
+const pays=[
+  {mo:'June 2026',addr:'Lekki, Lagos',amt:85000,date:'Jun 1, 2026',st:'confirmed'},
+  {mo:'May 2026',addr:'Lekki, Lagos',amt:85000,date:'May 1, 2026',st:'confirmed'},
+  {mo:'Apr 2026',addr:'Lekki, Lagos',amt:85000,date:'Apr 2, 2026',st:'confirmed'},
+  {mo:'Mar 2026',addr:'Lekki, Lagos',amt:85000,date:'Mar 1, 2026',st:'confirmed'},
+  {mo:'Feb 2026',addr:'Lekki, Lagos',amt:85000,date:'Feb 1, 2026',st:'confirmed'},
+  {mo:'Jan 2026',addr:'Lekki, Lagos',amt:85000,date:'Jan 2, 2026',st:'confirmed'},
+  {mo:'Jul 2026',addr:'Lekki, Lagos',amt:85000,date:'—',st:'pending'},
+];
+function renderPayTable(){
+  const b=document.getElementById('payBody');if(!b)return;b.innerHTML='';
+  pays.forEach(p=>{
+    const sc=p.st==='confirmed'?'s-paid':p.st==='pending'?'s-pend':p.st==='rejected'?'s-over':'s-over';
+    const st=p.st==='confirmed'?'✓ Confirmed':p.st==='pending'?'⏳ Awaiting Landlord':p.st==='rejected'?'✗ Rejected':'⚠ Overdue';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><span class="pay-mo">${p.mo}</span></td><td><div class="pc-d"><div class="pc-av">🏠</div><div style="font-size:11px">${p.addr}</div></div></td><td style="font-weight:600;color:var(--dark)">₦${p.amt.toLocaleString()}</td><td>${p.date}</td><td><span class="sbadge ${sc}">${st}</span></td><td><div class="act-row"><button class="bsm bsm-o" onclick="gToast('Downloading receipt for ${p.mo} 🧾','success')">Receipt</button><button class="bsm bsm-g" onclick="gToast('Viewing ${p.mo}','')">View</button></div></td>`;
+    b.appendChild(tr);
+  });
+}
+function renderChart(){
+  const mos=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const paid=[85,85,85,85,85,85,0,0,0,0,0,0];
+  const c=document.getElementById('chartBars');if(!c)return;c.innerHTML='';
+  mos.forEach((m,i)=>{const p=paid[i]>0;const h=p?(paid[i]/100)*100:22;const col=document.createElement('div');col.className='chart-col';col.innerHTML=`<div class="chart-bar" style="height:${h}%;background:${p?'var(--orange)':'var(--border)'};min-height:6px" data-tip="${p?'₦'+paid[i]+'k':'Upcoming'}"></div><span class="chart-mo">${m}</span>`;c.appendChild(col);});
+}
+function openPayModal(){document.getElementById('payDate').value=new Date().toISOString().split('T')[0];document.getElementById('payModalOv').classList.add('open');document.body.style.overflow='hidden';}
+function closePayModal(){document.getElementById('payModalOv').classList.remove('open');document.body.style.overflow='';}
+function savePay(){closePayModal();pays.unshift({mo:'July 2026',addr:'Lekki, Lagos',amt:85000,date:'Jul 1, 2026',st:'paid'});renderPayTable();gToast('Payment recorded successfully! ✅','success');}
+function markRead(){document.querySelectorAll('.notif-item').forEach(n=>{n.classList.remove('unread');const d=n.querySelector('.ni-dot');if(d)d.className='ni-dot read';});gToast('All notifications marked as read','');}
+
+// ── CONTACT REVEAL ───────────────────────────────────
+async function revealContact() {
+  const panel = document.getElementById('contactReveal');
+  const btn   = document.getElementById('contactBtn');
+  if (panel.style.display === 'none' || panel.style.display === '') {
+    panel.style.display = 'block';
+    btn.textContent = '✕ Hide Contact Details';
+    btn.style.background = 'var(--mid)';
+    gToast('Landlord contact details revealed. Visit in person before paying! 🔒', 'success');
+    // Log the reveal to backend if user is logged in
+    const token = localStorage.getItem('hb_token');
+    if(token && window._currentPropId) {
+      try {
+        const res = await fetch(`" + API + "/properties/${window._currentPropId}/contact`,{
+          method:'POST', headers:{Authorization:`Bearer ${token}`}
+        });
+        const data = await res.json();
+        if(data.success && data.data){
+          document.getElementById('landlordPhone').textContent = data.data.landlord_phone || '+234 801 234 5678';
+          document.getElementById('landlordAddr').textContent  = data.data.full_address   || '—';
+        }
+      } catch(err){ console.warn('Contact log failed — using demo data'); }
+    }
+  } else {
+    panel.style.display = 'none';
+    btn.textContent = '📞 Contact Landlord';
+    btn.style.background = '';
+  }
+}
+
+// ── NAV AUTH STATE ───────────────────────────────────
+function checkNavAuth(){
+  const user = JSON.parse(localStorage.getItem('hb_user')||'{}');
+  const acts = document.getElementById('navActs');
+  if(user && user.first_name && acts){
+    acts.innerHTML = `
+      <span style="font-size:13px;font-weight:500;color:var(--mid)">👤 ${user.first_name}</span>
+      <button class="btn-solid" onclick="goToDashboard()">My Dashboard</button>
+      <button class="btn-out" onclick="doLogout()">Sign Out</button>`;
+  }
+}
+function goToDashboard(){
+  const user = JSON.parse(localStorage.getItem('hb_user')||'{}');
+  if(user.role==='admin')         window.location.href='HomeBase_Admin.html';
+  else if(user.role==='landlord') window.location.href='HomeBase_Landlord.html';
+  else                            window.location.href='HomeBase_Tenant.html';
+}
+function doLogout(){
+  localStorage.removeItem('hb_token');
+  localStorage.removeItem('hb_user');
+  go('landing');
+  checkNavAuth();
+  gToast('Signed out successfully','');
+}
+
+// ── INIT ──────────────────────────────────────────────
+renderProps();
+checkNavAuth();
+</script>
+</body>
+</html>

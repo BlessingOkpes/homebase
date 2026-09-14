@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+// Auto-detect API URL — works locally and on Render
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000/api'
+  : window.location.origin + '/api';
+</script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HomeBase — Landlord Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --orange:#E8600A;--orange-mid:#F07A2A;--orange-light:#F9A05A;
+  --orange-pale:#FEF0E6;--orange-faint:#FFF8F3;
+  --brown:#7A3000;--brown-mid:#A84400;
+  --white:#FFFFFF;--offwhite:#FFFAF6;
+  --gray:#9A8070;--border:#F0D5C0;--dark:#2D1500;--mid:#6B4030;
+  --green:#2E9E6B;--green-bg:#D4F4E4;
+  --blue:#1E4DA1;--blue-bg:#E8F0FE;
+  --red:#D94F4F;--red-bg:#FDE8E8;
+  --yellow:#F0A500;--yellow-bg:#FEF3D0;
+  --side:240px;
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);background:var(--offwhite);overflow-x:hidden}
+
+/* ── SIDEBAR ── */
+.sidenav{width:var(--side);min-width:var(--side);
+  background:linear-gradient(180deg,var(--brown) 0%,var(--dark) 100%);
+  height:100vh;position:fixed;top:0;left:0;
+  display:flex;flex-direction:column;z-index:100;transition:left .3s}
+.sn-brand{padding:22px 18px;display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid rgba(255,255,255,.1);text-decoration:none}
+.sn-logo{width:36px;height:36px;background:linear-gradient(135deg,var(--orange),var(--orange-light));
+  border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px}
+.sn-name{font-family:'Playfair Display',serif;font-size:20px;color:#fff}
+.sn-badge{background:var(--green);color:#fff;font-size:9px;font-weight:700;
+  padding:2px 7px;border-radius:4px;margin-left:auto}
+.sn-menu{flex:1;padding:18px 10px;display:flex;flex-direction:column;gap:3px;overflow-y:auto}
+.sn-sec{font-size:9px;font-weight:600;color:rgba(255,255,255,.3);
+  text-transform:uppercase;letter-spacing:1px;padding:12px 12px 4px}
+.sn-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;
+  font-size:13px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;
+  text-decoration:none;transition:all .2s}
+.sn-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.sn-item.active{background:rgba(232,96,10,.3);color:#fff;font-weight:600;
+  border-left:3px solid var(--orange)}
+.sn-ico{font-size:16px;width:19px;text-align:center;flex-shrink:0}
+.sn-cnt{margin-left:auto;background:var(--red);color:#fff;font-size:9px;
+  font-weight:700;padding:1px 6px;border-radius:50px}
+.sn-cnt.grn{background:var(--green)}.sn-cnt.org{background:var(--orange)}
+.sn-bottom{padding:12px 10px;border-top:1px solid rgba(255,255,255,.1)}
+.sn-user{display:flex;align-items:center;gap:9px;padding:9px 11px;
+  border-radius:8px;background:rgba(255,255,255,.07)}
+.sn-av{width:34px;height:34px;border-radius:50%;
+  background:linear-gradient(135deg,var(--orange-light),var(--orange-mid));
+  display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.sn-uname{font-size:12px;font-weight:600;color:#fff}
+.sn-urole{font-size:10px;color:rgba(255,255,255,.45);margin-top:1px}
+
+/* ── MAIN ── */
+.main{margin-left:var(--side);min-height:100vh;display:flex;flex-direction:column}
+
+/* ── TOPBAR ── */
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;height:62px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50;box-shadow:0 2px 10px rgba(232,96,10,.05)}
+.tb-left{display:flex;align-items:center;gap:14px}
+.hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px}
+.hamburger span{width:22px;height:2px;background:var(--brown);border-radius:2px}
+.tb-title{font-size:16px;font-weight:600;color:var(--dark)}
+.tb-sub{font-size:11px;color:var(--gray)}
+.tb-right{display:flex;align-items:center;gap:10px}
+.tb-notif{width:36px;height:36px;border-radius:9px;background:var(--offwhite);
+  border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;position:relative;transition:background .2s}
+.tb-notif:hover{background:var(--orange-pale)}
+.nb-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;
+  background:var(--red);border-radius:50%;border:2px solid #fff}
+.btn-add-prop{padding:9px 16px;border:none;border-radius:9px;
+  background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;
+  box-shadow:0 3px 12px rgba(232,96,10,.25);transition:transform .2s,box-shadow .2s;
+  display:flex;align-items:center;gap:6px}
+.btn-add-prop:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(232,96,10,.35)}
+
+/* ── CONTENT ── */
+.content{padding:24px;flex:1}
+
+/* ── STAT CARDS ── */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:#fff;border-radius:14px;padding:20px;border:1.5px solid var(--border);
+  display:flex;flex-direction:column;gap:11px;transition:transform .2s,box-shadow .2s}
+.stat-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(232,96,10,.08)}
+.stat-card.org{background:linear-gradient(145deg,var(--orange),var(--orange-mid));border-color:transparent}
+.sc-top{display:flex;align-items:center;justify-content:space-between}
+.sc-ico{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:19px}
+.i-o{background:var(--orange-pale)}.i-g{background:var(--green-bg)}.i-b{background:var(--blue-bg)}.i-r{background:var(--red-bg)}.i-w{background:rgba(255,255,255,.2)}
+.sc-bd{font-size:10px;font-weight:600;padding:3px 8px;border-radius:50px}
+.bd-up{background:var(--green-bg);color:var(--green)}.bd-ok{background:var(--orange-pale);color:var(--orange)}
+.bd-dn{background:var(--red-bg);color:var(--red)}.bd-wt{background:rgba(255,255,255,.2);color:rgba(255,255,255,.9)}
+.sc-lbl{font-size:11px;color:var(--gray)}
+.sc-val{font-family:'Playfair Display',serif;font-size:26px;color:var(--dark)}
+.sc-hint{font-size:10px;color:var(--gray);margin-top:-4px}
+.stat-card.org .sc-lbl,.stat-card.org .sc-hint{color:rgba(255,255,255,.65)}
+.stat-card.org .sc-val{color:#fff}
+
+/* ── CARDS ── */
+.card{background:#fff;border-radius:14px;border:1.5px solid var(--border);overflow:hidden;margin-bottom:20px}
+.card-hd{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.ch-ttl{font-size:14px;font-weight:600;color:var(--dark);display:flex;align-items:center;gap:7px}
+.ch-act{font-size:12px;color:var(--orange);cursor:pointer;background:none;border:none;
+  font-family:'DM Sans',sans-serif;font-weight:500;transition:color .2s}
+.ch-act:hover{color:var(--brown)}
+
+/* ── GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:20px}
+
+/* ── SECTIONS ── */
+.sec-panel{display:none}.sec-panel.active{display:block}
+.sec-tabs{display:flex;gap:4px;background:#fff;border:1.5px solid var(--border);
+  border-radius:12px;padding:5px;margin-bottom:20px;width:fit-content;flex-wrap:wrap}
+.sec-tab{padding:8px 18px;border-radius:8px;font-family:'DM Sans',sans-serif;
+  font-size:13px;font-weight:500;color:var(--gray);cursor:pointer;border:none;
+  background:transparent;transition:all .2s;display:flex;align-items:center;gap:6px}
+.sec-tab:hover{color:var(--orange)}
+.sec-tab.active{background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-weight:600}
+
+/* ── TABLE ── */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:10px;font-weight:600;color:var(--gray);text-transform:uppercase;
+  letter-spacing:.6px;padding:11px 18px;text-align:left;border-bottom:1px solid var(--border);background:var(--offwhite)}
+.tbl td{padding:13px 18px;font-size:12px;color:var(--mid);border-bottom:1px solid var(--border)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--orange-faint)}
+.td-name{font-weight:600;color:var(--dark);font-size:13px}
+.td-sub{font-size:11px;color:var(--gray);margin-top:1px}
+
+/* badges */
+.badge{padding:3px 10px;border-radius:50px;font-size:10px;font-weight:600;display:inline-flex;align-items:center;gap:3px}
+.b-grn{background:var(--green-bg);color:var(--green)}
+.b-org{background:var(--orange-pale);color:var(--orange)}
+.b-red{background:var(--red-bg);color:var(--red)}
+.b-ylw{background:var(--yellow-bg);color:var(--yellow)}
+.b-blue{background:var(--blue-bg);color:var(--blue)}
+.b-gray{background:#f0f0f0;color:#666}
+
+/* action buttons */
+.act-row{display:flex;gap:5px}
+.abtn{padding:4px 10px;border-radius:6px;font-size:10px;font-weight:500;cursor:pointer;
+  font-family:'DM Sans',sans-serif;border:1.5px solid transparent;transition:all .2s}
+.abtn-org{background:var(--orange-pale);color:var(--orange);border-color:var(--orange-pale)}
+.abtn-org:hover{background:var(--orange);color:#fff}
+.abtn-grn{background:var(--green-bg);color:var(--green);border-color:var(--green-bg)}
+.abtn-grn:hover{background:var(--green);color:#fff}
+.abtn-red{background:var(--red-bg);color:var(--red);border-color:var(--red-bg)}
+.abtn-red:hover{background:var(--red);color:#fff}
+.abtn-ghost{background:transparent;color:var(--gray);border-color:var(--border)}
+.abtn-ghost:hover{border-color:var(--orange-light);color:var(--orange)}
+
+/* ── PAYMENT CLAIM CARDS ── */
+.claim-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;padding:18px}
+.claim-card{background:var(--offwhite);border-radius:12px;border:1.5px solid var(--border);
+  padding:18px;transition:box-shadow .2s,border-color .2s}
+.claim-card:hover{box-shadow:0 6px 20px rgba(232,96,10,.08);border-color:var(--orange-light)}
+.claim-card.urgent{border-color:var(--red);background:#fff8f8}
+.cc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.cc-tenant{display:flex;align-items:center;gap:10px}
+.cc-av{width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,var(--orange-light),var(--orange-mid));
+  display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.cc-name{font-size:13px;font-weight:600;color:var(--dark)}
+.cc-phone{font-size:11px;color:var(--gray);margin-top:1px}
+.cc-body{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.cc-row{display:flex;justify-content:space-between;align-items:center}
+.cc-label{font-size:11px;color:var(--gray)}
+.cc-value{font-size:12px;font-weight:600;color:var(--dark)}
+.cc-amount{font-family:'Playfair Display',serif;font-size:20px;color:var(--orange)}
+.cc-divider{height:1px;background:var(--border);margin:4px 0}
+.cc-note{font-size:11px;color:var(--mid);background:#fff;border-radius:7px;
+  padding:8px 10px;border:1px solid var(--border);line-height:1.5;margin-bottom:12px}
+.cc-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn-confirm{padding:10px;border:none;border-radius:9px;background:var(--green);
+  color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-confirm:hover{background:#258a5c;transform:translateY(-1px)}
+.btn-reject{padding:10px;border:1.5px solid var(--red);border-radius:9px;
+  background:var(--red-bg);color:var(--red);font-family:'DM Sans',sans-serif;
+  font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-reject:hover{background:var(--red);color:#fff;transform:translateY(-1px)}
+.claimed-ago{font-size:10px;color:var(--gray);text-align:center;margin-top:8px}
+
+/* ── PROPERTY CARDS ── */
+.prop-grid-ll{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:18px}
+.prop-card-ll{background:var(--offwhite);border-radius:12px;border:1.5px solid var(--border);
+  overflow:hidden;transition:box-shadow .2s}
+.prop-card-ll:hover{box-shadow:0 6px 20px rgba(232,96,10,.08)}
+.pc-img{height:150px;background:linear-gradient(135deg,var(--orange-pale),#fcd9bc);
+  display:flex;align-items:center;justify-content:center;font-size:48px;position:relative}
+.pc-status-tag{position:absolute;top:10px;right:10px}
+.pc-body{padding:14px}
+.pc-title{font-size:14px;font-weight:600;color:var(--dark);margin-bottom:4px}
+.pc-loc{font-size:11px;color:var(--gray);margin-bottom:8px;display:flex;align-items:center;gap:4px}
+.pc-price{font-size:17px;font-weight:700;color:var(--orange);margin-bottom:8px}
+.pc-meta{display:flex;gap:12px;margin-bottom:12px}
+.pc-meta span{font-size:11px;color:var(--mid)}
+.pc-acts{display:flex;gap:8px}
+.pc-acts button{flex:1;padding:8px;border-radius:8px;font-family:'DM Sans',sans-serif;
+  font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .2s}
+.btn-edit-prop{background:var(--orange-pale);color:var(--orange)}
+.btn-edit-prop:hover{background:var(--orange);color:#fff}
+.btn-toggle-prop{background:var(--green-bg);color:var(--green)}
+.btn-toggle-prop:hover{background:var(--green);color:#fff}
+
+/* ── TENANT LIST ── */
+.tenant-card{display:flex;align-items:center;gap:14px;padding:14px;
+  background:var(--offwhite);border-radius:10px;border:1px solid var(--border);
+  margin-bottom:10px;transition:border-color .2s}
+.tenant-card:hover{border-color:var(--orange-light)}
+.tc-av{width:40px;height:40px;border-radius:50%;
+  background:linear-gradient(135deg,var(--orange-light),var(--orange-mid));
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.tc-info{flex:1}
+.tc-name{font-size:13px;font-weight:600;color:var(--dark)}
+.tc-detail{font-size:11px;color:var(--gray);margin-top:2px}
+.tc-right{text-align:right}
+.tc-rent{font-size:14px;font-weight:700;color:var(--orange)}
+.tc-status{font-size:11px;margin-top:3px}
+
+/* ── CHART ── */
+.chart-wrap{padding:18px 20px}
+.chart-bars{display:flex;align-items:flex-end;gap:8px;height:100px}
+.chart-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px}
+.chart-bar{width:100%;border-radius:5px 5px 0 0;cursor:pointer;position:relative;transition:opacity .2s}
+.chart-bar:hover{opacity:.8}
+.chart-bar::after{content:attr(data-tip);position:absolute;top:-26px;left:50%;transform:translateX(-50%);
+  background:var(--dark);color:#fff;font-size:9px;padding:2px 6px;border-radius:4px;
+  white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s}
+.chart-bar:hover::after{opacity:1}
+.chart-mo{font-size:9px;color:var(--gray)}
+.chart-legend{display:flex;gap:14px;margin-top:12px}
+.cl-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mid)}
+.cl-dot{width:8px;height:8px;border-radius:50%}
+
+/* ── ADD PROPERTY MODAL ── */
+.modal-ov{position:fixed;inset:0;z-index:500;background:rgba(45,21,0,.5);
+  backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;
+  padding:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-ov.open{opacity:1;pointer-events:all}
+.modal{background:#fff;border-radius:18px;width:100%;max-width:520px;max-height:90vh;
+  overflow-y:auto;box-shadow:0 24px 60px rgba(232,96,10,.15);
+  transform:translateY(26px);transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+.modal-ov.open .modal{transform:translateY(0)}
+.modal-hd{padding:20px 22px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;background:#fff;z-index:1}
+.modal-hd h3{font-size:16px;font-weight:600;color:var(--dark)}
+.modal-x{background:none;border:none;font-size:19px;cursor:pointer;color:var(--gray);transition:color .2s}
+.modal-x:hover{color:var(--dark)}
+.modal-bd{padding:22px;display:flex;flex-direction:column;gap:14px}
+.ff{display:flex;flex-direction:column;gap:5px}
+.ff label{font-size:12px;font-weight:500;color:var(--mid)}
+.ff input,.ff select,.ff textarea{padding:10px 12px;border:1.5px solid var(--border);
+  border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--dark);
+  background:var(--offwhite);outline:none;transition:border-color .2s,box-shadow .2s}
+.ff input:focus,.ff select:focus,.ff textarea:focus{border-color:var(--orange);
+  box-shadow:0 0 0 3px rgba(232,96,10,.08);background:#fff}
+.ff-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-ft{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;
+  position:sticky;bottom:0;background:#fff}
+.btn-modal-p{flex:1;padding:11px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));
+  color:#fff;border:none;border-radius:9px;font-family:'DM Sans',sans-serif;
+  font-size:13px;font-weight:600;cursor:pointer;
+  transition:transform .2s,box-shadow .2s;box-shadow:0 3px 12px rgba(232,96,10,.22)}
+.btn-modal-p:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(232,96,10,.32)}
+.btn-modal-c{padding:11px 18px;border:1.5px solid var(--border);border-radius:9px;
+  background:#fff;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--mid);
+  cursor:pointer;transition:border-color .2s}
+.btn-modal-c:hover{border-color:var(--orange-light)}
+
+/* reject reason modal */
+.reject-modal{background:#fff;border-radius:18px;width:100%;max-width:420px;
+  box-shadow:0 24px 60px rgba(232,96,10,.15);
+  transform:translateY(26px);transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+.modal-ov.open .reject-modal{transform:translateY(0)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:22px;right:22px;z-index:9999;
+  background:var(--dark);color:#fff;padding:11px 18px;border-radius:11px;
+  font-size:13px;font-weight:500;box-shadow:0 6px 24px rgba(0,0,0,.2);
+  transform:translateY(70px);opacity:0;
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .35s;font-family:'DM Sans',sans-serif}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--green)}.toast.danger{background:var(--red)}.toast.warn{background:var(--yellow)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1100px){.stat-grid{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){
+  .sidenav{left:calc(-1 * var(--side))}.sidenav.open{left:0;box-shadow:4px 0 24px rgba(232,96,10,.2)}
+  .main{margin-left:0}.hamburger{display:flex}
+  .g2,.g3{grid-template-columns:1fr}.stat-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:480px){.stat-grid{grid-template-columns:1fr}.ff-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidenav" id="sidenav">
+ <a href="index.html" class="sn-brand">
+    <div class="sn-logo">🏠</div>
+    <span class="sn-name">HomeBase</span>
+    <span class="sn-badge">LANDLORD</span>
+  </a>
+  <div class="sn-menu">
+    <div class="sn-sec">Overview</div>
+    <a class="sn-item active" onclick="showSec('overview',this)"><span class="sn-ico">📊</span>Dashboard</a>
+
+    <div class="sn-sec">My Properties</div>
+    <a class="sn-item" onclick="showSec('properties',this)"><span class="sn-ico">🏠</span>My Listings<span class="sn-cnt grn">4</span></a>
+    <a class="sn-item" onclick="showSec('addprop',this)"><span class="sn-ico">➕</span>Add Property</a>
+
+    <div class="sn-sec">Payments</div>
+    <a class="sn-item" onclick="showSec('claims',this)"><span class="sn-ico">⏳</span>Payment Claims<span class="sn-cnt" id="navClaimCount">3</span></a>
+    <a class="sn-item" onclick="showSec('history',this)"><span class="sn-ico">📋</span>Payment History</a>
+
+    <div class="sn-sec">Tenants</div>
+    <a class="sn-item" onclick="showSec('tenants',this)"><span class="sn-ico">👥</span>My Tenants</a>
+    <a class="sn-item" onclick="showSec('messages',this)"><span class="sn-ico">💬</span>Messages<span class="sn-cnt org">2</span></a>
+
+    <div class="sn-sec">Account</div>
+    <a class="sn-item" onclick="showSec('profile',this)"><span class="sn-ico">👤</span>My Profile</a>
+    <a class="sn-item" onclick="window.location.href='index.html'"><span class="sn-ico">🌐</span>View Site</a>
+    <a class="sn-item" onclick="localStorage.removeItem('hb_token'); localStorage.removeItem('hb_user'); window.location.href='index.html';"><span class="sn-ico">🚪</span>Sign Out</a>
+  </div>
+  <div class="sn-bottom">
+    <div class="sn-user">
+      <div class="sn-av">🧑‍💼</div>
+      <div>
+        <div class="sn-uname">Kemi Adesanya</div>
+        <div class="sn-urole">Landlord · Lagos</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<div class="main">
+  <header class="topbar">
+    <div class="tb-left">
+      <button class="hamburger" onclick="document.getElementById('sidenav').classList.toggle('open')">
+        <span></span><span></span><span></span>
+      </button>
+      <div>
+        <div class="tb-title" id="tbTitle">Landlord Dashboard</div>
+        <div class="tb-sub" id="tbSub">Welcome back, Kemi · Wednesday July 29, 2026</div>
+      </div>
+    </div>
+    <div class="tb-right">
+      <div class="tb-notif" onclick="toast('You have 3 unread notifications','')">
+        🔔<div class="nb-dot"></div>
+      </div>
+      <button class="btn-add-prop" onclick="openAddProp()">+ Add Property</button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ══════════════ OVERVIEW ══════════════ -->
+    <div class="sec-panel active" id="sec-overview">
+
+      <div class="stat-grid">
+        <div class="stat-card org">
+          <div class="sc-top"><div class="sc-ico i-w">🏠</div><span class="sc-bd bd-wt">Active</span></div>
+          <div class="sc-lbl">My Properties</div>
+          <div class="sc-val">4</div>
+          <div class="sc-hint">3 occupied · 1 vacant</div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-top"><div class="sc-ico i-g">💳</div><span class="sc-bd bd-up">↑ This month</span></div>
+          <div class="sc-lbl">Confirmed Payments</div>
+          <div class="sc-val">₦360k</div>
+          <div class="sc-hint">4 payments confirmed</div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-top"><div class="sc-ico i-r">⏳</div><span class="sc-bd bd-dn">Action needed</span></div>
+          <div class="sc-lbl">Pending Claims</div>
+          <div class="sc-val">3</div>
+          <div class="sc-hint">Awaiting your confirmation</div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-top"><div class="sc-ico i-b">👥</div><span class="sc-bd bd-ok">All active</span></div>
+          <div class="sc-lbl">Current Tenants</div>
+          <div class="sc-val">3</div>
+          <div class="sc-hint">Across 3 properties</div>
+        </div>
+      </div>
+
+      <!-- Pending claims alert -->
+      <div style="background:var(--yellow-bg);border:1.5px solid var(--yellow);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:14px;margin-bottom:20px;cursor:pointer" onclick="showSec('claims',document.querySelector('.sn-item:nth-child(8)'))">
+        <span style="font-size:28px">⏳</span>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:600;color:#7a5500" id="pendingClaimsBanner">3 Payment Claims Awaiting Your Confirmation</div>
+          <div style="font-size:12px;color:#a07000;margin-top:2px">Your tenants have submitted payment claims. Review and confirm or reject them.</div>
+        </div>
+        <span style="font-size:18px;color:#7a5500">→</span>
+      </div>
+
+      <div class="g2">
+        <!-- Recent Claims -->
+        <div class="card">
+          <div class="card-hd">
+            <span class="ch-ttl">⏳ Recent Payment Claims</span>
+            <button class="ch-act" onclick="showSec('claims',null)">View All</button>
+          </div>
+          <table class="tbl" id="recentClaimsTbl"></table>
+        </div>
+
+        <!-- Income Chart -->
+        <div class="card">
+          <div class="card-hd">
+            <span class="ch-ttl">📈 Monthly Income (2026)</span>
+            <span style="font-size:11px;color:var(--gray)">Total: ₦1.44M</span>
+          </div>
+          <div class="chart-wrap">
+            <div class="chart-bars" id="incomeChart"></div>
+            <div class="chart-legend">
+              <div class="cl-item"><div class="cl-dot" style="background:var(--orange)"></div>Confirmed</div>
+              <div class="cl-item"><div class="cl-dot" style="background:var(--border)"></div>Upcoming</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tenant Summary -->
+      <div class="card">
+        <div class="card-hd">
+          <span class="ch-ttl">👥 My Tenants</span>
+          <button class="ch-act" onclick="showSec('tenants',null)">View All</button>
+        </div>
+        <div style="padding:16px 18px" id="tenantSummary"></div>
+      </div>
+
+    </div><!-- end overview -->
+
+    <!-- ══════════════ PAYMENT CLAIMS ══════════════ -->
+    <div class="sec-panel" id="sec-claims">
+      <div style="margin-bottom:20px">
+        <div style="font-size:18px;font-weight:600;color:var(--dark)">Payment Claims</div>
+        <div style="font-size:12px;color:var(--gray)">Review payment claims submitted by your tenants</div>
+      </div>
+
+      <div style="background:var(--orange-faint);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px">
+        <div style="font-size:13px;font-weight:600;color:var(--brown);margin-bottom:6px">📋 How Payment Confirmation Works</div>
+        <div style="font-size:12px;color:var(--mid);line-height:1.7">
+          1. Your tenant pays you <strong>directly</strong> (cash or bank transfer).<br/>
+          2. They log the payment claim in the HomeBase app.<br/>
+          3. You review the claim below and click <strong>Confirm</strong> if correct, or <strong>Reject</strong> if incorrect.<br/>
+          4. The tenant's dashboard updates automatically with your decision.
+        </div>
+      </div>
+
+      <div class="sec-tabs">
+        <button class="sec-tab active" onclick="filterClaims('pending',this)" id="pendingTabBtn">⏳ Pending (3)</button>
+        <button class="sec-tab" onclick="filterClaims('confirmed',this)">✓ Confirmed</button>
+        <button class="sec-tab" onclick="filterClaims('rejected',this)">✗ Rejected</button>
+      </div>
+
+      <div class="claim-grid" id="claimGrid"></div>
+    </div>
+
+    <!-- ══════════════ PAYMENT HISTORY ══════════════ -->
+    <div class="sec-panel" id="sec-history">
+      <div style="margin-bottom:20px">
+        <div style="font-size:18px;font-weight:600;color:var(--dark)">Payment History</div>
+        <div style="font-size:12px;color:var(--gray)">All confirmed and rejected payment records</div>
+      </div>
+
+      <div class="stat-grid" style="margin-bottom:20px">
+        <div class="stat-card"><div class="sc-top"><div class="sc-ico i-g">✅</div><span class="sc-bd bd-up">2026</span></div><div class="sc-lbl">Total Confirmed</div><div class="sc-val">₦1.44M</div><div class="sc-hint">All properties</div></div>
+        <div class="stat-card"><div class="sc-top"><div class="sc-ico i-b">📋</div><span class="sc-bd bd-ok">Total</span></div><div class="sc-lbl">No. of Payments</div><div class="sc-val">24</div><div class="sc-hint">Jan – Jul 2026</div></div>
+        <div class="stat-card"><div class="sc-top"><div class="sc-ico i-r">✗</div><span class="sc-bd bd-dn">Rejected</span></div><div class="sc-lbl">Rejected Claims</div><div class="sc-val">1</div><div class="sc-hint">Dispute resolved</div></div>
+        <div class="stat-card org"><div class="sc-top"><div class="sc-ico i-w">📅</div><span class="sc-bd bd-wt">This month</span></div><div class="sc-lbl">July 2026 Income</div><div class="sc-val">₦360k</div><div class="sc-hint">3 properties confirmed</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd">
+          <span class="ch-ttl">📋 All Payment Records</span>
+          <button class="ch-act" onclick="toast('Exporting payment history PDF...','success')">Export PDF</button>
+        </div>
+        <div style="overflow-x:auto"><table class="tbl" id="historyTbl"></table></div>
+      </div>
+    </div>
+
+    <!-- ══════════════ MY PROPERTIES ══════════════ -->
+    <div class="sec-panel" id="sec-properties">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:18px;font-weight:600;color:var(--dark)">My Properties</div>
+          <div style="font-size:12px;color:var(--gray)">Manage your listed properties</div>
+        </div>
+        <button onclick="openAddProp()" style="padding:9px 18px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 3px 12px rgba(232,96,10,.25)">+ Add New Property</button>
+      </div>
+
+      <div class="sec-tabs">
+        <button class="sec-tab active" onclick="filterMyProps('all',this)">All (4)</button>
+        <button class="sec-tab" onclick="filterMyProps('available',this)">Available (1)</button>
+        <button class="sec-tab" onclick="filterMyProps('occupied',this)">Occupied (3)</button>
+        <button class="sec-tab" onclick="filterMyProps('pending',this)">Pending Approval (1)</button>
+      </div>
+
+      <div class="prop-grid-ll" id="myPropGrid"></div>
+    </div>
+
+        <!-- ══════════════ ADD PROPERTY ══════════════ -->
+    <div class="sec-panel" id="sec-addprop">
+      <div style="margin-bottom:20px">
+        <div style="font-size:18px;font-weight:600;color:var(--dark)">Add New Property</div>
+        <div style="font-size:12px;color:var(--gray)">Submit a new listing for admin approval</div>
+      </div>
+      <div class="card" style="max-width:680px">
+        <div class="card-hd"><span class="ch-ttl">🏠 Property Details</span></div>
+        <div style="padding:22px;display:flex;flex-direction:column;gap:16px">
+          <div class="ff"><label>Property Title</label><input id="pTitle" type="text" placeholder="e.g. Modern 2-Bedroom Flat in Lekki"/></div>
+          <div class="ff-row">
+            <div class="ff"><label>Property Type</label><select id="pType">
+              <option value="flat">Flat</option>
+              <option value="duplex">Duplex</option>
+              <option value="bungalow">Bungalow</option>
+              <option value="self_contain">Self-Contain</option>
+              <option value="room_parlour">Room & Parlour</option>
+              <option value="studio">Studio</option>
+              <option value="terraced_house">Terraced House</option>
+            </select></div>
+            <div class="ff"><label>Location / City</label><select id="pLocation">
+              <option value="1">Lekki, Lagos</option>
+              <option value="2">Victoria Island, Lagos</option>
+              <option value="3">Surulere, Lagos</option>
+              <option value="4">Yaba, Lagos</option>
+              <option value="5">Ikeja, Lagos</option>
+              <option value="6">Maitama, Abuja</option>
+              <option value="7">Wuse, Abuja</option>
+              <option value="8">Gwarinpa, Abuja</option>
+              <option value="9">Kubwa, Abuja</option>
+              <option value="10">Port Harcourt</option>
+              <option value="12">Ibadan</option>
+              <option value="13">Enugu</option>
+            </select></div>
+          </div>
+          <div class="ff"><label>Full Property Address</label><input id="pAddress" type="text" placeholder="e.g. 15 Admiralty Way, Lekki Phase 1, Lagos"/></div>
+          <div class="ff-row">
+            <div class="ff"><label>Monthly Rent (₦)</label><input id="pRent" type="number" placeholder="e.g. 85000"/></div>
+            <div class="ff"><label>Size (m²) — optional</label><input id="pSize" type="number" placeholder="e.g. 65"/></div>
+          </div>
+          <div class="ff-row">
+            <div class="ff"><label>Bedrooms</label><select id="pBeds"><option value="0">Studio / Self-Contain</option><option value="1">1 Bedroom</option><option value="2" selected>2 Bedrooms</option><option value="3">3 Bedrooms</option><option value="4">4+ Bedrooms</option></select></div>
+            <div class="ff"><label>Bathrooms</label><select id="pBaths"><option value="1" selected>1 Bathroom</option><option value="2">2 Bathrooms</option><option value="3">3 Bathrooms</option></select></div>
+          </div>
+          <div class="ff"><label>Description</label><textarea id="pDesc" rows="4" placeholder="Describe the property — features, neighbourhood, nearby landmarks, transport links..."></textarea></div>
+          <div class="ff">
+            <label>Amenities (check all that apply)</label>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px">
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" class="pAmenity" value="24hr Power" style="accent-color:var(--orange)"/> 🔌 24hr Power</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" class="pAmenity" value="Running Water" style="accent-color:var(--orange)"/> 💧 Running Water</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" class="pAmenity" value="Security / Gate" style="accent-color:var(--orange)"/> 🔒 Security / Gate</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" class="pAmenity" value="Car Parking" style="accent-color:var(--orange)"/> 🚗 Car Parking</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" class="pAmenity" value="Internet Ready" style="accent-color:var(--orange)"/> 📶 Internet Ready</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" class="pAmenity" value="Furnished" style="accent-color:var(--orange)"/> 🪑 Furnished</label>
+            </div>
+          </div>
+          <div style="background:var(--orange-faint);border:1px solid var(--border);border-radius:9px;padding:12px">
+            <div style="font-size:12px;font-weight:600;color:var(--brown);margin-bottom:4px">ℹ️ Note on Bank Details</div>
+            <div style="font-size:12px;color:var(--mid);line-height:1.6">For security, HomeBase does not store or display bank account numbers. Your phone number will be shown to interested tenants (after they click "Contact Landlord") so they can contact you directly and arrange payment in person.</div>
+          </div>
+          <button onclick="submitProperty()" style="padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(232,96,10,.25);transition:transform .2s">Submit for Approval</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ TENANTS ══════════════ -->
+    <div class="sec-panel" id="sec-tenants">
+      <div style="margin-bottom:20px">
+        <div style="font-size:18px;font-weight:600;color:var(--dark)">My Tenants</div>
+        <div style="font-size:12px;color:var(--gray)">Tenants currently renting your properties</div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="ch-ttl">👥 Current Tenants</span><span style="font-size:12px;color:var(--gray)">3 active tenants</span></div>
+        <div style="padding:16px 18px" id="fullTenantList"></div>
+      </div>
+    </div>
+
+    <!-- ══════════════ MESSAGES ══════════════ -->
+    <div class="sec-panel" id="sec-messages">
+      <div style="margin-bottom:20px">
+        <div style="font-size:18px;font-weight:600;color:var(--dark)">Messages</div>
+        <div style="font-size:12px;color:var(--gray)">Tenant enquiries and messages</div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="ch-ttl">💬 Inbox</span><span class="badge b-org">2 unread</span></div>
+        <div style="padding:16px 18px;display:flex;flex-direction:column;gap:10px" id="msgList"></div>
+      </div>
+    </div>
+
+    <!-- ══════════════ PROFILE ══════════════ -->
+    <div class="sec-panel" id="sec-profile">
+      <div style="margin-bottom:20px">
+        <div style="font-size:18px;font-weight:600;color:var(--dark)">My Profile</div>
+        <div style="font-size:12px;color:var(--gray)">Manage your landlord account details</div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><span class="ch-ttl">👤 Personal Details</span></div>
+          <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:8px">
+              <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--orange-light),var(--orange-mid));display:flex;align-items:center;justify-content:center;font-size:28px">🧑‍💼</div>
+              <div><div style="font-size:16px;font-weight:600;color:var(--dark)">Kemi Adesanya</div><div style="font-size:12px;color:var(--gray)">Landlord · Member since Jan 2026</div></div>
+            </div>
+            <div class="ff"><label>First Name</label><input type="text" value="Kemi"/></div>
+            <div class="ff"><label>Last Name</label><input type="text" value="Adesanya"/></div>
+            <div class="ff"><label>Phone Number (Primary Contact)</label><input type="tel" value="+234 801 234 5678"/></div>
+            <div class="ff"><label>Email Address (optional)</label><input type="email" value="kemi@example.com"/></div>
+            <button onclick="toast('Profile updated successfully! ✅','success')" style="padding:11px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Save Changes</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="ch-ttl">🔒 Security</span></div>
+          <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
+            <div class="ff"><label>Current Password</label><input type="password" placeholder="Enter current password"/></div>
+            <div class="ff"><label>New Password</label><input type="password" placeholder="Enter new password"/></div>
+            <div class="ff"><label>Confirm New Password</label><input type="password" placeholder="Repeat new password"/></div>
+            <button onclick="toast('Password updated successfully! 🔒','success')" style="padding:11px;border:none;border-radius:9px;background:var(--dark);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Update Password</button>
+            <div style="padding:12px;background:var(--orange-faint);border-radius:9px;border:1px solid var(--border)">
+              <div style="font-size:12px;font-weight:600;color:var(--brown);margin-bottom:4px">📱 Your Phone is Your Key</div>
+              <div style="font-size:12px;color:var(--mid);line-height:1.6">Your phone number is shown to tenants who want to contact you about a property. Keep it up to date so tenants can reach you easily.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end content -->
+</div><!-- end main -->
+
+<!-- ADD PROPERTY MODAL (quick version) -->
+<div class="modal-ov" id="addPropModal" onclick="if(event.target===this)closeAddProp()">
+  <div class="modal">
+    <div class="modal-hd"><h3>🏠 Add New Property</h3><button class="modal-x" onclick="closeAddProp()">✕</button></div>
+    <div class="modal-bd">
+      <div class="ff"><label>Property Title</label><input type="text" placeholder="e.g. Modern 2-Bedroom Flat"/></div>
+      <div class="ff-row">
+        <div class="ff"><label>Type</label><select><option>Flat</option><option>Duplex</option><option>Self-Contain</option><option>Bungalow</option><option>Room & Parlour</option></select></div>
+        <div class="ff"><label>City</label><select><option>Lekki, Lagos</option><option>Surulere, Lagos</option><option>Yaba, Lagos</option><option>Maitama, Abuja</option><option>Wuse, Abuja</option><option>Ibadan</option></select></div>
+      </div>
+      <div class="ff"><label>Full Address</label><input type="text" placeholder="e.g. 15 Admiralty Way, Lekki Phase 1"/></div>
+      <div class="ff-row">
+        <div class="ff"><label>Monthly Rent (₦)</label><input type="number" placeholder="e.g. 85000"/></div>
+        <div class="ff-row" style="grid-template-columns:1fr 1fr">
+          <div class="ff"><label>Beds</label><select><option>1</option><option selected>2</option><option>3</option><option>4+</option></select></div>
+          <div class="ff"><label>Baths</label><select><option selected>1</option><option>2</option><option>3</option></select></div>
+        </div>
+      </div>
+      <div class="ff"><label>Description</label><textarea rows="3" placeholder="Describe the property..."></textarea></div>
+      <div style="background:var(--orange-faint);border-radius:9px;padding:10px 12px;font-size:11px;color:var(--mid)">
+        ℹ️ Your listing will be reviewed by our admin team before going live. Usually approved within 24 hours.
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-modal-c" onclick="closeAddProp()">Cancel</button>
+      <button class="btn-modal-p" onclick="submitPropModal()">Submit for Approval</button>
+    </div>
+  </div>
+</div>
+
+<!-- REJECT REASON MODAL -->
+<div class="modal-ov" id="rejectModal" onclick="if(event.target===this)closeReject()">
+  <div class="reject-modal">
+    <div class="modal-hd"><h3>✗ Reject Payment Claim</h3><button class="modal-x" onclick="closeReject()">✕</button></div>
+    <div class="modal-bd">
+      <div style="background:var(--red-bg);border:1px solid var(--red);border-radius:9px;padding:12px;margin-bottom:4px">
+        <div style="font-size:12px;color:var(--red);font-weight:600;margin-bottom:3px">⚠️ Why are you rejecting this claim?</div>
+        <div style="font-size:11px;color:var(--mid)">Your tenant will be notified with your reason so they can resolve it.</div>
+      </div>
+      <div class="ff"><label>Reason for Rejection</label>
+        <select id="rejectReason">
+          <option value="">Select a reason...</option>
+          <option value="Payment not received">Payment not received yet</option>
+          <option value="Wrong amount submitted">Wrong amount was submitted</option>
+          <option value="Incorrect payment period">Incorrect payment period stated</option>
+          <option value="Reference number does not match">Reference number does not match our records</option>
+          <option value="Other">Other (explain below)</option>
+        </select>
+      </div>
+      <div class="ff"><label>Additional Notes (optional)</label><textarea id="rejectNote" rows="3" placeholder="Add any extra details to help your tenant resolve this..."></textarea></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-modal-c" onclick="closeReject()">Cancel</button>
+      <button style="flex:1;padding:11px;background:var(--red);color:#fff;border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer" onclick="confirmReject()">Confirm Rejection</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toastEl"></div>
+
+<script>
+// ── API CONFIG ───────────────────────────────────────
+// API URL set dynamically above
+const token = localStorage.getItem('hb_token');
+const currentUser = JSON.parse(localStorage.getItem('hb_user') || '{}');
+
+// ── INIT ─────────────────────────────────────────────
+async function initLandlord(){
+  // Set user name in sidebar
+  if(currentUser.first_name){
+    document.querySelector('.sn-uname').textContent = currentUser.first_name+' '+currentUser.last_name;
+    document.querySelector('.sn-urole').textContent  = 'Landlord · '+( currentUser.city||'Nigeria');
+    document.getElementById('tbSub').textContent = 'Welcome back, '+currentUser.first_name+' · '+new Date().toDateString();
+  }
+  // Load claims from API
+  if(token){
+    try {
+      const res  = await fetch(`${API}/payments/claims?status=pending`,{ headers:{Authorization:`Bearer ${token}`} });
+      const data = await res.json();
+      if(data.success){
+        REAL_CLAIMS = data.data.map(c=>({
+          id:c.payment_id, tenant:c.tenant_name, phone:c.tenant_phone,
+          property:c.property_title, amount:parseFloat(c.amount),
+          month:c.payment_month, datePaid:c.date_paid||'—',
+          method:c.payment_method, ref:c.reference_no||'',
+          note:c.notes||'', status:'pending', submitted:'Just now', real:true
+        }));
+        updateClaimCounts();
+      }
+    } catch(err){ console.warn('Backend not available — using demo data'); }
+  }
+  renderRecentClaims();
+  renderTenantSummary();
+  renderIncomeChart();
+}
+
+function updateClaimCounts() {
+  const total = CLAIMS.filter(c=>c.status==='pending').length + REAL_CLAIMS.length;
+  document.getElementById('navClaimCount').textContent = total;
+  document.getElementById('pendingTabBtn').textContent = `⏳ Pending (${total})`;
+  document.getElementById('pendingClaimsBanner').textContent = `${total} Payment Claim${total===1?'':'s'} Awaiting Your Confirmation`;
+}
+let REAL_CLAIMS = [];
+
+// ── DATA ──────────────────────────────────────────
+const CLAIMS = [
+  {id:'demo1', tenant:'Emeka Nwachukwu', phone:'+234 801 234 5678', property:'Modern 2-Bed Flat, Lekki', amount:85000, month:'July 2026', datePaid:'Jul 1, 2026', method:'Bank Transfer', ref:'TRF2026070185', note:'Paid via Access Bank transfer.', status:'pending', submitted:'2 hours ago'},
+  {id:'demo2', tenant:'Adaeze Okonkwo', phone:'+234 802 345 6789', property:'1-Bed Flat, Surulere', amount:55000, month:'July 2026', datePaid:'Jul 1, 2026', method:'Cash', ref:'', note:'Paid cash at the property office.', status:'pending', submitted:'5 hours ago'},
+  {id:'demo3', tenant:'Tunde Balogun', phone:'+234 803 456 7890', property:'Studio, Victoria Island', amount:130000, month:'July 2026', datePaid:'Jun 30, 2026', method:'Bank Transfer', ref:'TRF2026063091', note:'', status:'pending', submitted:'1 day ago'},
+  {id:'demo4', tenant:'Emeka Nwachukwu', phone:'+234 801 234 5678', property:'Modern 2-Bed Flat, Lekki', amount:85000, month:'June 2026', datePaid:'Jun 1, 2026', method:'Bank Transfer', ref:'TRF2026060122', note:'', status:'confirmed', submitted:'1 month ago'},
+  {id:'demo5', tenant:'Adaeze Okonkwo', phone:'+234 802 345 6789', property:'1-Bed Flat, Surulere', amount:55000, month:'June 2026', datePaid:'Jun 2, 2026', method:'Cash', ref:'', note:'', status:'confirmed', submitted:'1 month ago'},
+  {id:'demo6', tenant:'Ngozi Eze', phone:'+234 804 567 8901', property:'Room & Parlour, Kubwa', amount:28000, month:'June 2026', datePaid:'May 30, 2026', method:'POS', ref:'POS20260530', note:'Wrong amount submitted.', status:'rejected', submitted:'1 month ago'},
+];
+
+const MY_PROPS = [
+  {id:1, e:'🏠', title:'Modern 2-Bed Flat', loc:'Lekki Phase 1, Lagos', price:'₦85,000/mo', beds:2, baths:1, status:'occupied', tenant:'Emeka Nwachukwu', approval:'approved'},
+  {id:2, e:'🏡', title:'1-Bed Flat', loc:'Surulere, Lagos', price:'₦55,000/mo', beds:1, baths:1, status:'occupied', tenant:'Adaeze Okonkwo', approval:'approved'},
+  {id:3, e:'🏗', title:'Studio Apartment', loc:'Victoria Island, Lagos', price:'₦130,000/mo', beds:0, baths:1, status:'occupied', tenant:'Tunde Balogun', approval:'approved'},
+  {id:4, e:'🏘', title:'Room & Parlour', loc:'Kubwa, Abuja', price:'₦28,000/mo', beds:1, baths:1, status:'available', tenant:'—', approval:'pending'},
+];
+
+const TENANTS = [
+  {name:'Emeka Nwachukwu', phone:'+234 801 234 5678', property:'Modern 2-Bed Flat, Lekki', rent:'₦85,000/mo', status:'confirmed', since:'Jan 2026'},
+  {name:'Adaeze Okonkwo', phone:'+234 802 345 6789', property:'1-Bed Flat, Surulere', rent:'₦55,000/mo', status:'confirmed', since:'Feb 2026'},
+  {name:'Tunde Balogun', phone:'+234 803 456 7890', property:'Studio, Victoria Island', rent:'₦130,000/mo', status:'pending', since:'Mar 2026'},
+];
+
+const MESSAGES = [
+  {from:'Ngozi Eze', msg:'Good afternoon ma, I am interested in the Room & Parlour in Kubwa. Can I come for a viewing this weekend?', time:'1 hour ago', unread:true},
+  {from:'Chidi Okafor', msg:'Please ma, I want to know if the Lekki flat is still available. My salary is ₦280,000 so it fits the budget.', time:'3 hours ago', unread:true},
+  {from:'Emeka Nwachukwu', msg:'Good morning ma, I have made the payment for July. I have logged it on the app with the transfer reference.', time:'2 days ago', unread:false},
+];
+
+const fn = n => '₦' + n.toLocaleString('en-NG');
+let rejectingId = null;
+
+// ── SECTION SWITCHING ──────────────────────────────
+const TITLES = {
+  overview:'Landlord Dashboard', claims:'Payment Claims',
+  history:'Payment History', properties:'My Properties',
+  addprop:'Add New Property', tenants:'My Tenants',
+  messages:'Messages', profile:'My Profile'
+};
+
+function showSec(name, el) {
+  document.querySelectorAll('.sec-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sn-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  document.getElementById('tbTitle').textContent = TITLES[name] || name;
+  if (el) el.classList.add('active');
+  if (name === 'claims')     renderClaims('pending');
+  if (name === 'history')    renderHistory();
+  if (name === 'properties') renderMyProps('all');
+  if (name === 'tenants')    renderFullTenants();
+  if (name === 'messages')   renderMessages();
+}
+
+// ── TOAST ──────────────────────────────────────────
+function toast(msg, type) {
+  const t = document.getElementById('toastEl');
+  t.textContent = msg; t.className = 'toast ' + (type || '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ── CHART ──────────────────────────────────────────
+function renderIncomeChart() {
+  const mos = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const vals = [240,240,240,240,240,240,240,0,0,0,0,0];
+  const c = document.getElementById('incomeChart');
+  if (!c) return; c.innerHTML = '';
+  vals.forEach((v, i) => {
+    const p = v > 0; const h = p ? (v/240)*100 : 20;
+    const col = document.createElement('div'); col.className = 'chart-col';
+    col.innerHTML = `<div class="chart-bar" style="height:${h}%;background:${p?'var(--orange)':'var(--border)'};min-height:6px" data-tip="${p?'₦'+v+'k':'Upcoming'}"></div><span class="chart-mo">${mos[i]}</span>`;
+    c.appendChild(col);
+  });
+}
+
+// ── RECENT CLAIMS TABLE ───────────────────────────
+function renderRecentClaims() {
+  const tbl = document.getElementById('recentClaimsTbl');
+  if (!tbl) return;
+  tbl.innerHTML = `<thead><tr><th>Tenant</th><th>Property</th><th>Amount</th><th>Method</th><th>Status</th><th>Action</th></tr></thead>`;
+  const tb = document.createElement('tbody');
+  CLAIMS.slice(0,4).forEach(c => {
+    const sc = c.status==='confirmed'?'b-grn':c.status==='pending'?'b-ylw':'b-red';
+    const st = c.status==='confirmed'?'✓ Confirmed':c.status==='pending'?'⏳ Pending':'✗ Rejected';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><div class="td-name">${c.tenant}</div><div class="td-sub">${c.phone}</div></td>
+      <td><div class="td-sub">${c.property}</div></td>
+      <td style="font-weight:600;color:var(--dark)">${fn(c.amount)}</td>
+      <td>${c.method}</td>
+      <td><span class="badge ${sc}">${st}</span></td>
+      <td>${c.status==='pending'?`<div class="act-row"><button class="abtn abtn-grn" onclick="quickConfirm('${c.id}')">✓</button><button class="abtn abtn-red" onclick="openReject('${c.id}')">✗</button></div>`:'<span style="font-size:11px;color:var(--gray)">Done</span>'}
+      </td>`;
+    tb.appendChild(tr);
+  });
+  tbl.appendChild(tb);
+}
+
+// ── CLAIM CARDS ───────────────────────────────────
+function renderClaims(filter) {
+  const grid = document.getElementById('claimGrid');
+  if (!grid) return; grid.innerHTML = '';
+   const filtered = filter === 'pending' ? [...REAL_CLAIMS, ...CLAIMS.filter(c => c.status === 'pending')] : CLAIMS.filter(c => c.status === filter);
+  if (!filtered.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px"><div style="font-size:56px;margin-bottom:14px">✅</div><div style="font-size:16px;font-weight:600;color:var(--dark)">No ${filter} claims</div><div style="font-size:13px;color:var(--gray);margin-top:5px">${filter==='pending'?'All payment claims have been reviewed.':'No '+filter+' claims yet.'}</div></div>`;
+    return;
+  }
+  filtered.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'claim-card' + (c.status==='pending'?' urgent':'');
+    div.innerHTML = `
+      <div class="cc-top">
+        <div class="cc-tenant"><div class="cc-av">👤</div><div><div class="cc-name">${c.tenant}</div><div class="cc-phone">📱 ${c.phone}</div></div></div>
+        <span class="badge ${c.status==='confirmed'?'b-grn':c.status==='pending'?'b-ylw':'b-red'}">${c.status==='confirmed'?'✓ Confirmed':c.status==='pending'?'⏳ Pending':'✗ Rejected'}</span>
+      </div>
+      <div class="cc-body">
+        <div class="cc-amount">${fn(c.amount)}</div>
+        <div class="cc-divider"></div>
+        <div class="cc-row"><span class="cc-label">Property</span><span class="cc-value">${c.property}</span></div>
+        <div class="cc-row"><span class="cc-label">Month Covered</span><span class="cc-value">${c.month}</span></div>
+        <div class="cc-row"><span class="cc-label">Date Paid</span><span class="cc-value">${c.datePaid}</span></div>
+        <div class="cc-row"><span class="cc-label">Payment Method</span><span class="cc-value">${c.method}</span></div>
+        ${c.ref ? `<div class="cc-row"><span class="cc-label">Reference No.</span><span class="cc-value">${c.ref}</span></div>` : ''}
+      </div>
+      ${c.note ? `<div class="cc-note">📝 Tenant note: "${c.note}"</div>` : ''}
+      ${c.status === 'pending' ? `
+      <div class="cc-actions">
+        <button class="btn-confirm" onclick="quickConfirm('${c.id}')">✓ Confirm Payment</button>
+        <button class="btn-reject" onclick="openReject('${c.id}')">✗ Reject</button>
+      </div>` : `<div style="text-align:center;font-size:12px;color:var(--gray);padding:8px 0">${c.status==='confirmed'?'✅ You confirmed this payment':'✗ You rejected this claim'}</div>`}
+      <div class="claimed-ago">Submitted ${c.submitted}</div>`;
+    grid.appendChild(div);
+  });
+}
+
+function filterClaims(status, btn) {
+  document.querySelectorAll('#sec-claims .sec-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderClaims(status);
+}
+
+// ── CONFIRM ───────────────────────────────────────
+async function quickConfirm(id) {
+  const claim = REAL_CLAIMS.find(c => String(c.id) === String(id)) || CLAIMS.find(c => String(c.id) === String(id));
+  if (!claim) return;
+  if (claim.real) {
+    try {
+      const res  = await fetch(`${API}/payments/${id}/confirm`,{
+        method:'PUT', headers:{Authorization:`Bearer ${token}`}
+      });
+      const data = await res.json();
+      if(!data.success){ toast(data.message||'Error confirming payment','danger'); return; }
+    } catch(err){ toast('Could not reach server.', 'danger'); return; }
+    REAL_CLAIMS = REAL_CLAIMS.filter(c => c.id !== id);
+  } else {
+    claim.status = 'confirmed';
+  }
+  updateClaimCounts();
+  renderRecentClaims();
+
+  renderClaims('pending');
+  renderTenantSummary();
+  toast(`✅ Payment of ${fn(claim.amount)} by ${claim.tenant} confirmed! Tenant notified.`, 'success');
+}
+
+// ── REJECT ────────────────────────────────────────
+function openReject(id) {
+  rejectingId = id;
+  document.getElementById('rejectReason').value = '';
+  document.getElementById('rejectNote').value = '';
+  document.getElementById('rejectModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeReject() {
+  document.getElementById('rejectModal').classList.remove('open');
+  document.body.style.overflow = '';
+  rejectingId = null;
+}
+async function confirmReject() {
+  const reason = document.getElementById('rejectReason').value;
+  if (!reason) { toast('Please select a reason for rejection', 'danger'); return; }
+    const claim = REAL_CLAIMS.find(c => String(c.id) === String(rejectingId)) || CLAIMS.find(c => String(c.id) === String(rejectingId));
+  try {
+    if(token && rejectingId){
+      const res  = await fetch(`${API}/payments/${rejectingId}/reject`,{
+        method:'PUT', headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`},
+        body: JSON.stringify({reason})
+      });
+      const data = await res.json();
+      if(!data.success){ toast(data.message||'Error rejecting payment','danger'); return; }
+    }
+  } catch(err){ console.warn('Backend not available — rejecting locally'); }
+  if (claim) {
+    if (claim.real) {
+      REAL_CLAIMS = REAL_CLAIMS.filter(c => c.id !== rejectingId);
+    } else {
+      claim.status = 'rejected';
+      claim.note = reason;
+    }
+    updateClaimCounts();
+    renderClaims('pending');
+    renderRecentClaims();
+  }
+  closeReject();
+  toast(`✗ Payment claim rejected. ${claim?.tenant} has been notified.`, 'danger');
+}
+
+// ── PAYMENT HISTORY ───────────────────────────────
+function renderHistory() {
+  const tbl = document.getElementById('historyTbl');
+  if (!tbl) return;
+  tbl.innerHTML = `<thead><tr><th>Tenant</th><th>Property</th><th>Amount</th><th>Month</th><th>Method</th><th>Reference</th><th>Status</th><th>Action</th></tr></thead>`;
+  const tb = document.createElement('tbody');
+  CLAIMS.filter(c => c.status !== 'pending').forEach(c => {
+    const sc = c.status==='confirmed'?'b-grn':'b-red';
+    const st = c.status==='confirmed'?'✓ Confirmed':'✗ Rejected';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><div class="td-name">${c.tenant}</div></td>
+      <td><div class="td-sub">${c.property}</div></td>
+      <td style="font-weight:600;color:var(--dark)">${fn(c.amount)}</td>
+      <td>${c.month}</td>
+      <td>${c.method}</td>
+      <td style="font-size:11px;color:var(--gray)">${c.ref || '—'}</td>
+      <td><span class="badge ${sc}">${st}</span></td>
+      <td><button class="abtn abtn-org" onclick="toast('Downloading receipt...','success')">Receipt</button></td>`;
+    tb.appendChild(tr);
+  });
+  tbl.appendChild(tb);
+}
+
+// ── MY PROPERTIES ─────────────────────────────────
+function renderMyProps(filter) {
+  const grid = document.getElementById('myPropGrid');
+  if (!grid) return; grid.innerHTML = '';
+  const filtered = filter==='all' ? MY_PROPS : MY_PROPS.filter(p => filter==='pending' ? p.approval==='pending' : p.status===filter);
+  filtered.forEach(p => {
+    const div = document.createElement('div'); div.className = 'prop-card-ll';
+    div.innerHTML = `
+      <div class="pc-img"><span>${p.e}</span>
+        <div class="pc-status-tag"><span class="badge ${p.approval==='pending'?'b-ylw':p.status==='occupied'?'b-grn':'b-org'}">${p.approval==='pending'?'⏳ Pending':p.status==='occupied'?'● Occupied':'○ Available'}</span></div>
+      </div>
+      <div class="pc-body">
+        <div class="pc-title">${p.title}</div>
+        <div class="pc-loc">📍 ${p.loc}</div>
+        <div class="pc-price">${p.price}</div>
+        <div class="pc-meta"><span>🛏 ${p.beds===0?'Studio':p.beds+' Bed'}</span><span>🚿 ${p.baths} Bath</span><span>👤 ${p.tenant}</span></div>
+        <div class="pc-acts">
+          <button class="btn-edit-prop" onclick="toast('Editing ${p.title}...','')">✏️ Edit</button>
+          <button class="btn-toggle-prop" onclick="toast('${p.status==='occupied'?'Marked as available':'Marked as occupied'}','success')">${p.status==='occupied'?'Mark Available':'Mark Occupied'}</button>
+        </div>
+      </div>`;
+    grid.appendChild(div);
+  });
+}
+
+function filterMyProps(filter, btn) {
+  document.querySelectorAll('#sec-properties .sec-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMyProps(filter);
+}
+
+// ── TENANT SUMMARY ────────────────────────────────
+function renderTenantSummary() {
+  const el = document.getElementById('tenantSummary');
+  if (!el) return;
+  el.innerHTML = '';
+  TENANTS.forEach(t => {
+    const claim = CLAIMS.find(c => c.tenant===t.name && c.status==='pending');
+    const div = document.createElement('div'); div.className = 'tenant-card';
+    div.innerHTML = `
+      <div class="tc-av">👤</div>
+      <div class="tc-info">
+        <div class="tc-name">${t.name}</div>
+        <div class="tc-detail">📱 ${t.phone} &nbsp;|&nbsp; 🏠 ${t.property}</div>
+      </div>
+      <div class="tc-right">
+        <div class="tc-rent">${t.rent}</div>
+        <div class="tc-status">${claim?'<span style="color:var(--yellow);font-weight:600">⏳ Claim pending</span>':'<span style="color:var(--green);font-weight:600">✓ Up to date</span>'}</div>
+      </div>`;
+    el.appendChild(div);
+  });
+}
+
+function renderFullTenants() {
+  const el = document.getElementById('fullTenantList');
+  if (!el) return; el.innerHTML = '';
+  TENANTS.forEach(t => {
+    const div = document.createElement('div'); div.className = 'tenant-card';
+    div.innerHTML = `
+      <div class="tc-av">👤</div>
+      <div class="tc-info">
+        <div class="tc-name">${t.name}</div>
+        <div class="tc-detail">📱 ${t.phone} &nbsp;·&nbsp; 🏠 ${t.property} &nbsp;·&nbsp; Since ${t.since}</div>
+      </div>
+      <div class="tc-right">
+        <div class="tc-rent">${t.rent}</div>
+        <div style="margin-top:6px;display:flex;gap:6px">
+          <button class="abtn abtn-org" onclick="toast('Viewing payment history for ${t.name}','')">History</button>
+          <button class="abtn abtn-ghost" onclick="toast('Message sent to ${t.name}','success')">Message</button>
+        </div>
+      </div>`;
+    el.appendChild(div);
+  });
+}
+
+// ── MESSAGES ──────────────────────────────────────
+function renderMessages() {
+  const el = document.getElementById('msgList');
+  if (!el) return; el.innerHTML = '';
+  MESSAGES.forEach(m => {
+    const div = document.createElement('div');
+    div.style.cssText = `display:flex;align-items:flex-start;gap:12px;padding:14px;border-radius:10px;border:1px solid var(--border);background:${m.unread?'var(--orange-faint)':'var(--offwhite)'}`;
+    div.innerHTML = `
+      <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--orange-light),var(--orange-mid));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">👤</div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div style="font-size:13px;font-weight:600;color:var(--dark)">${m.from}${m.unread?'<span style="background:var(--orange);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:50px;margin-left:8px">NEW</span>':''}</div>
+          <div style="font-size:10px;color:var(--gray)">${m.time}</div>
+        </div>
+        <div style="font-size:12px;color:var(--mid);line-height:1.5">${m.msg}</div>
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <button class="abtn abtn-org" onclick="toast('Replying to ${m.from}...','')">Reply</button>
+          <button class="abtn abtn-ghost" onclick="toast('Message marked as read','')">Mark read</button>
+        </div>
+      </div>`;
+    el.appendChild(div);
+  });
+}
+
+// ── ADD PROPERTY MODAL ────────────────────────────
+function openAddProp() { document.getElementById('addPropModal').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeAddProp() { document.getElementById('addPropModal').classList.remove('open'); document.body.style.overflow = ''; }
+async function submitPropModal() {
+  try {
+    if(token){
+      const res  = await fetch(`${API}/properties`,{
+        method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`},
+        body: JSON.stringify({title:'New Property', location_id:1, property_type:'flat', monthly_rent:0, full_address:'Address'})
+      });
+    }
+  } catch(err){ console.warn('Backend not available'); }
+  closeAddProp();
+  toast('Property submitted for admin approval! ✅ Usually approved within 24 hours.', 'success');
+}
+async function submitProperty() {
+  const title   = document.getElementById('pTitle').value.trim();
+  const type    = document.getElementById('pType').value;
+  const locId   = document.getElementById('pLocation').value;
+  const address = document.getElementById('pAddress').value.trim();
+  const rent    = document.getElementById('pRent').value;
+  const size    = document.getElementById('pSize').value;
+  const beds    = document.getElementById('pBeds').value;
+  const baths   = document.getElementById('pBaths').value;
+  const desc    = document.getElementById('pDesc').value.trim();
+  const amenities = Array.from(document.querySelectorAll('.pAmenity:checked')).map(c => c.value);
+
+  if (!title || !address || !rent) {
+    toast('Please fill in at least Title, Address, and Rent.', 'danger');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/properties`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        title, property_type: type, location_id: locId,
+        full_address: address, monthly_rent: rent,
+        size_sqm: size || null, bedrooms: beds, bathrooms: baths,
+        description: desc, amenities
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      toast('Property submitted for admin approval! ✅ Usually approved within 24 hours.', 'success');
+    } else {
+      toast(data.message || 'Submission failed.', 'danger');
+    }
+  } catch (err) {
+    toast('Could not reach server.', 'danger');
+  }
+}
+
+// ── INIT ──────────────────────────────────────────
+initLandlord();
+</script>
+</body>
+</html>

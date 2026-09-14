@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+// Auto-detect API URL — works locally and on Render
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000/api'
+  : window.location.origin + '/api';
+</script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HomeBase — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --orange:#E8600A;--orange-mid:#F07A2A;--orange-light:#F9A05A;
+  --orange-pale:#FEF0E6;--orange-faint:#FFF8F3;
+  --brown:#7A3000;--brown-mid:#A84400;
+  --white:#FFFFFF;--offwhite:#FFFAF6;
+  --gray:#9A8070;--border:#F0D5C0;--dark:#2D1500;--mid:#6B4030;
+  --green:#2E9E6B;--green-bg:#D4F4E4;
+  --blue:#1E4DA1;--blue-bg:#E8F0FE;
+  --red:#D94F4F;--red-bg:#FDE8E8;
+  --yellow:#F0A500;--yellow-bg:#FEF3D0;
+  --side:240px;
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);background:var(--offwhite);overflow-x:hidden}
+
+/* ── SIDEBAR ── */
+.sidenav{width:var(--side);min-width:var(--side);background:linear-gradient(180deg,var(--brown) 0%,var(--dark) 100%);
+  height:100vh;position:fixed;top:0;left:0;display:flex;flex-direction:column;z-index:100;transition:left .3s}
+.sn-brand{padding:22px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.1);text-decoration:none}
+.sn-logo{width:36px;height:36px;background:linear-gradient(135deg,var(--orange),var(--orange-light));
+  border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px}
+.sn-name{font-family:'Playfair Display',serif;font-size:20px;color:#fff}
+.sn-badge{background:var(--orange);color:#fff;font-size:9px;font-weight:700;
+  padding:2px 7px;border-radius:4px;margin-left:auto}
+.sn-menu{flex:1;padding:18px 10px;display:flex;flex-direction:column;gap:3px;overflow-y:auto}
+.sn-section{font-size:9px;font-weight:600;color:rgba(255,255,255,.3);
+  text-transform:uppercase;letter-spacing:1px;padding:12px 12px 4px}
+.sn-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;
+  font-size:13px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;text-decoration:none;transition:all .2s}
+.sn-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.sn-item.active{background:rgba(232,96,10,.3);color:#fff;font-weight:600;border-left:3px solid var(--orange)}
+.sn-ico{font-size:16px;width:19px;text-align:center;flex-shrink:0}
+.sn-count{margin-left:auto;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:50px}
+.sn-count.org{background:var(--orange)}
+.sn-bottom{padding:12px 10px;border-top:1px solid rgba(255,255,255,.1)}
+.sn-user{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;background:rgba(255,255,255,.07)}
+.sn-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--orange-light),var(--orange-mid));
+  display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.sn-uname{font-size:12px;font-weight:600;color:#fff}
+.sn-urole{font-size:10px;color:rgba(255,255,255,.45);margin-top:1px}
+
+/* ── MAIN ── */
+.main{margin-left:var(--side);min-height:100vh;display:flex;flex-direction:column}
+
+/* ── TOPBAR ── */
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;height:62px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50;box-shadow:0 2px 10px rgba(232,96,10,0.05)}
+.tb-left{display:flex;align-items:center;gap:14px}
+.hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px}
+.hamburger span{width:22px;height:2px;background:var(--brown);border-radius:2px}
+.tb-title{font-size:16px;font-weight:600;color:var(--dark)}
+.tb-sub{font-size:11px;color:var(--gray)}
+.tb-right{display:flex;align-items:center;gap:10px}
+.tb-search{display:flex;align-items:center;gap:8px;background:var(--offwhite);
+  border:1.5px solid var(--border);border-radius:9px;padding:0 12px;transition:border-color .2s,box-shadow .2s}
+.tb-search:focus-within{border-color:var(--orange);box-shadow:0 0 0 3px rgba(232,96,10,0.08)}
+.tb-search input{border:none;background:transparent;font-family:'DM Sans',sans-serif;
+  font-size:13px;color:var(--dark);outline:none;padding:9px 0;width:200px}
+.tb-search input::placeholder{color:var(--gray)}
+.tb-icon-btn{width:36px;height:36px;border-radius:9px;background:var(--offwhite);
+  border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;position:relative;transition:background .2s}
+.tb-icon-btn:hover{background:var(--orange-pale)}
+.tb-notif-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;
+  background:var(--red);border-radius:50%;border:2px solid #fff}
+.tb-admin-tag{display:flex;align-items:center;gap:8px;padding:6px 14px;
+  background:var(--orange-pale);border:1px solid var(--border);border-radius:9px;cursor:pointer}
+.tb-admin-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--orange-mid));
+  display:flex;align-items:center;justify-content:center;font-size:13px}
+.tb-admin-name{font-size:13px;font-weight:600;color:var(--brown)}
+
+/* ── CONTENT ── */
+.content{padding:24px;flex:1}
+
+/* ── SECTION TABS ── */
+.sec-tabs{display:flex;gap:4px;background:#fff;border:1.5px solid var(--border);
+  border-radius:12px;padding:5px;margin-bottom:24px;width:fit-content}
+.sec-tab{padding:8px 18px;border-radius:8px;font-family:'DM Sans',sans-serif;
+  font-size:13px;font-weight:500;color:var(--gray);cursor:pointer;border:none;
+  background:transparent;transition:all .2s;display:flex;align-items:center;gap:6px}
+.sec-tab:hover{color:var(--orange)}
+.sec-tab.active{background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-weight:600}
+.sec-panel{display:none}
+.sec-panel.active{display:block}
+
+/* ── STAT CARDS ── */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:#fff;border-radius:14px;padding:20px;border:1.5px solid var(--border);
+  display:flex;flex-direction:column;gap:12px;transition:transform .2s,box-shadow .2s;cursor:default}
+.stat-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(232,96,10,0.08)}
+.stat-card.orange{background:linear-gradient(145deg,var(--orange),var(--orange-mid));border-color:transparent}
+.sc-top{display:flex;align-items:center;justify-content:space-between}
+.sc-ico{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:19px}
+.ico-o{background:var(--orange-pale)}.ico-g{background:var(--green-bg)}.ico-b{background:var(--blue-bg)}
+.ico-r{background:var(--red-bg)}.ico-w{background:rgba(255,255,255,.2)}
+.sc-trend{font-size:11px;font-weight:600;padding:3px 9px;border-radius:50px}
+.tr-up{background:var(--green-bg);color:var(--green)}.tr-dn{background:var(--red-bg);color:var(--red)}
+.tr-ok{background:var(--orange-pale);color:var(--orange)}.tr-wt{background:rgba(255,255,255,.2);color:rgba(255,255,255,.9)}
+.sc-lbl{font-size:12px;color:var(--gray)}
+.sc-val{font-family:'Playfair Display',serif;font-size:26px;color:var(--dark)}
+.sc-hint{font-size:11px;color:var(--gray);margin-top:-4px}
+.stat-card.orange .sc-lbl,.stat-card.orange .sc-hint{color:rgba(255,255,255,.65)}
+.stat-card.orange .sc-val{color:#fff}
+
+/* ── CARDS ── */
+.card{background:#fff;border-radius:14px;border:1.5px solid var(--border);overflow:hidden;margin-bottom:20px}
+.card-hd{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.card-hd-title{font-size:14px;font-weight:600;color:var(--dark);display:flex;align-items:center;gap:7px}
+.card-hd-action{font-size:12px;color:var(--orange);cursor:pointer;background:none;
+  border:none;font-family:'DM Sans',sans-serif;font-weight:500;transition:color .2s}
+.card-hd-action:hover{color:var(--brown)}
+
+/* ── GRID 2-3 COL ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:20px}
+
+/* ── TABLE ── */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:10px;font-weight:600;color:var(--gray);text-transform:uppercase;
+  letter-spacing:.6px;padding:11px 18px;text-align:left;border-bottom:1px solid var(--border);background:var(--offwhite)}
+.tbl td{padding:13px 18px;font-size:12px;color:var(--mid);border-bottom:1px solid var(--border)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--orange-faint)}
+.tbl-name{font-weight:600;color:var(--dark);font-size:13px}
+.tbl-sub{font-size:11px;color:var(--gray);margin-top:1px}
+
+/* badges */
+.badge{padding:3px 10px;border-radius:50px;font-size:10px;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+.b-grn{background:var(--green-bg);color:var(--green)}
+.b-org{background:var(--orange-pale);color:var(--orange)}
+.b-red{background:var(--red-bg);color:var(--red)}
+.b-blue{background:var(--blue-bg);color:var(--blue)}
+.b-ylw{background:var(--yellow-bg);color:var(--yellow)}
+.b-gray{background:#f0f0f0;color:#666}
+
+/* action buttons */
+.act-row{display:flex;gap:5px}
+.abtn{padding:4px 10px;border-radius:6px;font-size:10px;font-weight:500;cursor:pointer;
+  font-family:'DM Sans',sans-serif;border:1.5px solid transparent;transition:all .2s}
+.abtn-org{background:var(--orange-pale);color:var(--orange);border-color:var(--orange-pale)}
+.abtn-org:hover{background:var(--orange);color:#fff}
+.abtn-grn{background:var(--green-bg);color:var(--green);border-color:var(--green-bg)}
+.abtn-grn:hover{background:var(--green);color:#fff}
+.abtn-red{background:var(--red-bg);color:var(--red);border-color:var(--red-bg)}
+.abtn-red:hover{background:var(--red);color:#fff}
+.abtn-ghost{background:transparent;color:var(--gray);border-color:var(--border)}
+.abtn-ghost:hover{border-color:var(--orange-light);color:var(--orange)}
+
+/* user avatar cell */
+.uav{display:flex;align-items:center;gap:10px}
+.uav-ico{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--orange-light),var(--orange-mid));
+  display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.uav-ico.green{background:linear-gradient(135deg,#38b27a,var(--green))}
+.uav-ico.blue{background:linear-gradient(135deg,#4F8EF7,var(--blue))}
+
+/* ── CHART BARS ── */
+.chart-wrap{padding:18px 20px}
+.chart-bars{display:flex;align-items:flex-end;gap:8px;height:110px}
+.chart-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px}
+.chart-bar{width:100%;border-radius:5px 5px 0 0;cursor:pointer;position:relative;transition:opacity .2s}
+.chart-bar:hover{opacity:.8}
+.chart-bar::after{content:attr(data-tip);position:absolute;top:-26px;left:50%;transform:translateX(-50%);
+  background:var(--dark);color:#fff;font-size:9px;padding:2px 6px;border-radius:4px;
+  white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s}
+.chart-bar:hover::after{opacity:1}
+.chart-mo{font-size:9px;color:var(--gray)}
+.chart-legend{display:flex;gap:14px;margin-top:12px}
+.cl-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mid)}
+.cl-dot{width:8px;height:8px;border-radius:50%}
+
+/* ── PROPERTY APPROVAL CARDS ── */
+.prop-approval-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:18px}
+.pa-card{background:var(--offwhite);border-radius:12px;border:1.5px solid var(--border);overflow:hidden;transition:box-shadow .2s}
+.pa-card:hover{box-shadow:0 6px 20px rgba(232,96,10,0.08)}
+.pa-img{height:140px;background:linear-gradient(135deg,var(--orange-pale),#fcd9bc);
+  display:flex;align-items:center;justify-content:center;font-size:48px;position:relative}
+.pa-status{position:absolute;top:10px;right:10px}
+.pa-body{padding:14px}
+.pa-title{font-size:14px;font-weight:600;color:var(--dark);margin-bottom:4px}
+.pa-loc{font-size:11px;color:var(--gray);margin-bottom:8px}
+.pa-price{font-size:16px;font-weight:700;color:var(--orange);margin-bottom:10px}
+.pa-landlord{font-size:11px;color:var(--mid);margin-bottom:12px;display:flex;align-items:center;gap:5px}
+.pa-actions{display:flex;gap:8px}
+.pa-actions button{flex:1;padding:8px;border-radius:8px;font-family:'DM Sans',sans-serif;
+  font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .2s}
+.btn-approve{background:var(--green);color:#fff}.btn-approve:hover{background:#258a5c}
+.btn-reject{background:var(--red-bg);color:var(--red);border:1.5px solid var(--red-bg)}
+.btn-reject:hover{background:var(--red);color:#fff}
+
+/* ── RECENT ACTIVITY ── */
+.activity-list{padding:14px 18px;display:flex;flex-direction:column;gap:10px}
+.act-item{display:flex;align-items:flex-start;gap:12px;padding:12px;
+  border-radius:10px;background:var(--offwhite);border:1px solid var(--border)}
+.act-item.new{background:var(--orange-faint);border-color:var(--border)}
+.act-ico{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.act-ico.org{background:var(--orange-pale)}.act-ico.grn{background:var(--green-bg)}
+.act-ico.red{background:var(--red-bg)}.act-ico.blue{background:var(--blue-bg)}
+.act-info{flex:1}
+.act-text{font-size:12px;color:var(--mid);line-height:1.5}
+.act-text strong{color:var(--dark)}
+.act-time{font-size:10px;color:var(--gray);margin-top:2px}
+
+/* ── QUICK STATS MINI ── */
+.mini-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 18px}
+.mini-stat{background:var(--offwhite);border-radius:10px;padding:14px;border:1px solid var(--border)}
+.ms-val{font-family:'Playfair Display',serif;font-size:22px;color:var(--dark);margin-bottom:3px}
+.ms-lbl{font-size:11px;color:var(--gray)}
+.ms-bar{height:4px;border-radius:4px;background:var(--border);margin-top:8px;overflow:hidden}
+.ms-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--orange),var(--orange-light))}
+
+/* ── MODAL ── */
+.modal-ov{position:fixed;inset:0;z-index:500;background:rgba(45,21,0,.5);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-ov.open{opacity:1;pointer-events:all}
+.modal{background:#fff;border-radius:18px;width:100%;max-width:480px;
+  box-shadow:0 24px 60px rgba(232,96,10,0.15);transform:translateY(26px);
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1);overflow:hidden}
+.modal-ov.open .modal{transform:translateY(0)}
+.modal-hd{padding:20px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-hd h3{font-size:16px;font-weight:600;color:var(--dark)}
+.modal-x{background:none;border:none;font-size:19px;cursor:pointer;color:var(--gray);transition:color .2s}
+.modal-x:hover{color:var(--dark)}
+.modal-bd{padding:22px;display:flex;flex-direction:column;gap:14px}
+.ff{display:flex;flex-direction:column;gap:5px}
+.ff label{font-size:12px;font-weight:500;color:var(--mid)}
+.ff input,.ff select,.ff textarea{padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;
+  font-family:'DM Sans',sans-serif;font-size:13px;color:var(--dark);background:var(--offwhite);outline:none;
+  transition:border-color .2s,box-shadow .2s}
+.ff input:focus,.ff select:focus,.ff textarea:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(232,96,10,0.08);background:#fff}
+.ff-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-ft{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px}
+.btn-modal-p{flex:1;padding:11px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;
+  border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;
+  transition:transform .2s,box-shadow .2s;box-shadow:0 3px 12px rgba(232,96,10,0.22)}
+.btn-modal-p:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(232,96,10,0.32)}
+.btn-modal-c{padding:11px 18px;border:1.5px solid var(--border);border-radius:9px;background:#fff;
+  font-family:'DM Sans',sans-serif;font-size:13px;color:var(--mid);cursor:pointer;transition:border-color .2s}
+.btn-modal-c:hover{border-color:var(--orange-light)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:22px;right:22px;z-index:9999;background:var(--dark);color:#fff;
+  padding:11px 18px;border-radius:11px;font-size:13px;font-weight:500;
+  box-shadow:0 6px 24px rgba(0,0,0,0.2);transform:translateY(70px);opacity:0;
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .35s;font-family:'DM Sans',sans-serif}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--green)}.toast.danger{background:var(--red)}.toast.warn{background:var(--yellow)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1100px){.stat-grid{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){
+  .sidenav{left:calc(-1 * var(--side))}.sidenav.open{left:0;box-shadow:4px 0 24px rgba(232,96,10,0.2)}
+  .main{margin-left:0}.hamburger{display:flex}.tb-search{display:none}
+  .g2,.g3{grid-template-columns:1fr}.stat-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:480px){.stat-grid{grid-template-columns:1fr}.ff-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidenav" id="sidenav">
+  <a href="HomeBase_Frontend.html" class="sn-brand">
+    <div class="sn-logo">🏠</div>
+    <span class="sn-name">HomeBase</span>
+    <span class="sn-badge">ADMIN</span>
+  </a>
+  <div class="sn-menu">
+    <div class="sn-section">Overview</div>
+    <a class="sn-item active" onclick="showSec('dashboard')"><span class="sn-ico">📊</span>Dashboard</a>
+    <a class="sn-item" onclick="showSec('analytics')"><span class="sn-ico">📈</span>Analytics</a>
+
+    <div class="sn-section">Management</div>
+    <a class="sn-item" onclick="showSec('users')"><span class="sn-ico">👥</span>Users<span class="sn-count">248</span></a>
+    <a class="sn-item" onclick="showSec('properties')"><span class="sn-ico">🏠</span>Properties<span class="sn-count org">7</span></a>
+    <a class="sn-item" onclick="showSec('payments')"><span class="sn-ico">💳</span>Payments</a>
+    <a class="sn-item" onclick="showSec('reports')"><span class="sn-ico">🧾</span>Reports</a>
+
+    <div class="sn-section">System</div>
+    <a class="sn-item" onclick="showSec('notifications')"><span class="sn-ico">🔔</span>Notifications<span class="sn-count">12</span></a>
+    <a class="sn-item" onclick="showSec('settings')"><span class="sn-ico">⚙️</span>Settings</a>
+    <a class="sn-item" onclick="window.location.href='HomeBase_Frontend.html'"><span class="sn-ico">🌐</span>View Site</a>
+    <a class="sn-item" onclick="localStorage.removeItem('hb_token'); localStorage.removeItem('hb_user'); window.location.href='index.html';"><span class="sn-ico">🚪</span>Sign Out</a>
+  </div>
+  <div class="sn-bottom">
+    <div class="sn-user">
+      <div class="sn-av">👨‍💼</div>
+      <div><div class="sn-uname">Super Admin</div><div class="sn-urole">Administrator</div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="tb-left">
+      <button class="hamburger" onclick="document.getElementById('sidenav').classList.toggle('open')">
+        <span></span><span></span><span></span>
+      </button>
+      <div>
+        <div class="tb-title" id="tbTitle">Admin Dashboard</div>
+        <div class="tb-sub">Wednesday, July 29, 2026</div>
+      </div>
+    </div>
+    <div class="tb-right">
+      <div class="tb-search">
+        <span style="font-size:15px;opacity:.5">🔍</span>
+        <input type="text" placeholder="Search users, properties..." oninput="handleSearch(this.value)"/>
+      </div>
+      <div class="tb-icon-btn" onclick="toast('You have 12 new notifications 🔔','')">
+        🔔<div class="tb-notif-dot"></div>
+      </div>
+      <div class="tb-admin-tag">
+        <div class="tb-admin-av">👨‍💼</div>
+        <span class="tb-admin-name">Super Admin</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ════════════════════════
+         SECTION: DASHBOARD
+    ════════════════════════ -->
+    <div class="sec-panel active" id="sec-dashboard">
+
+      <!-- Summary Stats -->
+      <div class="stat-grid">
+        <div class="stat-card orange">
+          <div class="sc-top"><div class="sc-ico ico-w">👥</div><span class="sc-trend tr-wt">↑ +18</span></div>
+          <div class="sc-lbl">Total Users</div>
+          <div class="sc-val">248</div>
+          <div class="sc-hint">Tenants + Landlords</div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-top"><div class="sc-ico ico-g">🏠</div><span class="sc-trend tr-up">↑ +5</span></div>
+          <div class="sc-lbl">Active Listings</div>
+          <div class="sc-val">124</div>
+          <div class="sc-hint">Approved properties</div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-top"><div class="sc-ico ico-b">💳</div><span class="sc-trend tr-up">↑ +12%</span></div>
+          <div class="sc-lbl">Rent Payments</div>
+          <div class="sc-val">₦42.6M</div>
+          <div class="sc-hint">Total processed 2026</div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-top"><div class="sc-ico ico-r">⏳</div><span class="sc-trend tr-ok">7 pending</span></div>
+          <div class="sc-lbl">Pending Approvals</div>
+          <div class="sc-val">7</div>
+          <div class="sc-hint">Properties awaiting review</div>
+        </div>
+      </div>
+
+      <div class="g2">
+        <!-- Recent Users -->
+        <div class="card">
+          <div class="card-hd">
+            <span class="card-hd-title">👥 Recent Registrations</span>
+            <button class="card-hd-action" onclick="showSec('users')">View All</button>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="tbl" id="recentUsersTbl"></table>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card">
+          <div class="card-hd">
+            <span class="card-hd-title">📋 Recent Activity</span>
+            <button class="card-hd-action" onclick="toast('Activity log exported!','success')">Export</button>
+          </div>
+          <div class="activity-list">
+            <div class="act-item new"><div class="act-ico org">🏠</div><div class="act-info"><div class="act-text"><strong>New property</strong> submitted by Kemi Adesanya in Lekki, Lagos — awaiting approval.</div><div class="act-time">5 minutes ago</div></div></div>
+            <div class="act-item new"><div class="act-ico grn">👤</div><div class="act-info"><div class="act-text"><strong>Emeka Nwachukwu</strong> registered as a new tenant from Lagos.</div><div class="act-time">18 minutes ago</div></div></div>
+            <div class="act-item"><div class="act-ico grn">💳</div><div class="act-info"><div class="act-text"><strong>Rent payment</strong> of ₦85,000 recorded by Adaeze Okonkwo for June 2026.</div><div class="act-time">1 hour ago</div></div></div>
+            <div class="act-item"><div class="act-ico org">✅</div><div class="act-info"><div class="act-text"><strong>Property approved:</strong> 2-Bedroom flat in Wuse 2, Abuja by Admin.</div><div class="act-time">2 hours ago</div></div></div>
+            <div class="act-item"><div class="act-ico red">🚨</div><div class="act-info"><div class="act-text"><strong>Overdue alert:</strong> 3 tenants have missed rent payments for July 2026.</div><div class="act-time">3 hours ago</div></div></div>
+            <div class="act-item"><div class="act-ico blue">🔔</div><div class="act-info"><div class="act-text"><strong>12 rent reminders</strong> sent automatically for August 2026 due dates.</div><div class="act-time">6 hours ago</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="g2">
+        <!-- Revenue Chart -->
+        <div class="card">
+          <div class="card-hd">
+            <span class="card-hd-title">📈 Monthly Payments (2026)</span>
+            <span style="font-size:11px;color:var(--gray)">Total: ₦42.6M</span>
+          </div>
+          <div class="chart-wrap">
+            <div class="chart-bars" id="revChart"></div>
+            <div class="chart-legend">
+              <div class="cl-item"><div class="cl-dot" style="background:var(--orange)"></div>Payments Collected</div>
+              <div class="cl-item"><div class="cl-dot" style="background:var(--border)"></div>Upcoming</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="card">
+          <div class="card-hd"><span class="card-hd-title">📊 Platform Overview</span></div>
+          <div class="mini-stats">
+            <div class="mini-stat"><div class="ms-val">186</div><div class="ms-lbl">Active Tenants</div><div class="ms-bar"><div class="ms-fill" style="width:75%"></div></div></div>
+            <div class="mini-stat"><div class="ms-val">62</div><div class="ms-lbl">Landlords</div><div class="ms-bar"><div class="ms-fill" style="width:25%"></div></div></div>
+            <div class="mini-stat"><div class="ms-val">124</div><div class="ms-lbl">Live Listings</div><div class="ms-bar"><div class="ms-fill" style="width:60%"></div></div></div>
+            <div class="mini-stat"><div class="ms-val">7</div><div class="ms-lbl">Pending Review</div><div class="ms-bar"><div class="ms-fill" style="width:15%;background:var(--red)"></div></div></div>
+            <div class="mini-stat"><div class="ms-val">98%</div><div class="ms-lbl">Satisfaction Rate</div><div class="ms-bar"><div class="ms-fill" style="width:98%"></div></div></div>
+            <div class="mini-stat"><div class="ms-val">342</div><div class="ms-lbl">Payments Made</div><div class="ms-bar"><div class="ms-fill" style="width:85%"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end dashboard -->
+
+    <!-- ════════════════════════
+         SECTION: USERS
+    ════════════════════════ -->
+    <div class="sec-panel" id="sec-users">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:18px;font-weight:600;color:var(--dark)">User Management</div>
+          <div style="font-size:12px;color:var(--gray)">248 registered users — tenants, landlords, admins</div>
+        </div>
+        <button onclick="openModal('addUser')" style="padding:9px 18px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 3px 12px rgba(232,96,10,0.25)">+ Add User</button>
+      </div>
+
+      <!-- Filter tabs -->
+      <div class="sec-tabs" style="margin-bottom:18px">
+        <button class="sec-tab active" onclick="filterUsers('all',this)">All Users (248)</button>
+        <button class="sec-tab" onclick="filterUsers('tenant',this)">Tenants (186)</button>
+        <button class="sec-tab" onclick="filterUsers('landlord',this)">Landlords (62)</button>
+        <button class="sec-tab" onclick="filterUsers('admin',this)">Admins (2)</button>
+      </div>
+
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-hd-title">👥 All Users</span>
+          <button class="card-hd-action" onclick="toast('Exporting users CSV...','success')">Export CSV</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tbl" id="usersTable"></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════
+         SECTION: PROPERTIES
+    ════════════════════════ -->
+    <div class="sec-panel" id="sec-properties">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:18px;font-weight:600;color:var(--dark)">Property Management</div>
+          <div style="font-size:12px;color:var(--gray)">Review, approve, or reject property listings</div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <span class="badge b-ylw" style="padding:6px 14px;font-size:11px">⏳ 7 Pending</span>
+          <span class="badge b-grn" style="padding:6px 14px;font-size:11px">✓ 124 Approved</span>
+        </div>
+      </div>
+
+      <div class="sec-tabs" style="margin-bottom:18px">
+        <button class="sec-tab active" onclick="filterProps('pending',this)">⏳ Pending (7)</button>
+        <button class="sec-tab" onclick="filterProps('approved',this)">✓ Approved (124)</button>
+        <button class="sec-tab" onclick="filterProps('rejected',this)">✗ Rejected (3)</button>
+      </div>
+
+      <div class="prop-approval-grid" id="propApprovalGrid"></div>
+    </div>
+
+    <!-- ════════════════════════
+         SECTION: PAYMENTS
+    ════════════════════════ -->
+    <div class="sec-panel" id="sec-payments">
+      <div style="margin-bottom:20px">
+        <div style="font-size:18px;font-weight:600;color:var(--dark)">Payment Management</div>
+        <div style="font-size:12px;color:var(--gray)">All rent payment transactions on the platform</div>
+      </div>
+
+      <div class="stat-grid" style="margin-bottom:20px">
+        <div class="stat-card"><div class="sc-top"><div class="sc-ico ico-g">✅</div><span class="sc-trend tr-up">+23</span></div><div class="sc-lbl">Paid This Month</div><div class="sc-val">186</div><div class="sc-hint">July 2026</div></div>
+        <div class="stat-card"><div class="sc-top"><div class="sc-ico ico-o">⏳</div><span class="sc-trend tr-ok">12</span></div><div class="sc-lbl">Pending</div><div class="sc-val">12</div><div class="sc-hint">Awaiting payment</div></div>
+        <div class="stat-card"><div class="sc-top"><div class="sc-ico ico-r">⚠️</div><span class="sc-trend tr-dn">3</span></div><div class="sc-lbl">Overdue</div><div class="sc-val">3</div><div class="sc-hint">Past due date</div></div>
+        <div class="stat-card orange"><div class="sc-top"><div class="sc-ico ico-w">💰</div><span class="sc-trend tr-wt">↑ 12%</span></div><div class="sc-lbl">Total Volume</div><div class="sc-val">₦42.6M</div><div class="sc-hint">Jan – Jul 2026</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-hd-title">💳 All Payment Records</span>
+          <button class="card-hd-action" onclick="toast('Exporting payment records...','success')">Export PDF</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tbl" id="paymentsTable"></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════
+         SECTION: REPORTS
+    ════════════════════════ -->
+    <div class="sec-panel" id="sec-reports">
+      <div style="margin-bottom:20px">
+        <div style="font-size:18px;font-weight:600;color:var(--dark)">Reports & Analytics</div>
+        <div style="font-size:12px;color:var(--gray)">Generate and download platform reports</div>
+      </div>
+      <div class="g3">
+        <div class="card" style="cursor:pointer" onclick="toast('Generating User Report PDF...','success')">
+          <div style="padding:28px;text-align:center">
+            <div style="font-size:48px;margin-bottom:12px">👥</div>
+            <div style="font-size:15px;font-weight:600;color:var(--dark);margin-bottom:6px">User Report</div>
+            <div style="font-size:12px;color:var(--gray);margin-bottom:16px">All registered users, roles, and registration dates</div>
+            <span class="badge b-org" style="padding:5px 14px">Download PDF</span>
+          </div>
+        </div>
+        <div class="card" style="cursor:pointer" onclick="toast('Generating Property Report PDF...','success')">
+          <div style="padding:28px;text-align:center">
+            <div style="font-size:48px;margin-bottom:12px">🏠</div>
+            <div style="font-size:15px;font-weight:600;color:var(--dark);margin-bottom:6px">Property Report</div>
+            <div style="font-size:12px;color:var(--gray);margin-bottom:16px">All listings by location, type, and approval status</div>
+            <span class="badge b-org" style="padding:5px 14px">Download PDF</span>
+          </div>
+        </div>
+        <div class="card" style="cursor:pointer" onclick="toast('Generating Payment Report PDF...','success')">
+          <div style="padding:28px;text-align:center">
+            <div style="font-size:48px;margin-bottom:12px">💳</div>
+            <div style="font-size:15px;font-weight:600;color:var(--dark);margin-bottom:6px">Payment Report</div>
+            <div style="font-size:12px;color:var(--gray);margin-bottom:16px">All rent transactions, status, and monthly totals</div>
+            <span class="badge b-org" style="padding:5px 14px">Download PDF</span>
+          </div>
+        </div>
+        <div class="card" style="cursor:pointer" onclick="toast('Generating Affordability Report PDF...','success')">
+          <div style="padding:28px;text-align:center">
+            <div style="font-size:48px;margin-bottom:12px">🧮</div>
+            <div style="font-size:15px;font-weight:600;color:var(--dark);margin-bottom:6px">Affordability Report</div>
+            <div style="font-size:12px;color:var(--gray);margin-bottom:16px">Salary vs rent analysis for all tenants</div>
+            <span class="badge b-org" style="padding:5px 14px">Download PDF</span>
+          </div>
+        </div>
+        <div class="card" style="cursor:pointer" onclick="toast('Generating Overdue Report PDF...','success')">
+          <div style="padding:28px;text-align:center">
+            <div style="font-size:48px;margin-bottom:12px">⚠️</div>
+            <div style="font-size:15px;font-weight:600;color:var(--dark);margin-bottom:6px">Overdue Report</div>
+            <div style="font-size:12px;color:var(--gray);margin-bottom:16px">Tenants with missed or late payments</div>
+            <span class="badge b-red" style="padding:5px 14px">Download PDF</span>
+          </div>
+        </div>
+        <div class="card" style="cursor:pointer" onclick="toast('Generating Platform Summary PDF...','success')">
+          <div style="padding:28px;text-align:center">
+            <div style="font-size:48px;margin-bottom:12px">📊</div>
+            <div style="font-size:15px;font-weight:600;color:var(--dark);margin-bottom:6px">Platform Summary</div>
+            <div style="font-size:12px;color:var(--gray);margin-bottom:16px">Complete platform overview and key metrics</div>
+            <span class="badge b-grn" style="padding:5px 14px">Download PDF</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════
+         SECTION: NOTIFICATIONS
+    ════════════════════════ -->
+    <div class="sec-panel" id="sec-notifications">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div>
+          <div style="font-size:18px;font-weight:600;color:var(--dark)">Notifications</div>
+          <div style="font-size:12px;color:var(--gray)">System alerts and platform notifications</div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button onclick="toast('All notifications marked as read','success')" style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;color:var(--mid)">Mark all read</button>
+          <button onclick="openModal('sendNotif')" style="padding:8px 16px;border:none;border-radius:8px;background:var(--orange);color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer">+ Send Notification</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="activity-list" id="notifList"></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════
+         SECTION: SETTINGS
+    ════════════════════════ -->
+    <div class="sec-panel" id="sec-settings">
+      <div style="margin-bottom:20px">
+        <div style="font-size:18px;font-weight:600;color:var(--dark)">System Settings</div>
+        <div style="font-size:12px;color:var(--gray)">Configure HomeBase platform settings</div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><span class="card-hd-title">🏠 Platform Settings</span></div>
+          <div style="padding:20px;display:flex;flex-direction:column;gap:16px">
+            <div class="ff"><label>Platform Name</label><input type="text" value="HomeBase"/></div>
+            <div class="ff"><label>Support Email</label><input type="email" value="support@homebase.ng"/></div>
+            <div class="ff"><label>Default Currency</label><select><option>Nigerian Naira (₦)</option><option>US Dollar ($)</option></select></div>
+            <div class="ff"><label>Affordability Threshold (%)</label><input type="number" value="30"/></div>
+            <button onclick="toast('Settings saved successfully! ✅','success')" style="padding:11px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Save Settings</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-hd-title">🔔 Notification Settings</span></div>
+          <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--offwhite);border-radius:9px;border:1px solid var(--border)">
+              <div><div style="font-size:13px;font-weight:500;color:var(--dark)">Rent Due Reminders</div><div style="font-size:11px;color:var(--gray)">Send 7, 3, and 1 day before due</div></div>
+              <input type="checkbox" checked style="accent-color:var(--orange);width:16px;height:16px;cursor:pointer"/>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--offwhite);border-radius:9px;border:1px solid var(--border)">
+              <div><div style="font-size:13px;font-weight:500;color:var(--dark)">Overdue Alerts</div><div style="font-size:11px;color:var(--gray)">Notify tenants with missed payments</div></div>
+              <input type="checkbox" checked style="accent-color:var(--orange);width:16px;height:16px;cursor:pointer"/>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--offwhite);border-radius:9px;border:1px solid var(--border)">
+              <div><div style="font-size:13px;font-weight:500;color:var(--dark)">New Listing Alerts</div><div style="font-size:11px;color:var(--gray)">Notify tenants of matching listings</div></div>
+              <input type="checkbox" checked style="accent-color:var(--orange);width:16px;height:16px;cursor:pointer"/>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--offwhite);border-radius:9px;border:1px solid var(--border)">
+              <div><div style="font-size:13px;font-weight:500;color:var(--dark)">Payment Confirmations</div><div style="font-size:11px;color:var(--gray)">Send receipt after each payment</div></div>
+              <input type="checkbox" checked style="accent-color:var(--orange);width:16px;height:16px;cursor:pointer"/>
+            </div>
+            <button onclick="toast('Notification settings saved! 🔔','success')" style="padding:11px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Save Settings</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════
+         SECTION: ANALYTICS
+    ════════════════════════ -->
+    <div class="sec-panel" id="sec-analytics">
+      <div style="margin-bottom:20px">
+        <div style="font-size:18px;font-weight:600;color:var(--dark)">Platform Analytics</div>
+        <div style="font-size:12px;color:var(--gray)">Detailed performance metrics for HomeBase</div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="sc-top"><div class="sc-ico ico-o">📈</div><span class="sc-trend tr-up">↑ 23%</span></div><div class="sc-lbl">User Growth (Monthly)</div><div class="sc-val">+47</div><div class="sc-hint">vs last month</div></div>
+        <div class="stat-card"><div class="sc-top"><div class="sc-ico ico-g">🏠</div><span class="sc-trend tr-up">↑ 18%</span></div><div class="sc-lbl">New Listings (Monthly)</div><div class="sc-val">+22</div><div class="sc-hint">vs last month</div></div>
+        <div class="stat-card"><div class="sc-top"><div class="sc-ico ico-b">💳</div><span class="sc-trend tr-up">↑ 12%</span></div><div class="sc-lbl">Payment Volume</div><div class="sc-val">₦7.8M</div><div class="sc-hint">July 2026</div></div>
+        <div class="stat-card orange"><div class="sc-top"><div class="sc-ico ico-w">⭐</div><span class="sc-trend tr-wt">98%</span></div><div class="sc-lbl">Satisfaction Rate</div><div class="sc-val">98%</div><div class="sc-hint">From user feedback</div></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><span class="card-hd-title">📊 User Growth by Month</span></div>
+          <div class="chart-wrap">
+            <div class="chart-bars" id="growthChart"></div>
+            <div class="chart-legend"><div class="cl-item"><div class="cl-dot" style="background:var(--orange)"></div>New Users</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-hd-title">🏠 Properties by Location</span></div>
+          <div style="padding:18px;display:flex;flex-direction:column;gap:12px">
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;color:var(--mid)">Lagos</span><span style="font-size:12px;font-weight:600;color:var(--dark)">68 listings</span></div>
+              <div class="ms-bar" style="height:8px"><div class="ms-fill" style="width:55%"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;color:var(--mid)">Abuja</span><span style="font-size:12px;font-weight:600;color:var(--dark)">34 listings</span></div>
+              <div class="ms-bar" style="height:8px"><div class="ms-fill" style="width:27%"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;color:var(--mid)">Ibadan</span><span style="font-size:12px;font-weight:600;color:var(--dark)">12 listings</span></div>
+              <div class="ms-bar" style="height:8px"><div class="ms-fill" style="width:10%"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;color:var(--mid)">Port Harcourt</span><span style="font-size:12px;font-weight:600;color:var(--dark)">6 listings</span></div>
+              <div class="ms-bar" style="height:8px"><div class="ms-fill" style="width:5%"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;color:var(--mid)">Others</span><span style="font-size:12px;font-weight:600;color:var(--dark)">4 listings</span></div>
+              <div class="ms-bar" style="height:8px"><div class="ms-fill" style="width:3%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end content -->
+</div><!-- end main -->
+
+<!-- ── ADD USER MODAL ── -->
+<div class="modal-ov" id="addUserModal" onclick="if(event.target===this)closeModal('addUser')">
+  <div class="modal">
+    <div class="modal-hd"><h3>👤 Add New User</h3><button class="modal-x" onclick="closeModal('addUser')">✕</button></div>
+    <div class="modal-bd">
+      <div class="ff-row">
+        <div class="ff"><label>First Name</label><input type="text" placeholder="John"/></div>
+        <div class="ff"><label>Last Name</label><input type="text" placeholder="Doe"/></div>
+      </div>
+      <div class="ff"><label>Email Address</label><input type="email" placeholder="john@example.com"/></div>
+      <div class="ff"><label>Phone Number</label><input type="tel" placeholder="+234 801 234 5678"/></div>
+      <div class="ff-row">
+        <div class="ff"><label>Role</label><select><option>tenant</option><option>landlord</option><option>admin</option></select></div>
+        <div class="ff"><label>Monthly Salary (₦)</label><input type="number" placeholder="e.g. 150000"/></div>
+      </div>
+      <div class="ff"><label>Password</label><input type="password" placeholder="Temporary password"/></div>
+    </div>
+    <div class="modal-ft"><button class="btn-modal-c" onclick="closeModal('addUser')">Cancel</button><button class="btn-modal-p" onclick="saveUser()">Add User</button></div>
+  </div>
+</div>
+
+<!-- ── SEND NOTIFICATION MODAL ── -->
+<div class="modal-ov" id="sendNotifModal" onclick="if(event.target===this)closeModal('sendNotif')">
+  <div class="modal">
+    <div class="modal-hd"><h3>🔔 Send Notification</h3><button class="modal-x" onclick="closeModal('sendNotif')">✕</button></div>
+    <div class="modal-bd">
+      <div class="ff"><label>Send To</label><select><option>All Users</option><option>All Tenants</option><option>All Landlords</option><option>Specific User</option></select></div>
+      <div class="ff"><label>Notification Title</label><input type="text" placeholder="e.g. System Maintenance Notice"/></div>
+      <div class="ff"><label>Type</label><select><option>System</option><option>Rent Reminder</option><option>Payment Confirmed</option><option>New Listing</option><option>Overdue Alert</option></select></div>
+      <div class="ff"><label>Message</label><textarea rows="4" placeholder="Enter your notification message here..."></textarea></div>
+    </div>
+    <div class="modal-ft"><button class="btn-modal-c" onclick="closeModal('sendNotif')">Cancel</button><button class="btn-modal-p" onclick="sendNotif()">Send Notification</button></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toastEl"></div>
+
+<script>
+// ── SECTION SWITCHING ─────────────────────────────
+const sectionTitles = {
+  dashboard:'Admin Dashboard', users:'User Management',
+  properties:'Property Management', payments:'Payment Management',
+  reports:'Reports & Analytics', notifications:'Notifications',
+  settings:'System Settings', analytics:'Platform Analytics'
+};
+
+function showSec(name) {
+  document.querySelectorAll('.sec-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sn-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  document.getElementById('tbTitle').textContent = sectionTitles[name] || name;
+  event.currentTarget?.classList.add('active');
+  if (name === 'properties') renderPropApprovals('pending');
+  if (name === 'notifications') renderNotifs();
+  if (name === 'analytics') setTimeout(renderGrowthChart, 100);
+}
+
+// ── TOAST ──────────────────────────────────────────
+function toast(msg, type) {
+  const t = document.getElementById('toastEl');
+  t.textContent = msg; t.className = 'toast ' + (type || '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ── MODAL ──────────────────────────────────────────
+function openModal(name) { document.getElementById(name + 'Modal').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeModal(name) { document.getElementById(name + 'Modal').classList.remove('open'); document.body.style.overflow = ''; }
+function saveUser() { closeModal('addUser'); toast('User added successfully! ✅', 'success'); }
+function sendNotif() { closeModal('sendNotif'); toast('Notification sent to all users! 🔔', 'success'); }
+
+// ── DATA ───────────────────────────────────────────
+const USERS = [
+  {id:1, name:'Emeka Nwachukwu', email:'emeka@gmail.com', role:'tenant', salary:'₦283,333', location:'Lagos', status:'active', joined:'Jun 1, 2026'},
+  {id:2, name:'Adaeze Okonkwo', email:'adaeze@gmail.com', role:'tenant', salary:'₦200,000', location:'Abuja', status:'active', joined:'May 15, 2026'},
+  {id:3, name:'Kemi Adesanya', email:'kemi@gmail.com', role:'landlord', salary:'—', location:'Lagos', status:'active', joined:'Apr 20, 2026'},
+  {id:4, name:'Funmilayo Adedeji', email:'funmi@gmail.com', role:'tenant', salary:'₦175,000', location:'Ibadan', status:'active', joined:'Apr 10, 2026'},
+  {id:5, name:'Chidi Okafor', email:'chidi@gmail.com', role:'tenant', salary:'₦320,000', location:'Lagos', status:'active', joined:'Mar 28, 2026'},
+  {id:6, name:'Ibrahim Musa', email:'ibrahim@gmail.com', role:'landlord', salary:'—', location:'Abuja', status:'active', joined:'Mar 12, 2026'},
+  {id:7, name:'Ngozi Eze', email:'ngozi@gmail.com', role:'tenant', salary:'₦150,000', location:'Enugu', status:'inactive', joined:'Feb 5, 2026'},
+  {id:8, name:'Tunde Balogun', email:'tunde@gmail.com', role:'tenant', salary:'₦250,000', location:'Lagos', status:'active', joined:'Jan 22, 2026'},
+];
+
+const PAYMENTS = [
+  {id:1, tenant:'Emeka Nwachukwu', property:'2-Bed Flat, Lekki', amount:'₦85,000', month:'July 2026', date:'Jul 1, 2026', method:'Bank Transfer', status:'paid'},
+  {id:2, tenant:'Adaeze Okonkwo', property:'1-Bed Flat, Wuse 2', amount:'₦60,000', month:'July 2026', date:'Jul 1, 2026', method:'Online', status:'paid'},
+  {id:3, tenant:'Funmilayo Adedeji', property:'Self-Contain, Bodija', amount:'₦35,000', month:'July 2026', date:'—', method:'—', status:'pending'},
+  {id:4, tenant:'Chidi Okafor', property:'3-Bed Duplex, Maitama', amount:'₦180,000', month:'July 2026', date:'Jul 2, 2026', method:'Bank Transfer', status:'paid'},
+  {id:5, tenant:'Ngozi Eze', property:'Room & Parlour, Kubwa', amount:'₦28,000', month:'July 2026', date:'—', method:'—', status:'overdue'},
+  {id:6, tenant:'Tunde Balogun', property:'Mini Flat, Ikeja', amount:'₦48,000', month:'July 2026', date:'—', method:'—', status:'pending'},
+];
+
+let REAL_PENDING = [];
+
+const PROPS_APPROVAL = [
+  {id:1, e:'🏠', title:'3-Bedroom Flat', loc:'Surulere, Lagos', price:'₦95,000/mo', landlord:'Kemi Adesanya', status:'pending', beds:3, baths:2},
+  {id:2, e:'🏢', title:'Self-Contain Studio', loc:'Wuse 2, Abuja', price:'₦55,000/mo', landlord:'Ibrahim Musa', status:'pending', beds:0, baths:1},
+  {id:3, e:'🏡', title:'2-Bedroom Duplex', loc:'GRA, Port Harcourt', price:'₦140,000/mo', landlord:'Ola Adeyemi', status:'pending', beds:2, baths:2},
+  {id:4, e:'🏠', title:'Mini Flat', loc:'Yaba, Lagos', price:'₦42,000/mo', landlord:'Kemi Adesanya', status:'approved', beds:1, baths:1},
+  {id:5, e:'🏘', title:'Room & Parlour', loc:'Kubwa, Abuja', price:'₦25,000/mo', landlord:'Ibrahim Musa', status:'approved', beds:1, baths:1},
+  {id:6, e:'🏗', title:'4-Bedroom Villa', loc:'Banana Island, Lagos', price:'₦600,000/mo', landlord:'Ola Adeyemi', status:'rejected', beds:4, baths:4},
+];
+
+// ── RENDER FUNCTIONS ───────────────────────────────
+function renderRecentUsers() {
+  const tbl = document.getElementById('recentUsersTbl');
+  if (!tbl) return;
+  tbl.innerHTML = `<thead><tr><th>User</th><th>Role</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>`;
+  const tbody = document.createElement('tbody');
+  USERS.slice(0, 5).forEach(u => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><div class="uav"><div class="uav-ico ${u.role==='landlord'?'green':''}">👤</div><div><div class="tbl-name">${u.name}</div><div class="tbl-sub">${u.email}</div></div></div></td>
+      <td><span class="badge ${u.role==='tenant'?'b-org':u.role==='landlord'?'b-grn':'b-blue'}">${u.role}</span></td>
+      <td>${u.location}</td>
+      <td><span class="badge ${u.status==='active'?'b-grn':'b-gray'}">${u.status}</span></td>
+      <td><div class="act-row"><button class="abtn abtn-org" onclick="toast('Viewing ${u.name}','')">View</button><button class="abtn abtn-ghost" onclick="toast('Editing ${u.name}','')">Edit</button></div></td>`;
+    tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);
+}
+
+function renderUsersTable(filter) {
+  const tbl = document.getElementById('usersTable');
+  if (!tbl) return;
+  tbl.innerHTML = `<thead><tr><th>User</th><th>Role</th><th>Monthly Salary</th><th>Location</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead>`;
+  const tbody = document.createElement('tbody');
+  const filtered = filter === 'all' ? USERS : USERS.filter(u => u.role === filter);
+  filtered.forEach(u => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><div class="uav"><div class="uav-ico ${u.role==='landlord'?'green':u.role==='admin'?'blue':''}">👤</div><div><div class="tbl-name">${u.name}</div><div class="tbl-sub">${u.email}</div></div></div></td>
+      <td><span class="badge ${u.role==='tenant'?'b-org':u.role==='landlord'?'b-grn':'b-blue'}">${u.role}</span></td>
+      <td style="font-weight:600;color:var(--dark)">${u.salary}</td>
+      <td>${u.location}</td>
+      <td>${u.joined}</td>
+      <td><span class="badge ${u.status==='active'?'b-grn':'b-gray'}">${u.status==='active'?'● Active':'○ Inactive'}</span></td>
+      <td><div class="act-row">
+        <button class="abtn abtn-org" onclick="toast('Viewing ${u.name}','')">View</button>
+        <button class="abtn abtn-ghost" onclick="toast('Editing ${u.name}','')">Edit</button>
+        <button class="abtn abtn-red" onclick="toast('${u.name} deactivated','danger')">Deactivate</button>
+      </div></td>`;
+    tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);
+}
+
+function renderPaymentsTable() {
+  const tbl = document.getElementById('paymentsTable');
+  if (!tbl) return;
+  tbl.innerHTML = `<thead><tr><th>Tenant</th><th>Property</th><th>Amount</th><th>Month</th><th>Date Paid</th><th>Method</th><th>Status</th><th>Actions</th></tr></thead>`;
+  const tbody = document.createElement('tbody');
+  PAYMENTS.forEach(p => {
+    const sc = p.status === 'paid' ? 'b-grn' : p.status === 'pending' ? 'b-ylw' : 'b-red';
+    const st = p.status === 'paid' ? '✓ Paid' : p.status === 'pending' ? '⏳ Pending' : '⚠ Overdue';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><div class="tbl-name">${p.tenant}</div></td>
+      <td><div class="tbl-sub">${p.property}</div></td>
+      <td style="font-weight:600;color:var(--dark)">${p.amount}</td>
+      <td>${p.month}</td>
+      <td>${p.date}</td>
+      <td>${p.method}</td>
+      <td><span class="badge ${sc}">${st}</span></td>
+      <td><div class="act-row">
+        <button class="abtn abtn-org" onclick="toast('Downloading receipt...','success')">Receipt</button>
+        <button class="abtn abtn-ghost" onclick="toast('Viewing payment details','')">View</button>
+      </div></td>`;
+    tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);
+}
+
+function renderPropApprovals(filter) {
+  const grid = document.getElementById('propApprovalGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  const filtered = filter === 'pending' ? REAL_PENDING : PROPS_APPROVAL.filter(p => p.status === filter);
+  if (!filtered.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px"><div style="font-size:48px;margin-bottom:12px">🏠</div><div style="font-size:16px;font-weight:600;color:var(--dark)">No ${filter} listings</div></div>`;
+    return;
+  }
+  filtered.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'pa-card';
+    div.innerHTML = `
+      <div class="pa-img"><span>${p.e}</span>
+        <div class="pa-status">
+          <span class="badge ${p.status==='pending'?'b-ylw':p.status==='approved'?'b-grn':'b-red'}">${p.status==='pending'?'⏳ Pending':p.status==='approved'?'✓ Approved':'✗ Rejected'}</span>
+        </div>
+      </div>
+      <div class="pa-body">
+        <div class="pa-title">${p.title}</div>
+        <div class="pa-loc">📍 ${p.loc}</div>
+        <div class="pa-price">${p.price}</div>
+        <div class="pa-landlord">👤 Landlord: ${p.landlord}</div>
+        <div class="pa-actions">
+          ${p.status === 'pending' ? `
+            <button class="btn-approve" onclick="approveProperty(${p.id}, this)">✓ Approve</button>
+            <button class="btn-reject" onclick="rejectProperty(${p.id}, this)">✗ Reject</button>
+          ` : `<button style="flex:1;padding:8px;border-radius:8px;background:var(--orange-pale);color:var(--orange);border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer" onclick="toast('Viewing property details','')">View Details</button>`}
+        </div>
+      </div>`;
+    grid.appendChild(div);
+  });
+}
+
+async function approveProperty(id, btn) {
+  const card = btn.closest('.pa-card');
+  const token = localStorage.getItem('hb_token');
+  try {
+    const res = await fetch(`${API}/properties/${id}/approve`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      REAL_PENDING = REAL_PENDING.filter(p => p.id !== id);
+      card.style.opacity = '.5'; card.style.pointerEvents = 'none';
+      setTimeout(() => { card.remove(); toast('Property approved and listed! ✅', 'success'); }, 400);
+    } else {
+      toast(data.message || 'Approval failed.', 'danger');
+    }
+  } catch (err) {
+    toast('Could not reach server.', 'danger');
+  }
+}
+
+async function rejectProperty(id, btn) {
+  const card = btn.closest('.pa-card');
+  const token = localStorage.getItem('hb_token');
+  try {
+    const res = await fetch(`${API}/properties/${id}/reject`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      REAL_PENDING = REAL_PENDING.filter(p => p.id !== id);
+      card.style.opacity = '.5'; card.style.pointerEvents = 'none';
+      setTimeout(() => { card.remove(); toast('Property rejected and landlord notified.', 'danger'); }, 400);
+    } else {
+      toast(data.message || 'Rejection failed.', 'danger');
+    }
+  } catch (err) {
+    toast('Could not reach server.', 'danger');
+  }
+}
+
+function filterUsers(role, btn) {
+  document.querySelectorAll('#sec-users .sec-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderUsersTable(role);
+}
+
+function filterProps(status, btn) {
+  document.querySelectorAll('#sec-properties .sec-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPropApprovals(status);
+}
+
+// ── CHARTS ────────────────────────────────────────
+function renderRevChart() {
+  const mos = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const vals = [5.8,6.2,6.5,6.1,7.0,7.4,7.8,0,0,0,0,0];
+  const c = document.getElementById('revChart');
+  if (!c) return; c.innerHTML = '';
+  const max = Math.max(...vals.filter(v=>v>0));
+  mos.forEach((m, i) => {
+    const p = vals[i] > 0; const h = p ? (vals[i]/max)*100 : 20;
+    const col = document.createElement('div'); col.className = 'chart-col';
+    col.innerHTML = `<div class="chart-bar" style="height:${h}%;background:${p?'var(--orange)':'var(--border)'};min-height:6px" data-tip="${p?'₦'+vals[i]+'M':'Upcoming'}"></div><span class="chart-mo">${m}</span>`;
+    c.appendChild(col);
+  });
+}
+
+function renderGrowthChart() {
+  const mos = ['Jan','Feb','Mar','Apr','May','Jun','Jul'];
+  const vals = [18, 24, 30, 27, 38, 42, 47];
+  const c = document.getElementById('growthChart');
+  if (!c) return; c.innerHTML = '';
+  const max = Math.max(...vals);
+  mos.forEach((m, i) => {
+    const h = (vals[i]/max)*100;
+    const col = document.createElement('div'); col.className = 'chart-col';
+    col.innerHTML = `<div class="chart-bar" style="height:${h}%;background:var(--orange);min-height:6px" data-tip="+${vals[i]} users"></div><span class="chart-mo">${m}</span>`;
+    c.appendChild(col);
+  });
+}
+
+// ── NOTIFICATIONS ─────────────────────────────────
+const NOTIFS = [
+  {ico:'🏠', type:'org', text:'<strong>New property</strong> submitted by Kemi Adesanya — requires review and approval.', time:'5 min ago', unread:true},
+  {ico:'👤', type:'grn', text:'<strong>Emeka Nwachukwu</strong> registered as a new tenant from Lagos.', time:'18 min ago', unread:true},
+  {ico:'💳', type:'grn', text:'<strong>Payment confirmed:</strong> ₦85,000 received from Emeka Nwachukwu for July 2026.', time:'1 hr ago', unread:true},
+  {ico:'⚠️', type:'red', text:'<strong>Overdue alert:</strong> Ngozi Eze has not paid July 2026 rent (₦28,000).', time:'2 hr ago', unread:true},
+  {ico:'✅', type:'org', text:'<strong>Property approved:</strong> 2-Bedroom flat in Wuse 2, Abuja is now live.', time:'3 hr ago', unread:false},
+  {ico:'🔔', type:'blue', text:'<strong>12 reminders</strong> sent automatically for August 2026 upcoming rent due dates.', time:'6 hr ago', unread:false},
+  {ico:'👤', type:'grn', text:'<strong>Funmilayo Adedeji</strong> updated her salary profile — new budget: ₦52,500/month.', time:'1 day ago', unread:false},
+  {ico:'🧾', type:'org', text:'<strong>Receipt generated</strong> for Chidi Okafor — ₦180,000 payment for July 2026.', time:'1 day ago', unread:false},
+];
+
+function renderNotifs() {
+  const list = document.getElementById('notifList');
+  if (!list) return; list.innerHTML = '';
+  NOTIFS.forEach(n => {
+    const div = document.createElement('div');
+    div.className = 'act-item' + (n.unread ? ' new' : '');
+    div.innerHTML = `<div class="act-ico ${n.type}">${n.ico}</div><div class="act-info"><div class="act-text">${n.text}</div><div class="act-time">${n.time}</div></div>${n.unread?'<div style="width:8px;height:8px;border-radius:50%;background:var(--orange);flex-shrink:0;margin-top:6px"></div>':''}`;
+    list.appendChild(div);
+  });
+}
+
+function handleSearch(val) {
+  if (!val) return;
+  toast(`Searching for "${val}"...`, '');
+}
+
+// ── API CONFIG ────────────────────────────────────
+
+const token = localStorage.getItem('hb_token');
+const currentUser = JSON.parse(localStorage.getItem('hb_user')||'{}');
+
+// ── INIT ──────────────────────────────────────────
+async function initAdmin(){
+  // Verify admin role
+  if(currentUser.first_name){
+    document.querySelector('.tb-admin-name').textContent = currentUser.first_name+' (Admin)';
+  }
+  // Try to load real data from API
+  if(token){
+    try {
+      // Load pending properties
+         const pRes = await fetch(`${API}/properties/admin/pending`,{headers:{Authorization:`Bearer ${token}`}});
+      const pData = await pRes.json();
+      if(pData.success){
+        REAL_PENDING = pData.data.map(p => ({
+          id: p.property_id,
+          e: '🏠',
+          title: p.title,
+          loc: `${p.city}, ${p.state}`,
+          price: `₦${Number(p.monthly_rent).toLocaleString()}/mo`,
+          landlord: p.landlord_name,
+          status: 'pending',
+          beds: p.bedrooms,
+          baths: p.bathrooms
+        }));
+        document.querySelector('.sn-count.org').textContent = REAL_PENDING.length;
+      }
+    } catch(err){ console.warn('Backend not available — using demo data'); }
+  }
+  renderRecentUsers();
+  renderUsersTable('all');
+  renderPaymentsTable();
+  renderRevChart();
+}
+
+initAdmin();
+</script>
+</body>
+</html>

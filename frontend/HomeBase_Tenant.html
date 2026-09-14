@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+// Auto-detect API URL — works locally and on Render
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000/api'
+  : window.location.origin + '/api';
+</script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HomeBase — Tenant Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --orange:#E8600A;--orange-mid:#F07A2A;--orange-light:#F9A05A;
+  --orange-pale:#FEF0E6;--orange-faint:#FFF8F3;
+  --brown:#7A3000;--white:#FFFFFF;--offwhite:#FFFAF6;
+  --gray:#9A8070;--border:#F0D5C0;--dark:#2D1500;--mid:#6B4030;
+  --green:#2E9E6B;--green-bg:#D4F4E4;
+  --blue:#1E4DA1;--blue-bg:#E8F0FE;
+  --red:#D94F4F;--red-bg:#FDE8E8;
+  --yellow:#F0A500;--yellow-bg:#FEF3D0;
+  --side:240px;
+  --API:http://localhost:5000/api;
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);background:var(--offwhite);overflow-x:hidden}
+
+/* SIDEBAR */
+.sidenav{width:var(--side);min-width:var(--side);background:linear-gradient(180deg,var(--brown) 0%,var(--dark) 100%);height:100vh;position:fixed;top:0;left:0;display:flex;flex-direction:column;z-index:100;transition:left .3s}
+.sn-brand{padding:22px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.1);text-decoration:none}
+.sn-logo{width:36px;height:36px;background:linear-gradient(135deg,var(--orange),var(--orange-light));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px}
+.sn-name{font-family:'Playfair Display',serif;font-size:20px;color:#fff}
+.sn-badge{background:var(--orange);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:auto}
+.sn-menu{flex:1;padding:18px 10px;display:flex;flex-direction:column;gap:3px;overflow-y:auto}
+.sn-sec{font-size:9px;font-weight:600;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;padding:12px 12px 4px}
+.sn-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;text-decoration:none;transition:all .2s}
+.sn-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.sn-item.active{background:rgba(232,96,10,.3);color:#fff;font-weight:600;border-left:3px solid var(--orange)}
+.sn-ico{font-size:16px;width:19px;text-align:center;flex-shrink:0}
+.sn-cnt{margin-left:auto;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:50px}
+.sn-bottom{padding:12px 10px;border-top:1px solid rgba(255,255,255,.1)}
+.sn-user{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;background:rgba(255,255,255,.07)}
+.sn-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--orange-light),var(--orange-mid));display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.sn-uname{font-size:12px;font-weight:600;color:#fff}
+.sn-urole{font-size:10px;color:rgba(255,255,255,.45);margin-top:1px}
+
+/* MAIN */
+.main{margin-left:var(--side);min-height:100vh;display:flex;flex-direction:column}
+
+/* TOPBAR */
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;height:62px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 2px 10px rgba(232,96,10,.05)}
+.tb-left{display:flex;align-items:center;gap:14px}
+.hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px}
+.hamburger span{width:22px;height:2px;background:var(--brown);border-radius:2px}
+.tb-title{font-size:16px;font-weight:600;color:var(--dark)}
+.tb-sub{font-size:11px;color:var(--gray)}
+.tb-right{display:flex;align-items:center;gap:10px}
+.tb-notif{width:36px;height:36px;border-radius:9px;background:var(--offwhite);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;position:relative}
+.tb-notif:hover{background:var(--orange-pale)}
+.nb-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;background:var(--red);border-radius:50%;border:2px solid #fff}
+.btn-claim{padding:9px 16px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 3px 12px rgba(232,96,10,.25);transition:transform .2s;display:flex;align-items:center;gap:6px}
+.btn-claim:hover{transform:translateY(-2px)}
+
+/* CONTENT */
+.content{padding:24px;flex:1}
+.sec-panel{display:none}.sec-panel.active{display:block}
+
+/* STAT CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:#fff;border-radius:14px;padding:20px;border:1.5px solid var(--border);display:flex;flex-direction:column;gap:11px;transition:transform .2s,box-shadow .2s}
+.stat-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(232,96,10,.08)}
+.stat-card.org{background:linear-gradient(145deg,var(--orange),var(--orange-mid));border-color:transparent}
+.sc-top{display:flex;align-items:center;justify-content:space-between}
+.sc-ico{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:19px}
+.i-o{background:var(--orange-pale)}.i-g{background:var(--green-bg)}.i-b{background:var(--blue-bg)}.i-r{background:var(--red-bg)}.i-w{background:rgba(255,255,255,.2)}
+.sc-bd{font-size:10px;font-weight:600;padding:3px 8px;border-radius:50px}
+.bd-up{background:var(--green-bg);color:var(--green)}.bd-ok{background:var(--orange-pale);color:var(--orange)}.bd-dn{background:var(--red-bg);color:var(--red)}.bd-wt{background:rgba(255,255,255,.2);color:rgba(255,255,255,.9)}
+.sc-lbl{font-size:11px;color:var(--gray)}.sc-val{font-family:'Playfair Display',serif;font-size:26px;color:var(--dark)}.sc-hint{font-size:10px;color:var(--gray);margin-top:-4px}
+.stat-card.org .sc-lbl,.stat-card.org .sc-hint{color:rgba(255,255,255,.65)}.stat-card.org .sc-val{color:#fff}
+
+/* CARDS */
+.card{background:#fff;border-radius:14px;border:1.5px solid var(--border);overflow:hidden;margin-bottom:20px}
+.card-hd{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.ch-ttl{font-size:14px;font-weight:600;color:var(--dark);display:flex;align-items:center;gap:7px}
+.ch-act{font-size:12px;color:var(--orange);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;font-weight:500}
+.ch-act:hover{color:var(--brown)}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:20px}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:10px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.6px;padding:11px 18px;text-align:left;border-bottom:1px solid var(--border);background:var(--offwhite)}
+.tbl td{padding:13px 18px;font-size:12px;color:var(--mid);border-bottom:1px solid var(--border)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--orange-faint)}
+
+/* BADGES */
+.badge{padding:3px 10px;border-radius:50px;font-size:10px;font-weight:600;display:inline-flex;align-items:center;gap:3px}
+.b-grn{background:var(--green-bg);color:var(--green)}.b-org{background:var(--orange-pale);color:var(--orange)}
+.b-red{background:var(--red-bg);color:var(--red)}.b-ylw{background:var(--yellow-bg);color:var(--yellow)}
+.b-blue{background:var(--blue-bg);color:var(--blue)}.b-gray{background:#f0f0f0;color:#666}
+
+/* ACTION BUTTONS */
+.act-row{display:flex;gap:5px}
+.abtn{padding:4px 10px;border-radius:6px;font-size:10px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;border:1.5px solid transparent;transition:all .2s}
+.abtn-org{background:var(--orange-pale);color:var(--orange)}.abtn-org:hover{background:var(--orange);color:#fff}
+.abtn-ghost{background:transparent;color:var(--gray);border-color:var(--border)}.abtn-ghost:hover{border-color:var(--orange-light);color:var(--orange)}
+
+/* DUE ITEMS */
+.due-list{padding:14px 18px;display:flex;flex-direction:column;gap:10px}
+.due-item{display:flex;align-items:center;gap:11px;padding:12px;border-radius:10px;border:1.5px solid var(--border);background:var(--offwhite)}
+.due-item.urg{border-color:var(--red);background:#fff8f8}
+.due-item.sn{border-color:var(--yellow);background:#fffbf0}
+.due-item.ok{border-color:var(--green);background:#f3fcf7}
+.due-ico{font-size:20px;flex-shrink:0}.due-info{flex:1}
+.due-ttl{font-size:12px;font-weight:600;color:var(--dark)}.due-addr{font-size:10px;color:var(--gray);margin-top:1px}
+.due-right{text-align:right}.due-amt{font-size:13px;font-weight:700;color:var(--dark)}
+.due-days{font-size:10px;font-weight:600;margin-top:2px}
+.dd-urg{color:var(--red)}.dd-sn{color:var(--yellow)}.dd-ok{color:var(--green)}
+
+/* BUDGET BAR */
+.prog-track{height:8px;background:var(--border);border-radius:50px;overflow:hidden;margin-bottom:10px}
+.prog-fill{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--orange),var(--orange-light));transition:width 1s ease}
+
+/* NOTIF */
+.notif-item{display:flex;align-items:flex-start;gap:9px;padding:11px;border-radius:9px;background:var(--offwhite);border:1px solid var(--border);margin-bottom:8px}
+.notif-item.unread{background:var(--orange-faint);border-color:var(--border)}
+.ni-dot{width:6px;height:6px;border-radius:50%;background:var(--orange);flex-shrink:0;margin-top:5px}
+.ni-dot.read{background:transparent;border:1.5px solid var(--border)}
+.ni-text{font-size:11px;color:var(--mid);line-height:1.5}.ni-text strong{color:var(--dark)}
+.ni-time{font-size:10px;color:var(--gray);margin-top:2px}
+
+/* SAVED PROP CARDS */
+.saved-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;padding:16px 18px}
+.saved-card{background:var(--offwhite);border-radius:11px;border:1.5px solid var(--border);overflow:hidden;transition:box-shadow .2s}
+.saved-card:hover{box-shadow:0 6px 18px rgba(232,96,10,.08)}
+.sc-img{height:120px;background:linear-gradient(135deg,var(--orange-pale),#fcd9bc);display:flex;align-items:center;justify-content:center;font-size:40px}
+.sc-body{padding:12px}
+.sc-ttl{font-size:13px;font-weight:600;color:var(--dark);margin-bottom:3px}
+.sc-loc{font-size:11px;color:var(--gray);margin-bottom:6px}
+.sc-price{font-size:15px;font-weight:700;color:var(--orange);margin-bottom:8px}
+
+/* MODAL */
+.modal-ov{position:fixed;inset:0;z-index:500;background:rgba(45,21,0,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-ov.open{opacity:1;pointer-events:all}
+.modal{background:#fff;border-radius:18px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(232,96,10,.15);transform:translateY(26px);transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+.modal-ov.open .modal{transform:translateY(0)}
+.modal-hd{padding:20px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
+.modal-hd h3{font-size:16px;font-weight:600;color:var(--dark)}
+.modal-x{background:none;border:none;font-size:19px;cursor:pointer;color:var(--gray)}
+.modal-bd{padding:22px;display:flex;flex-direction:column;gap:14px}
+.ff{display:flex;flex-direction:column;gap:5px}
+.ff label{font-size:12px;font-weight:500;color:var(--mid)}
+.ff input,.ff select,.ff textarea{padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--dark);background:var(--offwhite);outline:none;transition:border-color .2s}
+.ff input:focus,.ff select:focus,.ff textarea:focus{border-color:var(--orange);background:#fff}
+.ff-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-ft{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;position:sticky;bottom:0;background:#fff}
+.btn-modal-p{flex:1;padding:11px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:transform .2s;box-shadow:0 3px 12px rgba(232,96,10,.22)}
+.btn-modal-p:hover{transform:translateY(-2px)}
+.btn-modal-c{padding:11px 18px;border:1.5px solid var(--border);border-radius:9px;background:#fff;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--mid);cursor:pointer}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;z-index:9999;background:var(--dark);color:#fff;padding:11px 18px;border-radius:11px;font-size:13px;font-weight:500;box-shadow:0 6px 24px rgba(0,0,0,.2);transform:translateY(70px);opacity:0;transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .35s;font-family:'DM Sans',sans-serif}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--green)}.toast.danger{background:var(--red)}.toast.warn{background:var(--yellow)}
+
+/* LOADING */
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;z-index:800;font-size:24px;color:var(--orange);font-family:'DM Sans',sans-serif;font-weight:600;gap:12px}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* RESPONSIVE */
+@media(max-width:1100px){.stat-grid{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){
+  .sidenav{left:calc(-1 * var(--side))}.sidenav.open{left:0;box-shadow:4px 0 24px rgba(232,96,10,.2)}
+  .main{margin-left:0}.hamburger{display:flex}
+  .g2,.g3{grid-template-columns:1fr}.stat-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:480px){.stat-grid{grid-template-columns:1fr}.ff-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOv">
+  <div class="spinner"></div> Loading your dashboard...
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidenav" id="sidenav">
+  <a href="index.html" class="sn-brand">
+    <div class="sn-logo">🏠</div>
+    <span class="sn-name">HomeBase</span>
+    <span class="sn-badge">TENANT</span>
+  </a>
+  <div class="sn-menu">
+    <div class="sn-sec">Overview</div>
+    <a class="sn-item active" onclick="showSec('overview',this)"><span class="sn-ico">📊</span>Dashboard</a>
+
+    <div class="sn-sec">Housing</div>
+    <a class="sn-item" onclick="showSec('search',this)"><span class="sn-ico">🔍</span>Find Housing</a>
+    <a class="sn-item" onclick="showSec('saved',this)"><span class="sn-ico">❤️</span>Saved Homes</a>
+    <a class="sn-item" onclick="showSec('myhome',this)"><span class="sn-ico">🏠</span>My Home</a>
+
+    <div class="sn-sec">Payments</div>
+    <a class="sn-item" onclick="showSec('payments',this)"><span class="sn-ico">💳</span>My Payments</a>
+    <a class="sn-item" onclick="openClaimModal()"><span class="sn-ico">➕</span>Submit Claim</a>
+
+    <div class="sn-sec">Account</div>
+    <a class="sn-item" onclick="showSec('budget',this)"><span class="sn-ico">🧮</span>My Budget</a>
+    <a class="sn-item" onclick="showSec('notifications',this)"><span class="sn-ico">🔔</span>Notifications<span class="sn-cnt" id="unreadBadge">0</span></a>
+    <a class="sn-item" onclick="showSec('profile',this)"><span class="sn-ico">👤</span>My Profile</a>
+    <a class="sn-item" onclick="doLogout()"><span class="sn-ico">🚪</span>Sign Out</a>
+  </div>
+  <div class="sn-bottom">
+    <div class="sn-user">
+      <div class="sn-av">👤</div>
+      <div>
+        <div class="sn-uname" id="sidebarName">Loading...</div>
+        <div class="sn-urole">Tenant</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <div class="tb-left">
+      <button class="hamburger" onclick="document.getElementById('sidenav').classList.toggle('open')"><span></span><span></span><span></span></button>
+      <div>
+        <div class="tb-title" id="tbTitle">Tenant Dashboard</div>
+        <div class="tb-sub" id="tbSub">Loading...</div>
+      </div>
+    </div>
+    <div class="tb-right">
+      <div class="tb-notif" onclick="showSec('notifications',null)">🔔<div class="nb-dot" id="notifDot" style="display:none"></div></div>
+      <button class="btn-claim" onclick="openClaimModal()">+ Submit Payment</button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ══ OVERVIEW ══ -->
+    <div class="sec-panel active" id="sec-overview">
+      <div class="stat-grid">
+        <div class="stat-card org">
+          <div class="sc-top"><div class="sc-ico i-w">💳</div><span class="sc-bd bd-wt" id="nextDueLabel">—</span></div>
+          <div class="sc-lbl">Next Rent Due</div>
+          <div class="sc-val" id="nextDueAmt">₦—</div>
+          <div class="sc-hint" id="nextDueHint">Loading...</div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-top"><div class="sc-ico i-g">✅</div><span class="sc-bd bd-up" id="confirmedBadge">0</span></div>
+          <div class="sc-lbl">Confirmed Payments</div>
+          <div class="sc-val" id="confirmedCount">0</div>
+          <div class="sc-hint">This year</div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-top"><div class="sc-ico i-b">💰</div><span class="sc-bd bd-ok">2026</span></div>
+          <div class="sc-lbl">Total Paid</div>
+          <div class="sc-val" id="totalPaid">₦0</div>
+          <div class="sc-hint">Confirmed payments</div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-top"><div class="sc-ico i-r">⏳</div><span class="sc-bd bd-dn" id="pendingBadge">0</span></div>
+          <div class="sc-lbl">Pending Claims</div>
+          <div class="sc-val" id="pendingCount">0</div>
+          <div class="sc-hint">Awaiting landlord</div>
+        </div>
+      </div>
+
+      <div class="g2">
+        <!-- Recent Payments -->
+        <div class="card">
+          <div class="card-hd">
+            <span class="ch-ttl">📋 Recent Payments</span>
+            <button class="ch-act" onclick="showSec('payments',null)">View All</button>
+          </div>
+          <div style="overflow-x:auto"><table class="tbl" id="recentPayTbl"></table></div>
+        </div>
+
+        <!-- Upcoming Dues -->
+        <div class="card">
+          <div class="card-hd">
+            <span class="ch-ttl">📅 Upcoming Due Dates</span>
+            <button class="ch-act" onclick="toast('Reminder set! 7 days before due date 🔔','success')">+ Reminder</button>
+          </div>
+          <div class="due-list">
+            <div class="due-item urg"><div class="due-ico">🚨</div><div class="due-info"><div class="due-ttl">Electricity Bill</div><div class="due-addr">Your property</div></div><div class="due-right"><div class="due-amt">₦8,500</div><div class="due-days dd-urg">Due in 2 days</div></div></div>
+            <div class="due-item sn"><div class="due-ico">⚠️</div><div class="due-info"><div class="due-ttl">Service Charge</div><div class="due-addr">Your property</div></div><div class="due-right"><div class="due-amt">₦12,000</div><div class="due-days dd-sn">Due in 7 days</div></div></div>
+            <div class="due-item ok"><div class="due-ico">🏠</div><div class="due-info"><div class="due-ttl">Monthly Rent</div><div class="due-addr" id="duePropAddr">Your property</div></div><div class="due-right"><div class="due-amt" id="dueRentAmt">₦—</div><div class="due-days dd-ok">Due in 29 days</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- My Home Info -->
+      <div class="card" id="myHomeCard">
+        <div class="card-hd"><span class="ch-ttl">🏠 My Current Home</span><button class="ch-act" onclick="showSec('myhome',null)">View Details</button></div>
+        <div style="padding:18px 20px" id="homeCardContent">
+          <div style="text-align:center;padding:20px;color:var(--gray)">Loading tenancy info...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAYMENTS ══ -->
+    <div class="sec-panel" id="sec-payments">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div><div style="font-size:18px;font-weight:600;color:var(--dark)">My Payments</div><div style="font-size:12px;color:var(--gray)">All payment claims and their confirmation status</div></div>
+        <button onclick="openClaimModal()" style="padding:9px 18px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 3px 12px rgba(232,96,10,.25)">+ Submit Payment Claim</button>
+      </div>
+
+      <!-- Info banner -->
+      <div style="background:var(--orange-faint);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start">
+        <span style="font-size:22px">ℹ️</span>
+        <div style="font-size:12px;color:var(--mid);line-height:1.7">
+          <strong style="color:var(--brown)">How payments work on HomeBase:</strong><br/>
+          1. Pay your landlord directly (cash or bank transfer).<br/>
+          2. Submit a payment claim here with your reference number.<br/>
+          3. Your landlord logs in to <strong>confirm</strong> or <strong>reject</strong> your claim.<br/>
+          4. Your payment history updates with the landlord's decision.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd">
+          <span class="ch-ttl">💳 Payment History</span>
+          <button class="ch-act" onclick="toast('Downloading payment history PDF...','success')">Export PDF</button>
+        </div>
+        <div style="overflow-x:auto"><table class="tbl" id="fullPayTbl"></table></div>
+      </div>
+    </div>
+
+    <!-- ══ MY HOME ══ -->
+    <div class="sec-panel" id="sec-myhome">
+      <div style="margin-bottom:20px"><div style="font-size:18px;font-weight:600;color:var(--dark)">My Home</div><div style="font-size:12px;color:var(--gray)">Your current tenancy and landlord contact</div></div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><span class="ch-ttl">🏠 Property Details</span></div>
+          <div style="padding:20px" id="tenancyDetails">
+            <div style="text-align:center;padding:30px;color:var(--gray)">Loading...</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="ch-ttl">📞 Landlord Contact</span></div>
+          <div style="padding:20px">
+            <div style="background:var(--orange-faint);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px">
+              <div style="font-size:12px;font-weight:600;color:var(--brown);margin-bottom:5px">🔒 Security Reminder</div>
+              <div style="font-size:11px;color:var(--mid);line-height:1.6">Always pay your landlord <strong>in person</strong>. Never send money to an unknown account. HomeBase does not process or store bank account numbers.</div>
+            </div>
+            <div id="landlordContact">
+              <div style="text-align:center;padding:20px;color:var(--gray)">Loading landlord info...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ FIND HOUSING ══ -->
+    <div class="sec-panel" id="sec-search">
+      <div style="margin-bottom:20px"><div style="font-size:18px;font-weight:600;color:var(--dark)">Find Housing</div><div style="font-size:12px;color:var(--gray)">Search affordable listings filtered by your salary</div></div>
+      <div class="card">
+        <div style="padding:20px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+            <div class="ff"><label>City</label><input type="text" id="searchCity" placeholder="e.g. Lagos"/></div>
+            <div class="ff"><label>Max Rent (₦)</label><input type="number" id="searchMaxRent" placeholder="Auto from salary"/></div>
+            <div class="ff"><label>Bedrooms</label><select id="searchBeds"><option value="">Any</option><option value="0">Studio</option><option value="1">1 Bed</option><option value="2">2 Beds</option><option value="3">3 Beds</option></select></div>
+            <div class="ff"><label>&nbsp;</label><button onclick="searchProperties()" style="padding:10px 20px;border:none;border-radius:9px;background:var(--orange);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Search</button></div>
+          </div>
+          <div id="searchResults" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SAVED HOMES ══ -->
+    <div class="sec-panel" id="sec-saved">
+      <div style="margin-bottom:20px"><div style="font-size:18px;font-weight:600;color:var(--dark)">Saved Homes</div><div style="font-size:12px;color:var(--gray)">Properties you have saved during your search</div></div>
+      <div class="card">
+        <div class="saved-grid" id="savedGrid">
+          <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray)">Loading saved homes...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ BUDGET ══ -->
+    <div class="sec-panel" id="sec-budget">
+      <div style="margin-bottom:20px"><div style="font-size:18px;font-weight:600;color:var(--dark)">My Budget</div><div style="font-size:12px;color:var(--gray)">Set your salary to get accurate housing recommendations</div></div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><span class="ch-ttl">🧮 Affordability Calculator</span></div>
+          <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
+            <div class="ff"><label>Monthly Gross Salary (₦)</label><input type="number" id="salaryInput" placeholder="e.g. 250000" oninput="calcBudget()"/></div>
+            <div style="background:var(--orange-faint);border:1px solid var(--border);border-radius:11px;padding:16px">
+              <div style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px">Your Max Safe Rent (30% Rule)</div>
+              <div style="font-family:'Playfair Display',serif;font-size:30px;color:var(--orange)" id="budgetResult">₦0 <span style="font-size:13px;font-weight:400;color:var(--gray);font-family:'DM Sans',sans-serif">/month</span></div>
+            </div>
+            <div style="font-size:11px;color:var(--mid)" id="budgetNote">Enter your salary to see your safe rental budget.</div>
+            <div class="ff"><label>Preferred Location</label><input type="text" id="prefLocation" placeholder="e.g. Lagos"/></div>
+            <div class="ff"><label>Preferred Bedrooms</label><select id="prefBeds"><option value="">Any</option><option value="0">Studio</option><option value="1">1 Bedroom</option><option value="2">2 Bedrooms</option><option value="3">3 Bedrooms</option></select></div>
+            <button onclick="saveBudget()" style="padding:12px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 3px 12px rgba(232,96,10,.22)">Save My Budget Profile</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="ch-ttl">📊 Budget Breakdown</span></div>
+          <div style="padding:20px" id="budgetBreakdown">
+            <div style="text-align:center;padding:30px;color:var(--gray)">Enter your salary to see breakdown</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ NOTIFICATIONS ══ -->
+    <div class="sec-panel" id="sec-notifications">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div><div style="font-size:18px;font-weight:600;color:var(--dark)">Notifications</div><div style="font-size:12px;color:var(--gray)">Rent reminders and payment updates</div></div>
+        <button onclick="markAllRead()" style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;color:var(--mid)">Mark all read</button>
+      </div>
+      <div class="card"><div style="padding:16px 18px" id="notifList"><div style="text-align:center;padding:30px;color:var(--gray)">Loading notifications...</div></div></div>
+    </div>
+
+    <!-- ══ PROFILE ══ -->
+    <div class="sec-panel" id="sec-profile">
+      <div style="margin-bottom:20px"><div style="font-size:18px;font-weight:600;color:var(--dark)">My Profile</div><div style="font-size:12px;color:var(--gray)">Update your account details</div></div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><span class="ch-ttl">👤 Personal Details</span></div>
+          <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
+            <div class="ff"><label>First Name</label><input type="text" id="profFirst"/></div>
+            <div class="ff"><label>Last Name</label><input type="text" id="profLast"/></div>
+            <div class="ff"><label>Phone Number</label><input type="tel" id="profPhone"/></div>
+            <div class="ff"><label>Email Address</label><input type="email" id="profEmail"/></div>
+            <div class="ff"><label>Monthly Salary (₦)</label><input type="number" id="profSalary"/></div>
+            <button onclick="saveProfile()" style="padding:11px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Save Profile</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="ch-ttl">🔒 Change Password</span></div>
+          <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
+            <div class="ff"><label>Current Password</label><input type="password" placeholder="Enter current password"/></div>
+            <div class="ff"><label>New Password</label><input type="password" placeholder="Enter new password"/></div>
+            <div class="ff"><label>Confirm New Password</label><input type="password" placeholder="Repeat new password"/></div>
+            <button onclick="toast('Password updated successfully! 🔒','success')" style="padding:11px;border:none;border-radius:9px;background:var(--dark);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Update Password</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PAYMENT CLAIM MODAL -->
+<div class="modal-ov" id="claimModal" onclick="if(event.target===this)closeClaimModal()">
+  <div class="modal">
+    <div class="modal-hd"><h3>💳 Submit Payment Claim</h3><button class="modal-x" onclick="closeClaimModal()">✕</button></div>
+    <div class="modal-bd">
+      <div style="background:var(--orange-faint);border:1px solid var(--border);border-radius:9px;padding:12px;display:flex;gap:9px;align-items:flex-start">
+        <span style="font-size:18px">ℹ️</span>
+        <div style="font-size:11px;color:var(--mid);line-height:1.6">Submit this form <strong>after</strong> paying your landlord directly. Your claim will be <strong>pending</strong> until your landlord confirms it on their dashboard.</div>
+      </div>
+      <div class="ff-row">
+        <div class="ff"><label>Payment Month</label><select id="claimMonth"><option>July 2026</option><option>August 2026</option><option>September 2026</option></select></div>
+        <div class="ff"><label>Payment Type</label><select id="claimType"><option>Monthly Rent</option><option>Electricity Bill</option><option>Water Bill</option><option>Service Charge</option></select></div>
+      </div>
+      <div class="ff"><label>Property</label><input type="text" id="claimProperty" placeholder="Your property address"/></div>
+      <div class="ff-row">
+        <div class="ff"><label>Amount Paid (₦)</label><input type="number" id="claimAmount" placeholder="e.g. 85000"/></div>
+        <div class="ff"><label>Date Paid</label><input type="date" id="claimDate"/></div>
+      </div>
+      <div class="ff"><label>Payment Method</label><select id="claimMethod"><option>Bank Transfer</option><option>Cash</option><option>POS</option></select></div>
+      <div class="ff"><label>Reference / Teller No. (optional)</label><input type="text" id="claimRef" placeholder="e.g. TRF2026070185"/></div>
+      <div class="ff"><label>Notes (optional)</label><textarea id="claimNote" rows="2" placeholder="e.g. Paid at Access Bank Lekki branch"></textarea></div>
+      <div style="background:var(--yellow-bg);border:1px solid var(--yellow);border-radius:8px;padding:10px 12px;font-size:11px;color:#7a5500">
+        ⏳ Status after submission: <strong>Pending Confirmation</strong> — awaiting landlord review.
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-modal-c" onclick="closeClaimModal()">Cancel</button>
+      <button class="btn-modal-p" onclick="submitClaim()">Submit Payment Claim</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────
+// API URL set dynamically above
+let token = localStorage.getItem('hb_token');
+let currentUser = JSON.parse(localStorage.getItem('hb_user') || '{}');
+let dashData = null;
+
+// ── INIT ──────────────────────────────────────────
+async function init() {
+  // Set today's date on claim form
+  document.getElementById('claimDate').value = new Date().toISOString().split('T')[0];
+
+  // If no token, load demo data (so page works standalone)
+  if (!token) {
+    console.warn('No token found — loading demo data');
+    loadDemoData();
+    document.getElementById('loadingOv').style.display = 'none';
+    return;
+  }
+
+  // Load dashboard data from API
+  try {
+    const res  = await fetch(`${API}/tenants/dashboard`, { headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+
+    if (!data.success) {
+      console.warn('API error — loading demo data');
+      loadDemoData();
+    } else {
+      dashData = data.data;
+      renderAll();
+    }
+  } catch (err) {
+    // Fallback to demo data if backend not running
+    console.warn('Backend not running — using demo data');
+    loadDemoData();
+  } finally {
+    document.getElementById('loadingOv').style.display = 'none';
+  }
+}
+
+// ── DEMO DATA (when backend not running) ──────────
+function loadDemoData() {
+  dashData = {
+    summary: { confirmed: 6, pending: 1, rejected: 0, totalPaid: 510000, unreadNotifs: 3 },
+    payments: [
+      {payment_id:1, payment_month:'June 2026', property_title:'Modern 2-Bed Flat', amount:85000, date_paid:'Jun 1, 2026', payment_method:'Bank Transfer', status:'confirmed'},
+      {payment_id:2, payment_month:'May 2026',  property_title:'Modern 2-Bed Flat', amount:85000, date_paid:'May 1, 2026', payment_method:'Bank Transfer', status:'confirmed'},
+      {payment_id:3, payment_month:'Apr 2026',  property_title:'Modern 2-Bed Flat', amount:85000, date_paid:'Apr 2, 2026', payment_method:'Cash', status:'confirmed'},
+      {payment_id:4, payment_month:'Mar 2026',  property_title:'Modern 2-Bed Flat', amount:85000, date_paid:'Mar 1, 2026', payment_method:'Bank Transfer', status:'confirmed'},
+      {payment_id:5, payment_month:'Jul 2026',  property_title:'Modern 2-Bed Flat', amount:85000, date_paid:null, payment_method:'—', status:'pending'},
+    ],
+    profile: { monthly_salary: 283333, max_rent_budget: 85000 },
+    notifications: [
+      {notification_id:1, title:'Rent Reminder', message:'Your rent of ₦85,000 is due in 29 days.', type:'rent_reminder', is_read:0, created_at:'2026-07-02'},
+      {notification_id:2, title:'Payment Confirmed ✅', message:'Your June 2026 rent payment has been confirmed by your landlord.', type:'payment_confirmed', is_read:0, created_at:'2026-07-01'},
+      {notification_id:3, title:'Electricity Due', message:'Your electricity bill of ₦8,500 is due in 2 days.', type:'rent_reminder', is_read:0, created_at:'2026-06-30'},
+      {notification_id:4, title:'New Listing', message:'A new 2-bedroom flat in Surulere matches your budget.', type:'new_listing', is_read:1, created_at:'2026-06-28'},
+    ],
+    saved: [
+      {property_id:2, title:'Cosy Self-Contain', monthly_rent:35000, city:'Surulere', state:'Lagos'},
+      {property_id:8, title:'Executive 1-Bed Flat', monthly_rent:95000, city:'Wuse 2', state:'Abuja'},
+    ],
+    tenancy: { property_title:'Modern 2-Bedroom Flat', full_address:'15 Admiralty Way, Lekki Phase 1, Lagos', landlord_name:'Kemi Adesanya', landlord_phone:'+234 801 234 5678', monthly_rent:85000, start_date:'Jan 1, 2026' },
+  };
+
+  // Demo user
+  currentUser = JSON.parse(localStorage.getItem('hb_user') || '{"first_name":"Emeka","last_name":"Nwachukwu","phone_number":"+234 801 234 5678","email":"emeka@example.com","monthly_salary":283333}');
+  renderAll();
+}
+
+// ── RENDER ALL ────────────────────────────────────
+function renderAll() {
+  const { summary, payments, profile, notifications, saved, tenancy } = dashData;
+  const name = `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() || 'Tenant';
+
+  // Sidebar & topbar
+  document.getElementById('sidebarName').textContent = name;
+  document.getElementById('tbSub').textContent = `Welcome back, ${currentUser.first_name || 'Tenant'} · ${new Date().toDateString()}`;
+
+  // Stat cards
+  document.getElementById('confirmedCount').textContent = summary.confirmed;
+  document.getElementById('confirmedBadge').textContent = summary.confirmed + ' paid';
+  document.getElementById('pendingCount').textContent = summary.pending;
+  document.getElementById('pendingBadge').textContent = summary.pending + ' pending';
+  document.getElementById('totalPaid').textContent = '₦' + summary.totalPaid.toLocaleString('en-NG');
+
+  // Next due from tenancy
+  if (tenancy) {
+    document.getElementById('nextDueAmt').textContent = '₦' + parseFloat(tenancy.monthly_rent).toLocaleString('en-NG');
+    document.getElementById('nextDueHint').textContent = 'August 2026 · Due in 29 days';
+    document.getElementById('nextDueLabel').textContent = 'On Track';
+    document.getElementById('dueRentAmt').textContent = '₦' + parseFloat(tenancy.monthly_rent).toLocaleString('en-NG');
+    document.getElementById('duePropAddr').textContent = tenancy.property_title || tenancy.full_address;
+  }
+
+  // Notifications badge
+  const unread = summary.unreadNotifs || 0;
+  document.getElementById('unreadBadge').textContent = unread;
+  document.getElementById('unreadBadge').style.display = unread > 0 ? 'flex' : 'none';
+  document.getElementById('notifDot').style.display = unread > 0 ? 'block' : 'none';
+
+  // Tables
+  renderPayTable(payments.slice(0, 4), 'recentPayTbl');
+  renderPayTable(payments, 'fullPayTbl');
+
+  // Home card
+  renderHomeCard(tenancy);
+
+  // Profile inputs
+  document.getElementById('profFirst').value  = currentUser.first_name || '';
+  document.getElementById('profLast').value   = currentUser.last_name  || '';
+  document.getElementById('profPhone').value  = currentUser.phone_number || '';
+  document.getElementById('profEmail').value  = currentUser.email || '';
+  document.getElementById('profSalary').value = currentUser.monthly_salary || '';
+
+  // Budget
+  if (profile) {
+    document.getElementById('salaryInput').value = profile.monthly_salary || '';
+    calcBudget();
+  }
+
+  // Notifications
+  renderNotifs(notifications);
+
+  // Saved
+  renderSaved(saved);
+}
+
+// ── PAY TABLE ─────────────────────────────────────
+function renderPayTable(pays, tblId) {
+  const tbl = document.getElementById(tblId);
+  if (!tbl) return;
+  tbl.innerHTML = `<thead><tr><th>Month</th><th>Property</th><th>Amount</th><th>Date Paid</th><th>Method</th><th>Status</th><th>Action</th></tr></thead>`;
+  const tb = document.createElement('tbody');
+  pays.forEach(p => {
+    const sc = p.status==='confirmed'?'b-grn':p.status==='pending'?'b-ylw':'b-red';
+    const st = p.status==='confirmed'?'✓ Confirmed':p.status==='pending'?'⏳ Awaiting Landlord':'✗ Rejected';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight:600;color:var(--dark)">${p.payment_month}</td>
+      <td style="font-size:11px;color:var(--gray)">${p.property_title||p.full_address||'—'}</td>
+      <td style="font-weight:600;color:var(--dark)">₦${parseFloat(p.amount).toLocaleString()}</td>
+      <td>${p.date_paid||'—'}</td>
+      <td>${p.payment_method||'—'}</td>
+      <td><span class="badge ${sc}">${st}</span></td>
+      <td><button class="abtn abtn-org" onclick="toast('Downloading receipt...','success')">Receipt</button></td>`;
+    tb.appendChild(tr);
+  });
+  tbl.appendChild(tb);
+}
+
+// ── HOME CARD ─────────────────────────────────────
+function renderHomeCard(tenancy) {
+  const el = document.getElementById('homeCardContent');
+  const td = document.getElementById('tenancyDetails');
+  const lc = document.getElementById('landlordContact');
+  if (!tenancy) {
+    const msg = '<div style="text-align:center;padding:20px;color:var(--gray)">No active tenancy found. <a onclick="showSec(\'search\',null)" style="color:var(--orange);cursor:pointer">Find a home →</a></div>';
+    if (el) el.innerHTML = msg;
+    if (td) td.innerHTML = msg;
+    if (lc) lc.innerHTML = '<div style="color:var(--gray);font-size:12px">No tenancy found.</div>';
+    return;
+  }
+  const info = `
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="font-size:48px">🏠</div>
+      <div style="flex:1">
+        <div style="font-size:16px;font-weight:600;color:var(--dark);margin-bottom:4px">${tenancy.property_title||'Your Home'}</div>
+        <div style="font-size:13px;color:var(--mid);margin-bottom:8px">📍 ${tenancy.full_address}</div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <div style="font-size:12px;color:var(--gray)">Rent: <strong style="color:var(--orange)">₦${parseFloat(tenancy.monthly_rent||0).toLocaleString()}/mo</strong></div>
+          <div style="font-size:12px;color:var(--gray)">Since: <strong style="color:var(--dark)">${tenancy.start_date||'—'}</strong></div>
+        </div>
+      </div>
+      <button onclick="showSec('myhome',null)" class="abtn abtn-org" style="padding:8px 16px;font-size:12px">View Details →</button>
+    </div>`;
+  if (el) el.innerHTML = info;
+  if (td) td.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="background:var(--offwhite);border-radius:9px;padding:12px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--gray);margin-bottom:3px">Property</div>
+        <div style="font-size:14px;font-weight:600;color:var(--dark)">${tenancy.property_title||'—'}</div>
+      </div>
+      <div style="background:var(--offwhite);border-radius:9px;padding:12px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--gray);margin-bottom:3px">Address</div>
+        <div style="font-size:13px;color:var(--dark)">${tenancy.full_address||'—'}</div>
+      </div>
+      <div style="background:var(--offwhite);border-radius:9px;padding:12px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--gray);margin-bottom:3px">Monthly Rent</div>
+        <div style="font-size:20px;font-weight:700;color:var(--orange)">₦${parseFloat(tenancy.monthly_rent||0).toLocaleString()}</div>
+      </div>
+      <div style="background:var(--offwhite);border-radius:9px;padding:12px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--gray);margin-bottom:3px">Tenancy Start</div>
+        <div style="font-size:13px;color:var(--dark)">${tenancy.start_date||'—'}</div>
+      </div>
+    </div>`;
+  if (lc) lc.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--offwhite);border-radius:9px;border:1px solid var(--border)">
+        <span style="font-size:22px">🧑‍💼</span>
+        <div>
+          <div style="font-size:11px;color:var(--gray)">Landlord</div>
+          <div style="font-size:14px;font-weight:600;color:var(--dark)">${tenancy.landlord_name||'—'}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--offwhite);border-radius:9px;border:1px solid var(--border)">
+        <span style="font-size:22px">📱</span>
+        <div>
+          <div style="font-size:11px;color:var(--gray)">Phone Number</div>
+          <div style="font-size:14px;font-weight:600;color:var(--dark)">${tenancy.landlord_phone||'—'}</div>
+        </div>
+      </div>
+      <button onclick="toast('Calling landlord... 📞','success')" style="padding:11px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">📞 Call Landlord</button>
+    </div>`;
+}
+
+// ── NOTIFICATIONS ─────────────────────────────────
+function renderNotifs(notifs) {
+  const el = document.getElementById('notifList');
+  if (!el) return; el.innerHTML = '';
+  if (!notifs || !notifs.length) { el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray)">No notifications yet.</div>'; return; }
+  notifs.forEach(n => {
+    const ico = n.type==='payment_confirmed'?'✅':n.type==='payment_rejected'?'❌':n.type==='new_listing'?'🏠':'🔔';
+    const div = document.createElement('div');
+    div.className = 'notif-item' + (!n.is_read ? ' unread' : '');
+    div.innerHTML = `<div class="${!n.is_read?'ni-dot':'ni-dot read'}"></div><div style="flex:1"><div class="ni-text"><strong>${n.title}</strong> — ${n.message}</div><div class="ni-time">${n.created_at||''}</div></div><span style="font-size:18px">${ico}</span>`;
+    el.appendChild(div);
+  });
+}
+
+// ── SAVED PROPERTIES ──────────────────────────────
+function renderSaved(saved) {
+  const grid = document.getElementById('savedGrid');
+  if (!grid) return;
+  if (!saved || !saved.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray)">No saved homes yet. <a onclick="showSec(\'search\',null)" style="color:var(--orange);cursor:pointer">Start searching →</a></div>'; return; }
+  grid.innerHTML = '';
+  const EMOJIS = ['🏠','🏡','🏢','🏗','🏘'];
+  saved.forEach((p, i) => {
+    const div = document.createElement('div'); div.className = 'saved-card';
+    div.innerHTML = `<div class="sc-img">${EMOJIS[i%EMOJIS.length]}</div><div class="sc-body"><div class="sc-ttl">${p.title}</div><div class="sc-loc">📍 ${p.city}, ${p.state}</div><div class="sc-price">₦${parseFloat(p.monthly_rent).toLocaleString()}/mo</div><div style="display:flex;gap:6px"><button class="abtn abtn-org" onclick="toast('Viewing property details','')">View</button><button class="abtn abtn-ghost" onclick="toast('Removed from saved','')">Remove</button></div></div>`;
+    grid.appendChild(div);
+  });
+}
+
+// ── SEARCH ────────────────────────────────────────
+async function searchProperties() {
+  const city     = document.getElementById('searchCity').value;
+  const maxRent  = document.getElementById('searchMaxRent').value || (dashData?.profile?.max_rent_budget || '');
+  const bedrooms = document.getElementById('searchBeds').value;
+  const el       = document.getElementById('searchResults');
+  el.innerHTML   = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--gray)">🔍 Searching...</div>';
+
+  try {
+    let url = `${API}/properties?`;
+    if (city) url += `city=${city}&`;
+    if (maxRent) url += `max_price=${maxRent}&`;
+    if (bedrooms) url += `bedrooms=${bedrooms}&`;
+
+    const res  = await fetch(url);
+    const data = await res.json();
+
+    if (!data.success || !data.data.length) {
+      el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray)">No properties found. Try different filters.</div>';
+      return;
+    }
+
+    el.innerHTML = '';
+    const EMOJIS = ['🏠','🏡','🏢','🏗','🏘'];
+    data.data.forEach((p, i) => {
+      const div = document.createElement('div');
+      div.style.cssText = 'background:#fff;border-radius:12px;border:1.5px solid var(--border);overflow:hidden;transition:box-shadow .2s';
+      div.innerHTML = `
+        <div style="height:130px;background:linear-gradient(135deg,var(--orange-pale),#fcd9bc);display:flex;align-items:center;justify-content:center;font-size:44px">${EMOJIS[i%EMOJIS.length]}</div>
+        <div style="padding:13px">
+          <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:3px">${p.title}</div>
+          <div style="font-size:11px;color:var(--gray);margin-bottom:7px">📍 ${p.city}, ${p.state}</div>
+          <div style="font-size:16px;font-weight:700;color:var(--orange);margin-bottom:9px">₦${parseFloat(p.monthly_rent).toLocaleString()}/mo</div>
+          <div style="display:flex;gap:6px">
+            <button class="abtn abtn-org" onclick="openClaimFor(${p.property_id}, '${p.title.replace(/'/g, "\\'")}')">Pay Rent</button>
+            <button class="abtn abtn-ghost" onclick="saveProperty(${p.property_id})">♡ Save</button>
+          </div>
+        </div>`;
+      el.appendChild(div);
+    });
+  } catch (err) {
+    el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--gray)">Could not load results. Make sure the backend is running.</div>';
+  }
+}
+
+async function saveProperty(id) {
+  try {
+    const res  = await fetch(`${API}/properties/${id}/save`, { method:'POST', headers:{ Authorization:`Bearer ${token}` } });
+    const data = await res.json();
+    toast(data.saved ? 'Saved to favourites ❤️' : 'Removed from saved', data.saved ? 'success' : '');
+  } catch (err) {
+    toast('Could not save. Is backend running?', 'danger');
+  }
+}
+
+// ── BUDGET CALC ───────────────────────────────────
+function calcBudget() {
+  const s = parseFloat(document.getElementById('salaryInput').value) || 0;
+  const max = s * 0.30;
+  document.getElementById('budgetResult').innerHTML = s > 0 ? '₦'+max.toLocaleString('en-NG',{maximumFractionDigits:0})+' <span style="font-size:13px;font-weight:400;color:var(--gray);font-family:\'DM Sans\',sans-serif">/month</span>' : '₦0 <span style="font-size:13px;font-weight:400;color:var(--gray);font-family:\'DM Sans\',sans-serif">/month</span>';
+  document.getElementById('budgetNote').textContent = s > 0 ? `Based on your salary of ₦${s.toLocaleString('en-NG')}/month, you should spend no more than ₦${max.toLocaleString('en-NG')} on rent per month (30% rule).` : 'Enter your salary to see your safe rental budget.';
+
+  if (s > 0) {
+    const bd = document.getElementById('budgetBreakdown');
+    bd.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;color:var(--mid)">Monthly Salary</span><span style="font-size:13px;font-weight:600;color:var(--dark)">₦${s.toLocaleString('en-NG')}</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;color:var(--mid)">Max Safe Rent (30%)</span><span style="font-size:13px;font-weight:700;color:var(--orange)">₦${max.toLocaleString('en-NG')}</span></div>
+        <div class="prog-track"><div class="prog-fill" style="width:30%"></div></div>
+        <div style="background:var(--green-bg);border-radius:9px;padding:10px 12px;font-size:11px;color:var(--green)">✅ You are within the safe 30% salary affordability threshold.</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+          <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--mid)">Remaining after rent</span><span style="font-weight:600;color:var(--dark)">₦${(s-max).toLocaleString('en-NG')}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--mid)">Rent as % of salary</span><span style="font-weight:600;color:var(--orange)">30%</span></div>
+        </div>
+      </div>`;
+  }
+}
+
+async function saveBudget() {
+  const salary   = document.getElementById('salaryInput').value;
+  const location = document.getElementById('prefLocation').value;
+  const beds     = document.getElementById('prefBeds').value;
+  if (!salary) { toast('Please enter your salary first', 'danger'); return; }
+  try {
+    const res  = await fetch(`${API}/affordability`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ monthly_salary: salary, preferred_location: location, preferred_bedrooms: beds })
+    });
+    const data = await res.json();
+    toast(data.success ? 'Budget profile saved! ✅' : data.message, data.success ? 'success' : 'danger');
+  } catch (err) {
+    toast('Saved locally (backend not connected)', 'success');
+  }
+}
+
+let claimPropertyId = null, claimPropertyTitle = '';
+function openClaimFor(id, title) {
+  claimPropertyId = id;
+  claimPropertyTitle = title;
+  openClaimModal();
+}
+// ── PAYMENT CLAIM ─────────────────────────────────
+function openClaimModal() { document.getElementById('claimModal').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeClaimModal() { document.getElementById('claimModal').classList.remove('open'); document.body.style.overflow = ''; }
+
+async function submitClaim() {
+  const amount = document.getElementById('claimAmount').value;
+  const month  = document.getElementById('claimMonth').value;
+  if (!amount) { toast('Please enter the amount paid', 'danger'); return; }
+  if (!claimPropertyId) { toast('Please select a property from Find Housing first', 'danger'); return; }
+
+  const payload = {
+    property_id:    claimPropertyId,
+    amount,
+    payment_month:  month,
+    payment_year:   2026,
+    due_date:       '2026-07-01',
+    date_paid:      document.getElementById('claimDate').value,
+    payment_method: document.getElementById('claimMethod').value,
+    reference_no:   document.getElementById('claimRef').value,
+    notes:          document.getElementById('claimNote').value,
+  };
+
+  try {
+    const res  = await fetch(`${API}/payments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    closeClaimModal();
+    toast(data.success ? 'Payment claim submitted! ⏳ Awaiting landlord confirmation.' : data.message, data.success ? 'success' : 'danger');
+    if (data.success) {
+      dashData.payments.unshift({ payment_id: Date.now(), payment_month: month, property_title: claimPropertyTitle, amount, date_paid: payload.date_paid, payment_method: payload.payment_method, status: 'pending' });
+      dashData.summary.pending++;
+      renderAll();
+    }
+  } catch (err) {
+    toast('Could not reach server.', 'danger');
+  }
+}
+
+// ── PROFILE ───────────────────────────────────────
+async function saveProfile() {
+  const updates = {
+    first_name:     document.getElementById('profFirst').value,
+    last_name:      document.getElementById('profLast').value,
+    phone_number:   document.getElementById('profPhone').value,
+    email:          document.getElementById('profEmail').value,
+    monthly_salary: document.getElementById('profSalary').value,
+  };
+  try {
+    const res  = await fetch(`${API}/auth/me`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(updates) });
+    toast('Profile updated! ✅', 'success');
+  } catch (err) {
+    toast('Profile saved locally ✅', 'success');
+  }
+  Object.assign(currentUser, updates);
+  localStorage.setItem('hb_user', JSON.stringify(currentUser));
+  document.getElementById('sidebarName').textContent = `${updates.first_name} ${updates.last_name}`;
+}
+
+// ── NOTIFICATIONS ─────────────────────────────────
+async function markAllRead() {
+  try {
+    await fetch(`${API}/notifications/read-all`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
+  } catch (err) {}
+  document.querySelectorAll('.notif-item').forEach(n => { n.classList.remove('unread'); const d = n.querySelector('.ni-dot'); if (d) d.className = 'ni-dot read'; });
+  document.getElementById('unreadBadge').style.display = 'none';
+  document.getElementById('notifDot').style.display = 'none';
+  toast('All notifications marked as read', '');
+}
+
+// ── SECTION SWITCHING ─────────────────────────────
+const TITLES = {
+  overview:'Tenant Dashboard', search:'Find Housing', saved:'Saved Homes',
+  myhome:'My Home', payments:'My Payments', budget:'My Budget',
+  notifications:'Notifications', profile:'My Profile'
+};
+function showSec(name, el) {
+  document.querySelectorAll('.sec-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sn-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('sec-'+name)?.classList.add('active');
+  document.getElementById('tbTitle').textContent = TITLES[name] || name;
+  if (el) el.classList.add('active');
+}
+
+// ── TOAST ─────────────────────────────────────────
+function toast(msg, type) {
+  const t = document.getElementById('toastEl');
+  t.textContent = msg; t.className = 'toast '+(type||''); t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ── LOGOUT ────────────────────────────────────────
+function doLogout() {
+  localStorage.removeItem('hb_token');
+  localStorage.removeItem('hb_user');
+  window.location.href = 'index.html';
+}
+
+// ── START ─────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
