@@ -2,6 +2,8 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
+const useSSL = process.env.DB_HOST && process.env.DB_HOST !== 'localhost' && process.env.DB_HOST !== '127.0.0.1';
+
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   port: process.env.DB_PORT || 3306,
@@ -11,6 +13,7 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  ...(useSSL ? { ssl: { rejectUnauthorized: false } } : {})
 });
 
 pool.getConnection()
