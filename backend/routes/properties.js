@@ -1,11 +1,25 @@
 // ============================================================
 // routes/properties.js v2
-// UPDATED: contact reveal logging, phone hidden by default
+// UPDATED: contact reveal logging, phone hidden by default,
+//          single cover-photo upload via Cloudinary
 // ============================================================
 const express = require('express');
 const router  = express.Router();
 const db      = require('../config/db');
 const { protect, adminOnly } = require('../middleware/auth');
+const multer      = require('multer');
+const cloudinary   = require('../config/cloudinary');
+
+// Store the uploaded file in memory (not on disk) — Render's disk doesn't
+// persist between restarts, so we stream straight to Cloudinary instead.
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) return cb(null, true);
+    cb(new Error('Only image files are allowed.'));
+  }
+});
 
 // GET /api/properties — public search with filters
 router.get('/', async (req, res) => {
@@ -16,12 +30,14 @@ router.get('/', async (req, res) => {
              p.bedrooms, p.bathrooms, p.size_sqm, p.monthly_rent,
              p.full_address, p.is_available, p.created_at,
              l.city, l.state,
-             CONCAT(u.first_name,' ',u.last_name) AS landlord_name
+             CONCAT(u.first_name,' ',u.last_name) AS landlord_name,
+             pi.image_url AS cover_image_url
              -- NOTE: landlord phone NOT included here (anti-fraud)
              -- Phone is only returned via /api/properties/:id/contact
       FROM properties p
       JOIN locations l ON p.location_id = l.location_id
       JOIN users     u ON p.landlord_id  = u.user_id
+      LEFT JOIN property_images pi ON pi.property_id = p.property_id AND pi.is_cover = 1
       WHERE p.is_available = 1 AND p.is_approved = 1
     `;
     const params = [];
@@ -53,11 +69,13 @@ router.get('/:id', async (req, res) => {
   try {
     const [rows] = await db.execute(
       `SELECT p.*, l.city, l.state,
-              CONCAT(u.first_name,' ',u.last_name) AS landlord_name
+              CONCAT(u.first_name,' ',u.last_name) AS landlord_name,
+              pi.image_url AS cover_image_url
               -- Phone excluded intentionally
        FROM properties p
        JOIN locations l ON p.location_id = l.location_id
        JOIN users     u ON p.landlord_id  = u.user_id
+       LEFT JOIN property_images pi ON pi.property_id = p.property_id AND pi.is_cover = 1
        WHERE p.property_id = ? AND p.is_approved = 1`,
       [req.params.id]
     );
@@ -148,6 +166,49 @@ router.post('/', protect, async (req, res) => {
   }
 });
 
+// POST /api/properties/:id/image — landlord uploads/replaces the single cover photo
+// Single-photo version: one cover image per property (property_images.is_cover = 1)
+router.post('/:id/image', protect, upload.single('image'), async (req, res) => {
+  try {
+    const propertyId = req.params.id;
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No image file received.' });
+    }
+
+    // Ownership check — same pattern used for payment claims: derive the
+    // real landlord_id server-side and compare, never trust the client.
+    const [propRows] = await db.execute('SELECT landlord_id FROM properties WHERE property_id = ?', [propertyId]);
+    if (propRows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Property not found.' });
+    }
+    if (req.user.role !== 'admin' && propRows[0].landlord_id !== req.user.user_id) {
+      return res.status(403).json({ success: false, message: 'You can only upload photos for your own listings.' });
+    }
+
+    // Upload the buffer to Cloudinary
+    const uploadResult = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: 'homebase/properties', resource_type: 'image' },
+        (err, result) => err ? reject(err) : resolve(result)
+      );
+      stream.end(req.file.buffer);
+    });
+
+    // Single cover-photo model: replace any existing cover for this property
+    await db.execute('DELETE FROM property_images WHERE property_id = ? AND is_cover = 1', [propertyId]);
+    await db.execute(
+      'INSERT INTO property_images (property_id, image_url, is_cover) VALUES (?, ?, 1)',
+      [propertyId, uploadResult.secure_url]
+    );
+
+    return res.status(200).json({ success: true, message: 'Cover photo uploaded.', image_url: uploadResult.secure_url });
+  } catch (err) {
+    console.error('Property image upload error:', err);
+    return res.status(500).json({ success: false, message: 'Server error during image upload.' });
+  }
+});
+
 // POST /api/properties/:id/save — tenant saves a property
 router.post('/:id/save', protect, async (req, res) => {
   try {
@@ -168,10 +229,11 @@ router.post('/:id/save', protect, async (req, res) => {
 router.get('/saved/list', protect, async (req, res) => {
   try {
     const [rows] = await db.execute(
-      `SELECT p.*, l.city, l.state, sp.saved_at
+      `SELECT p.*, l.city, l.state, sp.saved_at, pi.image_url AS cover_image_url
        FROM saved_properties sp
        JOIN properties p ON sp.property_id = p.property_id
        JOIN locations  l ON p.location_id  = l.location_id
+       LEFT JOIN property_images pi ON pi.property_id = p.property_id AND pi.is_cover = 1
        WHERE sp.tenant_id = ? ORDER BY sp.saved_at DESC`,
       [req.user.user_id]
     );
@@ -224,10 +286,12 @@ router.get('/admin/pending', protect, adminOnly, async (req, res) => {
       `SELECT p.property_id, p.title, p.property_type, p.bedrooms, p.bathrooms,
               p.monthly_rent, p.full_address, p.created_at,
               l.city, l.state,
-              CONCAT(u.first_name,' ',u.last_name) AS landlord_name
+              CONCAT(u.first_name,' ',u.last_name) AS landlord_name,
+              pi.image_url AS cover_image_url
        FROM properties p
        JOIN locations l ON p.location_id = l.location_id
        JOIN users     u ON p.landlord_id  = u.user_id
+       LEFT JOIN property_images pi ON pi.property_id = p.property_id AND pi.is_cover = 1
        WHERE p.is_approved = 0
        ORDER BY p.created_at DESC`
     );

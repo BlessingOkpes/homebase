@@ -193,7 +193,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
 <!-- SIDEBAR -->
 <aside class="sidenav" id="sidenav">
   <a href="index.html" class="sn-brand">
-    <div class="sn-logo">🏠</div>
+    <img src="assets/homebase-logo.png" alt="HomeBase" style="width:36px;height:36px;border-radius:9px;object-fit:cover"/>
     <span class="sn-name">HomeBase</span>
     <span class="sn-badge">TENANT</span>
   </a>
@@ -726,7 +726,10 @@ function renderSaved(saved) {
   const EMOJIS = ['🏠','🏡','🏢','🏗','🏘'];
   saved.forEach((p, i) => {
     const div = document.createElement('div'); div.className = 'saved-card';
-    div.innerHTML = `<div class="sc-img">${EMOJIS[i%EMOJIS.length]}</div><div class="sc-body"><div class="sc-ttl">${p.title}</div><div class="sc-loc">📍 ${p.city}, ${p.state}</div><div class="sc-price">₦${parseFloat(p.monthly_rent).toLocaleString()}/mo</div><div style="display:flex;gap:6px"><button class="abtn abtn-org" onclick="toast('Viewing property details','')">View</button><button class="abtn abtn-ghost" onclick="toast('Removed from saved','')">Remove</button></div></div>`;
+    const coverImg = p.cover_image_url
+      ? `<div class="sc-img" style="background-size:cover;background-position:center;background-image:url('${p.cover_image_url}');font-size:0"></div>`
+      : `<div class="sc-img">${EMOJIS[i%EMOJIS.length]}</div>`;
+    div.innerHTML = `${coverImg}<div class="sc-body"><div class="sc-ttl">${p.title}</div><div class="sc-loc">📍 ${p.city}, ${p.state}</div><div class="sc-price">₦${parseFloat(p.monthly_rent).toLocaleString()}/mo</div><div style="display:flex;gap:6px"><button class="abtn abtn-org" onclick="toast('Viewing property details','')">View</button><button class="abtn abtn-ghost" onclick="toast('Removed from saved','')">Remove</button></div></div>`;
     grid.appendChild(div);
   });
 }
@@ -758,8 +761,11 @@ async function searchProperties() {
     data.data.forEach((p, i) => {
       const div = document.createElement('div');
       div.style.cssText = 'background:#fff;border-radius:12px;border:1.5px solid var(--border);overflow:hidden;transition:box-shadow .2s';
+      const coverImg = p.cover_image_url
+        ? `<div style="height:130px;background-size:cover;background-position:center;background-image:url('${p.cover_image_url}')"></div>`
+        : `<div style="height:130px;background:linear-gradient(135deg,var(--orange-pale),#fcd9bc);display:flex;align-items:center;justify-content:center;font-size:44px">${EMOJIS[i%EMOJIS.length]}</div>`;
       div.innerHTML = `
-        <div style="height:130px;background:linear-gradient(135deg,var(--orange-pale),#fcd9bc);display:flex;align-items:center;justify-content:center;font-size:44px">${EMOJIS[i%EMOJIS.length]}</div>
+        ${coverImg}
         <div style="padding:13px">
           <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:3px">${p.title}</div>
           <div style="font-size:11px;color:var(--gray);margin-bottom:7px">📍 ${p.city}, ${p.state}</div>

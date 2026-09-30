@@ -313,7 +313,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
 <!-- ── SIDEBAR ── -->
 <aside class="sidenav" id="sidenav">
  <a href="index.html" class="sn-brand">
-    <div class="sn-logo">🏠</div>
+    <img src="assets/homebase-logo.png" alt="HomeBase" style="width:36px;height:36px;border-radius:9px;object-fit:cover"/>
     <span class="sn-name">HomeBase</span>
     <span class="sn-badge">LANDLORD</span>
   </a>
@@ -572,6 +572,11 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
               <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" class="pAmenity" value="Internet Ready" style="accent-color:var(--orange)"/> 📶 Internet Ready</label>
               <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" class="pAmenity" value="Furnished" style="accent-color:var(--orange)"/> 🪑 Furnished</label>
             </div>
+          </div>
+          <div class="ff">
+            <label>Cover Photo — optional</label>
+            <input id="pImage" type="file" accept="image/*" style="padding:8px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px"/>
+            <div style="font-size:11px;color:var(--gray);margin-top:4px">One photo per listing, up to 5MB. You can add or replace it later.</div>
           </div>
           <div style="background:var(--orange-faint);border:1px solid var(--border);border-radius:9px;padding:12px">
             <div style="font-size:12px;font-weight:600;color:var(--brown);margin-bottom:4px">ℹ️ Note on Bank Details</div>
@@ -1124,8 +1129,25 @@ async function submitProperty() {
         description: desc, amenities
       })
     });
-    const data = await res.json();
+        const data = await res.json();
     if (data.success) {
+      // If a cover photo was chosen, upload it now that we have the new property_id
+      const imageFile = document.getElementById('pImage').files[0];
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        try {
+          const imgRes = await fetch(`${API}/properties/${data.property_id}/image`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` }, // no Content-Type — browser sets multipart boundary
+            body: formData
+          });
+          const imgData = await imgRes.json();
+          if (!imgData.success) toast(imgData.message || 'Property saved, but photo upload failed.', 'danger');
+        } catch (imgErr) {
+          toast('Property saved, but photo upload failed.', 'danger');
+        }
+      }
       toast('Property submitted for admin approval! ✅ Usually approved within 24 hours.', 'success');
     } else {
       toast(data.message || 'Submission failed.', 'danger');

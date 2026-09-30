@@ -275,7 +275,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
 <!-- ── SIDEBAR ── -->
 <aside class="sidenav" id="sidenav">
   <a href="HomeBase_Frontend.html" class="sn-brand">
-    <div class="sn-logo">🏠</div>
+    <img src="assets/homebase-logo.png" alt="HomeBase" style="width:36px;height:36px;border-radius:9px;object-fit:cover"/>
     <span class="sn-name">HomeBase</span>
     <span class="sn-badge">ADMIN</span>
   </a>
@@ -874,8 +874,11 @@ function renderPropApprovals(filter) {
   filtered.forEach(p => {
     const div = document.createElement('div');
     div.className = 'pa-card';
+    const paImg = p.img
+      ? `background-size:cover;background-position:center;background-image:url('${p.img}')`
+      : '';
     div.innerHTML = `
-      <div class="pa-img"><span>${p.e}</span>
+      <div class="pa-img" style="${paImg}"><span>${p.img ? '' : p.e}</span>
         <div class="pa-status">
           <span class="badge ${p.status==='pending'?'b-ylw':p.status==='approved'?'b-grn':'b-red'}">${p.status==='pending'?'⏳ Pending':p.status==='approved'?'✓ Approved':'✗ Rejected'}</span>
         </div>
@@ -1028,6 +1031,7 @@ async function initAdmin(){
         REAL_PENDING = pData.data.map(p => ({
           id: p.property_id,
           e: '🏠',
+          img: p.cover_image_url || null,
           title: p.title,
           loc: `${p.city}, ${p.state}`,
           price: `₦${Number(p.monthly_rent).toLocaleString()}/mo`,
