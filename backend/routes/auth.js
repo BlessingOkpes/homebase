@@ -24,7 +24,7 @@ router.post('/register', async (req, res) => {
     }
 
     // Email required for tenants, optional for landlords
-    const userRole = ['tenant','landlord','admin'].includes(role) ? role : 'tenant';
+    const userRole = ['tenant','landlord'].includes(role) ? role : 'tenant';
     if (userRole === 'tenant' && !email) {
       return res.status(400).json({ success: false, message: 'Email is required for tenants.' });
     }
