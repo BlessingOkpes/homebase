@@ -268,9 +268,10 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
   .sidenav{left:calc(-1 * var(--side))}.sidenav.open{left:0;box-shadow:4px 0 24px rgba(232,96,10,0.2)}
   .main{margin-left:0}.hamburger{display:flex}.tb-search{display:none}
   .mobile-backdrop.show{display:block}
-  .sidenav-close{display:flex;align-items:center;justify-content:center;position:absolute;top:14px;right:14px;
-    width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:#fff;
-    font-size:15px;cursor:pointer;z-index:2}
+  .sidenav-close{display:flex;align-items:center;justify-content:center;position:absolute;top:50%;right:-14px;
+    transform:translateY(-50%);width:28px;height:48px;border-radius:0 12px 12px 0;
+    background:var(--orange);border:none;color:#fff;font-size:20px;cursor:pointer;z-index:2;
+    box-shadow:2px 0 8px rgba(0,0,0,.25)}
   .g2,.g3{grid-template-columns:1fr}.stat-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:480px){.stat-grid{grid-template-columns:1fr}.ff-row{grid-template-columns:1fr}}
@@ -281,7 +282,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
 <!-- ── SIDEBAR ── -->
 <div class="mobile-backdrop" id="mobileBackdrop" onclick="closeSidenav()"></div>
 <aside class="sidenav" id="sidenav">
-  <button class="sidenav-close" onclick="closeSidenav()">✕</button>
+  <button class="sidenav-close" onclick="closeSidenav()">‹</button>
   <a href="HomeBase_Frontend.html" class="sn-brand">
     <img src="assets/homebase-logo.png" alt="HomeBase" style="width:36px;height:36px;border-radius:9px;object-fit:cover"/>
     <span class="sn-name">HomeBase</span>
