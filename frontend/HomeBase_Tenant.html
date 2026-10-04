@@ -10,6 +10,7 @@ const API = window.location.hostname === 'localhost' || window.location.hostname
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>HomeBase — Tenant Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -201,6 +202,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
 
 <!-- SIDEBAR -->
 <aside class="sidenav" id="sidenav">
+  <button class="sidenav-close" onclick="closeSidenav()">‹</button>
   <a href="index.html" class="sn-brand">
     <img src="assets/homebase-logo.png" alt="HomeBase" style="width:36px;height:36px;border-radius:9px;object-fit:cover"/>
     <span class="sn-name">HomeBase</span>
@@ -503,6 +505,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
 let token = localStorage.getItem('hb_token');
 let currentUser = JSON.parse(localStorage.getItem('hb_user') || '{}');
 let dashData = null;
+let ALL_PAYMENTS = {};
 
 // ── INIT ──────────────────────────────────────────
 async function init() {
@@ -600,6 +603,7 @@ function renderAll() {
   document.getElementById('notifDot').style.display = unread > 0 ? 'block' : 'none';
 
   // Tables
+  payments.forEach(p => { ALL_PAYMENTS[p.payment_id] = p; });
   renderPayTable(payments.slice(0, 4), 'recentPayTbl');
   renderPayTable(payments, 'fullPayTbl');
 
@@ -643,13 +647,79 @@ function renderPayTable(pays, tblId) {
       <td>${p.date_paid||'—'}</td>
       <td>${p.payment_method||'—'}</td>
       <td><span class="badge ${sc}">${st}</span></td>
-      <td><button class="abtn abtn-org" onclick="toast('Downloading receipt...','success')">Receipt</button></td>`;
+      <td>${p.status==='confirmed' ? `<button class="abtn abtn-org" onclick="generateReceipt(${p.payment_id})">Receipt</button>` : '<span style="font-size:11px;color:var(--gray)">—</span>'}</td>`;
     tb.appendChild(tr);
   });
   tbl.appendChild(tb);
 }
 
 // ── HOME CARD ─────────────────────────────────────
+
+function generateReceipt(paymentId) {
+  const p = ALL_PAYMENTS[paymentId];
+  if (!p) { toast('Could not find that payment.', 'danger'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const tenantName = `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() || 'Tenant';
+  const receiptNo  = 'HB-' + String(p.payment_id).padStart(6, '0');
+  const today      = new Date().toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  // Header
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(20);
+  doc.setTextColor(232, 96, 10);
+  doc.text('HomeBase', 20, 25);
+  doc.setFontSize(12);
+  doc.setTextColor(60, 60, 60);
+  doc.text('Payment Receipt', 20, 33);
+
+  doc.setDrawColor(230, 230, 230);
+  doc.line(20, 38, 190, 38);
+
+  // Meta
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Receipt No: ${receiptNo}`, 20, 46);
+  doc.text(`Generated: ${today}`, 20, 52);
+
+  // Body — two-column details
+  let y = 66;
+  const row = (label, value) => {
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(40, 40, 40);
+    doc.text(label, 20, y);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(80, 80, 80);
+    doc.text(String(value ?? '—'), 75, y);
+    y += 9;
+  };
+
+  row('Tenant', tenantName);
+  row('Property', p.property_title || p.full_address || '—');
+  row('Landlord', p.landlord_name || '—');
+  row('Month Covered', p.payment_month || '—');
+  row('Amount Paid', `NGN ${parseFloat(p.amount).toLocaleString('en-NG')}`);
+  row('Date Paid', p.date_paid || '—');
+  row('Payment Method', p.payment_method || '—');
+  row('Reference No.', p.reference_no || '—');
+  row('Status', 'Confirmed by landlord');
+
+  // Footer disclaimer
+  y += 10;
+  doc.setDrawColor(230, 230, 230);
+  doc.line(20, y, 190, y);
+  y += 8;
+  doc.setFontSize(9);
+  doc.setTextColor(140, 140, 140);
+  doc.text('This receipt confirms a payment recorded and confirmed within the HomeBase platform.', 20, y);
+  doc.text('It is not a bank-issued transaction receipt. Keep your bank\'s own proof of transfer for your records.', 20, y + 5);
+
+  doc.save(`HomeBase_Receipt_${receiptNo}.pdf`);
+  toast('Receipt downloaded ✅', 'success');
+}
+
 function renderHomeCard(tenancy) {
   const el = document.getElementById('homeCardContent');
   const td = document.getElementById('tenancyDetails');
