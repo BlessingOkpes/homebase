@@ -330,7 +330,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
     <a class="sn-item active" onclick="showSec('overview',this)"><span class="sn-ico">📊</span>Dashboard</a>
 
     <div class="sn-sec">My Properties</div>
-    <a class="sn-item" onclick="showSec('properties',this)"><span class="sn-ico">🏠</span>My Listings<span class="sn-cnt grn">4</span></a>
+    <a class="sn-item" onclick="showSec('properties',this)"><span class="sn-ico">🏠</span>My Listings</a>
     <a class="sn-item" onclick="showSec('addprop',this)"><span class="sn-ico">➕</span>Add Property</a>
 
     <div class="sn-sec">Payments</div>
@@ -339,7 +339,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
 
     <div class="sn-sec">Tenants</div>
     <a class="sn-item" onclick="showSec('tenants',this)"><span class="sn-ico">👥</span>My Tenants</a>
-    <a class="sn-item" onclick="showSec('messages',this)"><span class="sn-ico">💬</span>Messages<span class="sn-cnt org">2</span></a>
+    <a class="sn-item" onclick="showSec('messages',this)"><span class="sn-ico">💬</span>Messages </a>
 
     <div class="sn-sec">Account</div>
     <a class="sn-item" onclick="showSec('profile',this)"><span class="sn-ico">👤</span>My Profile</a>
@@ -590,7 +590,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
             <div style="font-size:12px;font-weight:600;color:var(--brown);margin-bottom:4px">ℹ️ Note on Bank Details</div>
             <div style="font-size:12px;color:var(--mid);line-height:1.6">For security, HomeBase does not store or display bank account numbers. Your phone number will be shown to interested tenants (after they click "Contact Landlord") so they can contact you directly and arrange payment in person.</div>
           </div>
-          <button onclick="submitProperty()" style="padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(232,96,10,.25);transition:transform .2s">Submit for Approval</button>
+          <button id="submitPropBtn" onclick="submitProperty()" style="padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(232,96,10,.25);transition:transform .2s">Submit for Approval</button>
         </div>
       </div>
     </div>
@@ -614,7 +614,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
         <div style="font-size:12px;color:var(--gray)">Tenant enquiries and messages</div>
       </div>
       <div class="card">
-        <div class="card-hd"><span class="ch-ttl">💬 Inbox</span><span class="badge b-org">2 unread</span></div>
+        <div class="card-hd"><span class="ch-ttl">💬 Inbox</span></div>
         <div style="padding:16px 18px;display:flex;flex-direction:column;gap:10px" id="msgList"></div>
       </div>
     </div>
@@ -765,14 +765,7 @@ function updateClaimCounts() {
 let REAL_CLAIMS = [];
 
 // ── DATA ──────────────────────────────────────────
-const CLAIMS = [
-  {id:'demo1', tenant:'Emeka Nwachukwu', phone:'+234 801 234 5678', property:'Modern 2-Bed Flat, Lekki', amount:85000, month:'July 2026', datePaid:'Jul 1, 2026', method:'Bank Transfer', ref:'TRF2026070185', note:'Paid via Access Bank transfer.', status:'pending', submitted:'2 hours ago'},
-  {id:'demo2', tenant:'Adaeze Okonkwo', phone:'+234 802 345 6789', property:'1-Bed Flat, Surulere', amount:55000, month:'July 2026', datePaid:'Jul 1, 2026', method:'Cash', ref:'', note:'Paid cash at the property office.', status:'pending', submitted:'5 hours ago'},
-  {id:'demo3', tenant:'Tunde Balogun', phone:'+234 803 456 7890', property:'Studio, Victoria Island', amount:130000, month:'July 2026', datePaid:'Jun 30, 2026', method:'Bank Transfer', ref:'TRF2026063091', note:'', status:'pending', submitted:'1 day ago'},
-  {id:'demo4', tenant:'Emeka Nwachukwu', phone:'+234 801 234 5678', property:'Modern 2-Bed Flat, Lekki', amount:85000, month:'June 2026', datePaid:'Jun 1, 2026', method:'Bank Transfer', ref:'TRF2026060122', note:'', status:'confirmed', submitted:'1 month ago'},
-  {id:'demo5', tenant:'Adaeze Okonkwo', phone:'+234 802 345 6789', property:'1-Bed Flat, Surulere', amount:55000, month:'June 2026', datePaid:'Jun 2, 2026', method:'Cash', ref:'', note:'', status:'confirmed', submitted:'1 month ago'},
-  {id:'demo6', tenant:'Ngozi Eze', phone:'+234 804 567 8901', property:'Room & Parlour, Kubwa', amount:28000, month:'June 2026', datePaid:'May 30, 2026', method:'POS', ref:'POS20260530', note:'Wrong amount submitted.', status:'rejected', submitted:'1 month ago'},
-];
+const CLAIMS = [];
 
 const MY_PROPS = [
   {id:1, e:'🏠', title:'Modern 2-Bed Flat', loc:'Lekki Phase 1, Lagos', price:'₦85,000/mo', beds:2, baths:1, status:'occupied', tenant:'Emeka Nwachukwu', approval:'approved'},
@@ -787,11 +780,7 @@ const TENANTS = [
   {name:'Tunde Balogun', phone:'+234 803 456 7890', property:'Studio, Victoria Island', rent:'₦130,000/mo', status:'pending', since:'Mar 2026'},
 ];
 
-const MESSAGES = [
-  {from:'Ngozi Eze', msg:'Good afternoon ma, I am interested in the Room & Parlour in Kubwa. Can I come for a viewing this weekend?', time:'1 hour ago', unread:true},
-  {from:'Chidi Okafor', msg:'Please ma, I want to know if the Lekki flat is still available. My salary is ₦280,000 so it fits the budget.', time:'3 hours ago', unread:true},
-  {from:'Emeka Nwachukwu', msg:'Good morning ma, I have made the payment for July. I have logged it on the app with the transfer reference.', time:'2 days ago', unread:false},
-];
+const MESSAGES = [];
 
 const fn = n => '₦' + n.toLocaleString('en-NG');
 let rejectingId = null;
@@ -1074,6 +1063,10 @@ function renderFullTenants() {
 function renderMessages() {
   const el = document.getElementById('msgList');
   if (!el) return; el.innerHTML = '';
+  if (!MESSAGES.length) {
+    el.innerHTML = '<div style="text-align:center;padding:50px 20px;color:var(--gray)"><div style="font-size:40px;margin-bottom:10px">💬</div><div style="font-size:15px;font-weight:600;color:var(--dark)">No messages yet</div><div style="font-size:12px;margin-top:4px">Tenant enquiries will appear here.</div></div>';
+    return;
+  }
   MESSAGES.forEach(m => {
     const div = document.createElement('div');
     div.style.cssText = `display:flex;align-items:flex-start;gap:12px;padding:14px;border-radius:10px;border:1px solid var(--border);background:${m.unread?'var(--orange-faint)':'var(--offwhite)'}`;
@@ -1126,6 +1119,11 @@ async function submitProperty() {
     return;
   }
 
+  const btn = document.getElementById('submitPropBtn');
+  if (btn.disabled) return;
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
   try {
     const res = await fetch(`${API}/properties`, {
       method: 'POST',
@@ -1157,11 +1155,16 @@ async function submitProperty() {
         }
       }
       toast('Property submitted for admin approval! ✅ Usually approved within 24 hours.', 'success');
+      ['pTitle','pAddress','pRent','pSize','pDesc'].forEach(id => { document.getElementById(id).value = ''; });
+      document.getElementById('pImage').value = '';
     } else {
       toast(data.message || 'Submission failed.', 'danger');
     }
   } catch (err) {
     toast('Could not reach server.', 'danger');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Submit for Approval';
   }
 }
 
