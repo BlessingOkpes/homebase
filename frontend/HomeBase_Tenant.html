@@ -342,7 +342,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
       <div class="card">
         <div class="card-hd">
           <span class="ch-ttl">💳 Payment History</span>
-          <button class="ch-act" onclick="toast('Downloading payment history PDF...','success')">Export PDF</button>
+          <button class="ch-act" onclick="exportPaymentsPDF()">Export PDF</button>
         </div>
         <div style="overflow-x:auto"><table class="tbl" id="fullPayTbl"></table></div>
       </div>
@@ -718,6 +718,99 @@ function generateReceipt(paymentId) {
 
   doc.save(`HomeBase_Receipt_${receiptNo}.pdf`);
   toast('Receipt downloaded ✅', 'success');
+}
+
+function exportPaymentsPDF() {
+  const list = Object.values(ALL_PAYMENTS).sort((a, b) => b.payment_id - a.payment_id);
+  if (!list.length) { toast('No payments to export yet.', 'danger'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const tenantName = `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() || 'Tenant';
+  const today = new Date().toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' });
+  const cut = (v, n) => { const s = String(v ?? '-'); return s.length > n ? s.slice(0, n - 1) + '.' : s; };
+
+  // Column x-positions (mm)
+  const X = { month: 15, prop: 40, amt: 92, date: 122, method: 148, status: 172 };
+
+  const drawTableHead = (y) => {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(40, 40, 40);
+    doc.text('Month', X.month, y);
+    doc.text('Property', X.prop, y);
+    doc.text('Amount', X.amt, y);
+    doc.text('Date Paid', X.date, y);
+    doc.text('Method', X.method, y);
+    doc.text('Status', X.status, y);
+    doc.setDrawColor(230, 230, 230);
+    doc.line(15, y + 2, 195, y + 2);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(80, 80, 80);
+  };
+
+  // Title block
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(20);
+  doc.setTextColor(232, 96, 10);
+  doc.text('HomeBase', 15, 22);
+  doc.setFontSize(12);
+  doc.setTextColor(60, 60, 60);
+  doc.text('Payment History', 15, 30);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Tenant: ${tenantName}`, 15, 38);
+  doc.text(`Generated: ${today}`, 15, 44);
+
+  let y = 56;
+  drawTableHead(y);
+  y += 9;
+
+  let confirmedTotal = 0;
+  let confirmedCount = 0;
+
+  list.forEach(p => {
+    if (y > 275) {
+      doc.addPage();
+      y = 20;
+      drawTableHead(y);
+      y += 9;
+    }
+    const amount = parseFloat(p.amount) || 0;
+    if (p.status === 'confirmed') { confirmedTotal += amount; confirmedCount++; }
+    const statusText = p.status === 'confirmed' ? 'Confirmed' : p.status === 'pending' ? 'Pending' : 'Rejected';
+
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    doc.text(cut(p.payment_month, 12), X.month, y);
+    doc.text(cut(p.property_title || p.full_address, 30), X.prop, y);
+    doc.text(`NGN ${amount.toLocaleString('en-NG')}`, X.amt, y);
+    doc.text(String(p.date_paid || '-').slice(0, 10), X.date, y);
+    doc.text(cut(p.payment_method, 14), X.method, y);
+    doc.text(statusText, X.status, y);
+    y += 8;
+  });
+
+  // Summary
+  if (y > 262) { doc.addPage(); y = 20; }
+  y += 4;
+  doc.setDrawColor(230, 230, 230);
+  doc.line(15, y, 195, y);
+  y += 8;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(40, 40, 40);
+  doc.text(`Confirmed payments: ${confirmedCount}   |   Total confirmed: NGN ${confirmedTotal.toLocaleString('en-NG')}`, 15, y);
+
+  y += 10;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(140, 140, 140);
+  doc.text('Pending and rejected claims are listed for reference only and are not counted in the total.', 15, y);
+
+  doc.save('HomeBase_Payment_History.pdf');
+  toast('Payment history downloaded', 'success');
 }
 
 function renderHomeCard(tenancy) {
