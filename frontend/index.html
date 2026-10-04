@@ -1190,11 +1190,7 @@ async function doLogin(){
       gToast(data.message||'Invalid credentials','danger');
     }
   } catch(err){
-    // Demo fallback — backend not running
-    gToast('Demo mode: Redirecting to Tenant Dashboard...','success');
-    localStorage.setItem('hb_token','demo_token');
-    localStorage.setItem('hb_user', JSON.stringify({first_name:'Emeka',last_name:'Nwachukwu',role:'tenant',phone_number:'+234 801 234 5678',email:e}));
-    setTimeout(()=>window.location.href='HomeBase_Tenant.html', 900);
+    gToast('Login failed. Could not reach the server. It may be waking up, so please wait a few seconds and try again.','danger');
   } finally {
     btn.classList.remove('loading');btn.textContent='Sign In to HomeBase';
   }
@@ -1235,14 +1231,7 @@ async function doReg(){
       gToast(data.message||'Registration failed. Try again.','danger');
     }
   } catch(err){
-    // Demo fallback
-    gToast('Demo mode: Account created! 🎉','success');
-    localStorage.setItem('hb_token','demo_token');
-    localStorage.setItem('hb_user', JSON.stringify({first_name:f,last_name:l,role,phone_number:ph,email:e}));
-    setTimeout(()=>{
-      if(role==='landlord') window.location.href='HomeBase_Landlord.html';
-      else                  window.location.href='HomeBase_Tenant.html';
-    }, 900);
+    gToast('Registration failed. Could not reach the server. It may be waking up, so please wait a few seconds and try again.','danger');
   } finally {
     btn.classList.remove('loading');btn.textContent='Create My Account';
   }
@@ -1401,12 +1390,18 @@ async function revealContact() {
 // ── NAV AUTH STATE ───────────────────────────────────
 function checkNavAuth(){
   const user = JSON.parse(localStorage.getItem('hb_user')||'{}');
+  const token = localStorage.getItem('hb_token');
   const acts = document.getElementById('navActs');
-  if(user && user.first_name && acts){
+  if (!acts) return;
+  if(user && user.first_name && token && token !== 'demo_token'){
     acts.innerHTML = `
       <span style="font-size:13px;font-weight:500;color:rgba(255,255,255,.85)">👤 ${user.first_name}</span>
       <button class="btn-solid" onclick="goToDashboard()">My Dashboard</button>
       <button class="btn-out" onclick="doLogout()">Sign Out</button>`;
+  } else {
+    acts.innerHTML = `
+      <button class="btn-out" onclick="go('auth')" id="signInBtn">Sign In</button>
+      <button class="btn-solid" onclick="go('auth')" id="getStartedBtn">Get Started Free</button>`;
   }
 }
 function goToDashboard(){
