@@ -294,13 +294,13 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
     <a class="sn-item" onclick="showSec('analytics')"><span class="sn-ico">📈</span>Analytics</a>
 
     <div class="sn-section">Management</div>
-    <a class="sn-item" onclick="showSec('users')"><span class="sn-ico">👥</span>Users<span class="sn-count">248</span></a>
-    <a class="sn-item" onclick="showSec('properties')"><span class="sn-ico">🏠</span>Properties<span class="sn-count org">7</span></a>
+    <a class="sn-item" onclick="showSec('users')"><span class="sn-ico">👥</span>Users</a>
+    <a class="sn-item" onclick="showSec('properties')"><span class="sn-ico">🏠</span>Properties<span class="sn-count org">0</span></a>
     <a class="sn-item" onclick="showSec('payments')"><span class="sn-ico">💳</span>Payments</a>
     <a class="sn-item" onclick="showSec('reports')"><span class="sn-ico">🧾</span>Reports</a>
 
     <div class="sn-section">System</div>
-    <a class="sn-item" onclick="showSec('notifications')"><span class="sn-ico">🔔</span>Notifications<span class="sn-count">12</span></a>
+    <a class="sn-item" onclick="showSec('notifications')"><span class="sn-ico">🔔</span>Notifications</a>
     <a class="sn-item" onclick="showSec('settings')"><span class="sn-ico">⚙️</span>Settings</a>
     <a class="sn-item" onclick="window.location.href='index.html'"><span class="sn-ico">🌐</span>View Site</a>
     <a class="sn-item" onclick="localStorage.removeItem('hb_token'); localStorage.removeItem('hb_user'); window.location.href='index.html';"><span class="sn-ico">🚪</span>Sign Out</a>
@@ -324,7 +324,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
       </button>
       <div>
         <div class="tb-title" id="tbTitle">Admin Dashboard</div>
-        <div class="tb-sub">Wednesday, July 29, 2026</div>
+       <div class="tb-sub"><script>document.write(new Date().toDateString())</script></div>
       </div>
     </div>
     <div class="tb-right">
@@ -355,7 +355,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
         <div class="stat-card orange">
           <div class="sc-top"><div class="sc-ico ico-w">👥</div><span class="sc-trend tr-wt">↑ +18</span></div>
           <div class="sc-lbl">Total Users</div>
-          <div class="sc-val">248</div>
+          <div class="sc-val">—</div>
           <div class="sc-hint">Tenants + Landlords</div>
         </div>
         <div class="stat-card">
@@ -446,7 +446,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
         <div>
           <div style="font-size:18px;font-weight:600;color:var(--dark)">User Management</div>
-          <div style="font-size:12px;color:var(--gray)">248 registered users — tenants, landlords, admins</div>
+          <div style="font-size:12px;color:var(--gray)">Registered users— tenants, landlords, admins</div>
         </div>
         <button onclick="openModal('addUser')" style="padding:9px 18px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 3px 12px rgba(232,96,10,0.25)">+ Add User</button>
       </div>

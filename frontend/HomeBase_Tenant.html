@@ -507,16 +507,22 @@ let currentUser = JSON.parse(localStorage.getItem('hb_user') || '{}');
 let dashData = null;
 let ALL_PAYMENTS = {};
 
+function showLoadError(msg) {
+  const c = document.querySelector('.content');
+  if (!c) return;
+  c.insertAdjacentHTML('afterbegin',
+    `<div style="background:#fdeaea;border:1px solid #f2b8b8;color:#9b1c1c;padding:14px 16px;border-radius:10px;margin-bottom:16px;font-size:13px">${msg}
+     <button onclick="location.reload()" style="margin-left:10px;padding:5px 12px;border:none;border-radius:6px;background:var(--orange);color:#fff;cursor:pointer">Try Again</button></div>`);
+}
+
 // ── INIT ──────────────────────────────────────────
 async function init() {
   // Set today's date on claim form
   document.getElementById('claimDate').value = new Date().toISOString().split('T')[0];
 
-  // If no token, load demo data (so page works standalone)
+    // If no token, send the user to log in
   if (!token) {
-    console.warn('No token found — loading demo data');
-    loadDemoData();
-    document.getElementById('loadingOv').style.display = 'none';
+    window.location.href = 'index.html';
     return;
   }
 
@@ -526,20 +532,17 @@ async function init() {
     const data = await res.json();
 
     if (!data.success) {
-      console.warn('API error — loading demo data');
-      loadDemoData();
+      showLoadError('Could not load your dashboard. Please sign in again.');
     } else {
       dashData = data.data;
       renderAll();
     }
   } catch (err) {
-    // Fallback to demo data if backend not running
-    console.warn('Backend not running — using demo data');
-    loadDemoData();
+    showLoadError('Could not reach the server. It may be waking up, so wait a few seconds and try again.');
   } finally {
     document.getElementById('loadingOv').style.display = 'none';
+   }
   }
-}
 
 // ── DEMO DATA (when backend not running) ──────────
 function loadDemoData() {

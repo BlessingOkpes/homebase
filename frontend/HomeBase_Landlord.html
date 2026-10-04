@@ -386,8 +386,8 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
         <div class="stat-card org">
           <div class="sc-top"><div class="sc-ico i-w">🏠</div><span class="sc-bd bd-wt">Active</span></div>
           <div class="sc-lbl">My Properties</div>
-          <div class="sc-val">4</div>
-          <div class="sc-hint">3 occupied · 1 vacant</div>
+          <div class="sc-val">—</div>
+          <div class="sc-hint">Properties you have listed</div>
         </div>
         <div class="stat-card">
           <div class="sc-top"><div class="sc-ico i-g">💳</div><span class="sc-bd bd-up">↑ This month</span></div>
@@ -404,8 +404,8 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
         <div class="stat-card">
           <div class="sc-top"><div class="sc-ico i-b">👥</div><span class="sc-bd bd-ok">All active</span></div>
           <div class="sc-lbl">Current Tenants</div>
-          <div class="sc-val">3</div>
-          <div class="sc-hint">Across 3 properties</div>
+          <div class="sc-val">—</div>
+          <div class="sc-hint">Tenants renting from you</div>
         </div>
       </div>
 
@@ -474,7 +474,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
       </div>
 
       <div class="sec-tabs">
-        <button class="sec-tab active" onclick="filterClaims('pending',this)" id="pendingTabBtn">⏳ Pending (3)</button>
+        <button class="sec-tab active" onclick="filterClaims('pending',this)" id="pendingTabBtn">⏳ Pending</button>
         <button class="sec-tab" onclick="filterClaims('confirmed',this)">✓ Confirmed</button>
         <button class="sec-tab" onclick="filterClaims('rejected',this)">✗ Rejected</button>
       </div>
@@ -516,10 +516,10 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
       </div>
 
       <div class="sec-tabs">
-        <button class="sec-tab active" onclick="filterMyProps('all',this)">All (4)</button>
-        <button class="sec-tab" onclick="filterMyProps('available',this)">Available (1)</button>
-        <button class="sec-tab" onclick="filterMyProps('occupied',this)">Occupied (3)</button>
-        <button class="sec-tab" onclick="filterMyProps('pending',this)">Pending Approval (1)</button>
+        <button class="sec-tab active" onclick="filterMyProps('all',this)">All</button>
+        <button class="sec-tab" onclick="filterMyProps('available',this)">Available</button>
+        <button class="sec-tab" onclick="filterMyProps('occupied',this)">Occupied</button>
+        <button class="sec-tab" onclick="filterMyProps('pending',this)">Pending Approval</button>
       </div>
 
       <div class="prop-grid-ll" id="myPropGrid"></div>
