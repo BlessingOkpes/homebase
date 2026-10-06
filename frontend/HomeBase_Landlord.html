@@ -767,18 +767,9 @@ let REAL_CLAIMS = [];
 // ── DATA ──────────────────────────────────────────
 const CLAIMS = [];
 
-const MY_PROPS = [
-  {id:1, e:'🏠', title:'Modern 2-Bed Flat', loc:'Lekki Phase 1, Lagos', price:'₦85,000/mo', beds:2, baths:1, status:'occupied', tenant:'Emeka Nwachukwu', approval:'approved'},
-  {id:2, e:'🏡', title:'1-Bed Flat', loc:'Surulere, Lagos', price:'₦55,000/mo', beds:1, baths:1, status:'occupied', tenant:'Adaeze Okonkwo', approval:'approved'},
-  {id:3, e:'🏗', title:'Studio Apartment', loc:'Victoria Island, Lagos', price:'₦130,000/mo', beds:0, baths:1, status:'occupied', tenant:'Tunde Balogun', approval:'approved'},
-  {id:4, e:'🏘', title:'Room & Parlour', loc:'Kubwa, Abuja', price:'₦28,000/mo', beds:1, baths:1, status:'available', tenant:'—', approval:'pending'},
-];
+const MY_PROPS = [];
 
-const TENANTS = [
-  {name:'Emeka Nwachukwu', phone:'+234 801 234 5678', property:'Modern 2-Bed Flat, Lekki', rent:'₦85,000/mo', status:'confirmed', since:'Jan 2026'},
-  {name:'Adaeze Okonkwo', phone:'+234 802 345 6789', property:'1-Bed Flat, Surulere', rent:'₦55,000/mo', status:'confirmed', since:'Feb 2026'},
-  {name:'Tunde Balogun', phone:'+234 803 456 7890', property:'Studio, Victoria Island', rent:'₦130,000/mo', status:'pending', since:'Mar 2026'},
-];
+const TENANTS = [];
 
 const MESSAGES = [];
 
@@ -819,7 +810,9 @@ function renderIncomeChart() {
   const mos = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const vals = [240,240,240,240,240,240,240,0,0,0,0,0];
   const c = document.getElementById('incomeChart');
-  if (!c) return; c.innerHTML = '';
+  if (!c) return;
+  c.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--gray);font-size:13px;width:100%">Your monthly income chart will appear once payments are confirmed.</div>';
+  return;
   vals.forEach((v, i) => {
     const p = v > 0; const h = p ? (v/240)*100 : 20;
     const col = document.createElement('div'); col.className = 'chart-col';
@@ -989,6 +982,10 @@ function renderMyProps(filter) {
   const grid = document.getElementById('myPropGrid');
   if (!grid) return; grid.innerHTML = '';
   const filtered = filter==='all' ? MY_PROPS : MY_PROPS.filter(p => filter==='pending' ? p.approval==='pending' : p.status===filter);
+  if (!filtered.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--gray)"><div style="font-size:15px;font-weight:600;color:var(--dark)">No listings yet</div><div style="font-size:12px;margin-top:4px">Properties you add will appear here.</div></div>';
+    return;
+  }
   filtered.forEach(p => {
     const div = document.createElement('div'); div.className = 'prop-card-ll';
     div.innerHTML = `
@@ -1020,6 +1017,10 @@ function renderTenantSummary() {
   const el = document.getElementById('tenantSummary');
   if (!el) return;
   el.innerHTML = '';
+  if (!TENANTS.length) {
+    el.innerHTML = '<div style="text-align:center;padding:30px 20px;color:var(--gray);font-size:13px">No tenants yet.</div>';
+    return;
+  }
   TENANTS.forEach(t => {
     const claim = CLAIMS.find(c => c.tenant===t.name && c.status==='pending');
     const div = document.createElement('div'); div.className = 'tenant-card';
@@ -1040,6 +1041,10 @@ function renderTenantSummary() {
 function renderFullTenants() {
   const el = document.getElementById('fullTenantList');
   if (!el) return; el.innerHTML = '';
+  if (!TENANTS.length) {
+    el.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--gray)"><div style="font-size:15px;font-weight:600;color:var(--dark)">No tenants yet</div><div style="font-size:12px;margin-top:4px">Tenants appear here once a payment on one of your properties is confirmed.</div></div>';
+    return;
+  }
   TENANTS.forEach(t => {
     const div = document.createElement('div'); div.className = 'tenant-card';
     div.innerHTML = `
