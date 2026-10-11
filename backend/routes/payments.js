@@ -54,6 +54,11 @@ router.get('/claims', protect, async (req, res) => {
     }
 
     const status = req.query.status || 'pending';
+    const allowed = ['pending', 'confirmed', 'rejected'];
+    if (status !== 'all' && !allowed.includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status filter.' });
+    }
+    const filterByStatus = status !== 'all';
 
     const [rows] = await db.execute(
       `SELECT rp.*,
@@ -63,9 +68,9 @@ router.get('/claims', protect, async (req, res) => {
        FROM rent_payments rp
        JOIN users      t  ON rp.tenant_id   = t.user_id
        JOIN properties p  ON rp.property_id = p.property_id
-       WHERE rp.landlord_id = ? AND rp.status = ?
+       WHERE rp.landlord_id = ?${filterByStatus ? ' AND rp.status = ?' : ''}
        ORDER BY rp.created_at DESC`,
-      [req.user.user_id, status]
+      filterByStatus ? [req.user.user_id, status] : [req.user.user_id]
     );
 
     return res.status(200).json({ success: true, count: rows.length, data: rows });
