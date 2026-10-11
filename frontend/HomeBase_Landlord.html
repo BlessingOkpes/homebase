@@ -737,16 +737,19 @@ async function initLandlord(){
   // Load claims from API
   if(token){
     try {
-      const res  = await fetch(`${API}/payments/claims?status=pending`,{ headers:{Authorization:`Bearer ${token}`} });
+            const res  = await fetch(`${API}/payments/claims?status=all`,{ headers:{Authorization:`Bearer ${token}`} });
       const data = await res.json();
       if(data.success){
-        REAL_CLAIMS = data.data.map(c=>({
+        const all = data.data.map(c=>({
           id:c.payment_id, tenant:c.tenant_name, phone:c.tenant_phone,
           property:c.property_title, amount:parseFloat(c.amount),
-          month:c.payment_month, datePaid:c.date_paid||'—',
+          month:c.payment_month, datePaid:c.date_paid ? String(c.date_paid).slice(0,10) : '-',
           method:c.payment_method, ref:c.reference_no||'',
-          note:c.notes||'', status:'pending', submitted:'Just now', real:true
+          note:c.notes||'', status:c.status,
+          submitted:c.created_at ? new Date(c.created_at).toLocaleDateString('en-NG') : 'recently', real:true
         }));
+        REAL_CLAIMS = all.filter(c => c.status === 'pending');
+        all.filter(c => c.status !== 'pending').forEach(c => CLAIMS.push(c));
         updateClaimCounts();
       }
     } catch(err){ console.warn('Backend not available — using demo data'); }
@@ -756,7 +759,32 @@ async function initLandlord(){
   renderIncomeChart();
 }
 
+function updateLandlordStats() {
+  const all       = [...REAL_CLAIMS, ...CLAIMS];
+  const confirmed = all.filter(c => c.status === 'confirmed');
+  const rejected  = all.filter(c => c.status === 'rejected');
+  const pending   = all.filter(c => c.status === 'pending');
+  const sum   = list => list.reduce((s, c) => s + (Number(c.amount) || 0), 0);
+  const naira = n => '₦' + Number(n).toLocaleString('en-NG');
+  const setCard = (panel, i, val, hint, label) => {
+    const card = document.querySelectorAll(`#${panel} .stat-card`)[i];
+    if (!card) return;
+    const v = card.querySelector('.sc-val');  if (v) v.textContent = val;
+    const h = card.querySelector('.sc-hint'); if (h && hint !== undefined) h.textContent = hint;
+    const l = card.querySelector('.sc-lbl');  if (l && label) l.textContent = label;
+  };
+  // Overview: card 1 = Confirmed Payments, card 2 = Pending Claims
+  setCard('sec-overview', 1, naira(sum(confirmed)), `${confirmed.length} payment${confirmed.length === 1 ? '' : 's'} confirmed`);
+  setCard('sec-overview', 2, pending.length);
+  // Payment History cards
+  setCard('sec-history', 0, naira(sum(confirmed)));
+  setCard('sec-history', 1, confirmed.length);
+  setCard('sec-history', 2, rejected.length);
+  setCard('sec-history', 3, naira(sum(pending)), undefined, 'Awaiting Confirmation');
+}
+
 function updateClaimCounts() {
+  updateLandlordStats();
   const total = CLAIMS.filter(c=>c.status==='pending').length + REAL_CLAIMS.length;
   document.getElementById('navClaimCount').textContent = total;
   document.getElementById('pendingTabBtn').textContent = `⏳ Pending (${total})`;
@@ -827,7 +855,11 @@ function renderRecentClaims() {
   if (!tbl) return;
   tbl.innerHTML = `<thead><tr><th>Tenant</th><th>Property</th><th>Amount</th><th>Method</th><th>Status</th><th>Action</th></tr></thead>`;
   const tb = document.createElement('tbody');
-  CLAIMS.slice(0,4).forEach(c => {
+  const recent = [...REAL_CLAIMS, ...CLAIMS].slice(0,4);
+  if (!recent.length) {
+    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--gray)">No payment claims yet.</td></tr>';
+  }
+  recent.forEach(c => {
     const sc = c.status==='confirmed'?'b-grn':c.status==='pending'?'b-ylw':'b-red';
     const st = c.status==='confirmed'?'✓ Confirmed':c.status==='pending'?'⏳ Pending':'✗ Rejected';
     const tr = document.createElement('tr');
@@ -899,7 +931,9 @@ async function quickConfirm(id) {
       const data = await res.json();
       if(!data.success){ toast(data.message||'Error confirming payment','danger'); return; }
     } catch(err){ toast('Could not reach server.', 'danger'); return; }
-    REAL_CLAIMS = REAL_CLAIMS.filter(c => c.id !== id);
+    REAL_CLAIMS = REAL_CLAIMS.filter(c => String(c.id) !== String(id));
+    claim.status = 'confirmed';
+    CLAIMS.unshift(claim);
   } else {
     claim.status = 'confirmed';
   }
@@ -940,7 +974,10 @@ async function confirmReject() {
   } catch(err){ console.warn('Backend not available — rejecting locally'); }
   if (claim) {
     if (claim.real) {
-      REAL_CLAIMS = REAL_CLAIMS.filter(c => c.id !== rejectingId);
+      REAL_CLAIMS = REAL_CLAIMS.filter(c => String(c.id) !== String(rejectingId));
+      claim.status = 'rejected';
+      claim.note = reason;
+      CLAIMS.unshift(claim);
     } else {
       claim.status = 'rejected';
       claim.note = reason;
@@ -959,7 +996,11 @@ function renderHistory() {
   if (!tbl) return;
   tbl.innerHTML = `<thead><tr><th>Tenant</th><th>Property</th><th>Amount</th><th>Month</th><th>Method</th><th>Reference</th><th>Status</th><th>Action</th></tr></thead>`;
   const tb = document.createElement('tbody');
-  CLAIMS.filter(c => c.status !== 'pending').forEach(c => {
+  const done = CLAIMS.filter(c => c.status !== 'pending');
+  if (!done.length) {
+    tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--gray)">No payment records yet.</td></tr>';
+  }
+  done.forEach(c => {
     const sc = c.status==='confirmed'?'b-grn':'b-red';
     const st = c.status==='confirmed'?'✓ Confirmed':'✗ Rejected';
     const tr = document.createElement('tr');
@@ -971,7 +1012,7 @@ function renderHistory() {
       <td>${c.method}</td>
       <td style="font-size:11px;color:var(--gray)">${c.ref || '—'}</td>
       <td><span class="badge ${sc}">${st}</span></td>
-      <td><button class="abtn abtn-org" onclick="toast('Downloading receipt...','success')">Receipt</button></td>`;
+      <td style="font-size:11px;color:var(--gray)">—</td>`;
     tb.appendChild(tr);
   });
   tbl.appendChild(tb);

@@ -353,27 +353,27 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
       <!-- Summary Stats -->
       <div class="stat-grid">
         <div class="stat-card orange">
-          <div class="sc-top"><div class="sc-ico ico-w">👥</div><span class="sc-trend tr-wt">↑ +18</span></div>
+          <div class="sc-top"><div class="sc-ico ico-w">👥</div></div>
           <div class="sc-lbl">Total Users</div>
           <div class="sc-val">—</div>
           <div class="sc-hint">Tenants + Landlords</div>
         </div>
         <div class="stat-card">
-          <div class="sc-top"><div class="sc-ico ico-g">🏠</div><span class="sc-trend tr-up">↑ +5</span></div>
+          <div class="sc-top"><div class="sc-ico ico-g">🏠</div></div>
           <div class="sc-lbl">Active Listings</div>
-          <div class="sc-val">124</div>
+          <div class="sc-val">—</div>
           <div class="sc-hint">Approved properties</div>
         </div>
         <div class="stat-card">
-          <div class="sc-top"><div class="sc-ico ico-b">💳</div><span class="sc-trend tr-up">↑ +12%</span></div>
+          <div class="sc-top"><div class="sc-ico ico-b">💳</div></div>
           <div class="sc-lbl">Rent Payments</div>
-          <div class="sc-val">₦42.6M</div>
+          <div class="sc-val">—</div>
           <div class="sc-hint">Total processed 2026</div>
         </div>
         <div class="stat-card">
-          <div class="sc-top"><div class="sc-ico ico-r">⏳</div><span class="sc-trend tr-ok">7 pending</span></div>
+          <div class="sc-top"><div class="sc-ico ico-r">⏳</div></div>
           <div class="sc-lbl">Pending Approvals</div>
-          <div class="sc-val">7</div>
+          <div class="sc-val">—</div>
           <div class="sc-hint">Properties awaiting review</div>
         </div>
       </div>
@@ -394,15 +394,10 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
         <div class="card">
           <div class="card-hd">
             <span class="card-hd-title">📋 Recent Activity</span>
-            <button class="card-hd-action" onclick="toast('Activity log exported!','success')">Export</button>
+            <button class="card-hd-action" onclick="toast('Export is coming soon','')">Export</button>
           </div>
           <div class="activity-list">
-            <div class="act-item new"><div class="act-ico org">🏠</div><div class="act-info"><div class="act-text"><strong>New property</strong> submitted by Kemi Adesanya in Lekki, Lagos — awaiting approval.</div><div class="act-time">5 minutes ago</div></div></div>
-            <div class="act-item new"><div class="act-ico grn">👤</div><div class="act-info"><div class="act-text"><strong>Emeka Nwachukwu</strong> registered as a new tenant from Lagos.</div><div class="act-time">18 minutes ago</div></div></div>
-            <div class="act-item"><div class="act-ico grn">💳</div><div class="act-info"><div class="act-text"><strong>Rent payment</strong> of ₦85,000 recorded by Adaeze Okonkwo for June 2026.</div><div class="act-time">1 hour ago</div></div></div>
-            <div class="act-item"><div class="act-ico org">✅</div><div class="act-info"><div class="act-text"><strong>Property approved:</strong> 2-Bedroom flat in Wuse 2, Abuja by Admin.</div><div class="act-time">2 hours ago</div></div></div>
-            <div class="act-item"><div class="act-ico red">🚨</div><div class="act-info"><div class="act-text"><strong>Overdue alert:</strong> 3 tenants have missed rent payments for July 2026.</div><div class="act-time">3 hours ago</div></div></div>
-            <div class="act-item"><div class="act-ico blue">🔔</div><div class="act-info"><div class="act-text"><strong>12 rent reminders</strong> sent automatically for August 2026 due dates.</div><div class="act-time">6 hours ago</div></div></div>
+            <div style="padding:40px 20px;text-align:center;color:var(--gray);font-size:13px">No recent activity yet.</div>
           </div>
         </div>
       </div>
@@ -412,7 +407,6 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
         <div class="card">
           <div class="card-hd">
             <span class="card-hd-title">📈 Monthly Payments (2026)</span>
-            <span style="font-size:11px;color:var(--gray)">Total: ₦42.6M</span>
           </div>
           <div class="chart-wrap">
             <div class="chart-bars" id="revChart"></div>
@@ -427,12 +421,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
         <div class="card">
           <div class="card-hd"><span class="card-hd-title">📊 Platform Overview</span></div>
           <div class="mini-stats">
-            <div class="mini-stat"><div class="ms-val">186</div><div class="ms-lbl">Active Tenants</div><div class="ms-bar"><div class="ms-fill" style="width:75%"></div></div></div>
-            <div class="mini-stat"><div class="ms-val">62</div><div class="ms-lbl">Landlords</div><div class="ms-bar"><div class="ms-fill" style="width:25%"></div></div></div>
-            <div class="mini-stat"><div class="ms-val">124</div><div class="ms-lbl">Live Listings</div><div class="ms-bar"><div class="ms-fill" style="width:60%"></div></div></div>
-            <div class="mini-stat"><div class="ms-val">7</div><div class="ms-lbl">Pending Review</div><div class="ms-bar"><div class="ms-fill" style="width:15%;background:var(--red)"></div></div></div>
-            <div class="mini-stat"><div class="ms-val">98%</div><div class="ms-lbl">Satisfaction Rate</div><div class="ms-bar"><div class="ms-fill" style="width:98%"></div></div></div>
-            <div class="mini-stat"><div class="ms-val">342</div><div class="ms-lbl">Payments Made</div><div class="ms-bar"><div class="ms-fill" style="width:85%"></div></div></div>
+            <div style="padding:40px 20px;text-align:center;color:var(--gray);font-size:13px">Platform statistics will appear here.</div>
           </div>
         </div>
       </div>
@@ -448,21 +437,21 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
           <div style="font-size:18px;font-weight:600;color:var(--dark)">User Management</div>
           <div style="font-size:12px;color:var(--gray)">Registered users— tenants, landlords, admins</div>
         </div>
-        <button onclick="openModal('addUser')" style="padding:9px 18px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 3px 12px rgba(232,96,10,0.25)">+ Add User</button>
+        <button onclick="toast('Adding users is coming soon','')" style="padding:9px 18px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 3px 12px rgba(232,96,10,0.25)">+ Add User</button>
       </div>
 
       <!-- Filter tabs -->
       <div class="sec-tabs" style="margin-bottom:18px">
-        <button class="sec-tab active" onclick="filterUsers('all',this)">All Users (248)</button>
-        <button class="sec-tab" onclick="filterUsers('tenant',this)">Tenants (186)</button>
-        <button class="sec-tab" onclick="filterUsers('landlord',this)">Landlords (62)</button>
-        <button class="sec-tab" onclick="filterUsers('admin',this)">Admins (2)</button>
+        <button class="sec-tab active" onclick="filterUsers('all',this)">All Users </button>
+        <button class="sec-tab" onclick="filterUsers('tenant',this)">Tenants </button>
+        <button class="sec-tab" onclick="filterUsers('landlord',this)">Landlords </button>
+        <button class="sec-tab" onclick="filterUsers('admin',this)">Admins </button>
       </div>
 
       <div class="card">
         <div class="card-hd">
           <span class="card-hd-title">👥 All Users</span>
-          <button class="card-hd-action" onclick="toast('Exporting users CSV...','success')">Export CSV</button>
+          <button class="card-hd-action" onclick="toast('Export is coming soon','')">Export CSV</button>
         </div>
         <div style="overflow-x:auto">
           <table class="tbl" id="usersTable"></table>
@@ -504,16 +493,16 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
       </div>
 
       <div class="stat-grid" style="margin-bottom:20px">
-        <div class="stat-card"><div class="sc-top"><div class="sc-ico ico-g">✅</div><span class="sc-trend tr-up">+23</span></div><div class="sc-lbl">Paid This Month</div><div class="sc-val">186</div><div class="sc-hint">July 2026</div></div>
-        <div class="stat-card"><div class="sc-top"><div class="sc-ico ico-o">⏳</div><span class="sc-trend tr-ok">12</span></div><div class="sc-lbl">Pending</div><div class="sc-val">12</div><div class="sc-hint">Awaiting payment</div></div>
-        <div class="stat-card"><div class="sc-top"><div class="sc-ico ico-r">⚠️</div><span class="sc-trend tr-dn">3</span></div><div class="sc-lbl">Overdue</div><div class="sc-val">3</div><div class="sc-hint">Past due date</div></div>
-        <div class="stat-card orange"><div class="sc-top"><div class="sc-ico ico-w">💰</div><span class="sc-trend tr-wt">↑ 12%</span></div><div class="sc-lbl">Total Volume</div><div class="sc-val">₦42.6M</div><div class="sc-hint">Jan – Jul 2026</div></div>
-      </div>
+  <div class="stat-card"><div class="sc-top"><div class="sc-ico ico-g">✅</div></div><div class="sc-lbl">Confirmed</div><div class="sc-val" id="payStatConfirmed">-</div><div class="sc-hint">Confirmed by landlords</div></div>
+  <div class="stat-card"><div class="sc-top"><div class="sc-ico ico-o">⏳</div></div><div class="sc-lbl">Pending</div><div class="sc-val" id="payStatPending">-</div><div class="sc-hint">Awaiting landlord</div></div>
+  <div class="stat-card"><div class="sc-top"><div class="sc-ico ico-r">❌</div></div><div class="sc-lbl">Rejected</div><div class="sc-val" id="payStatRejected">-</div><div class="sc-hint">Rejected by landlords</div></div>
+  <div class="stat-card orange"><div class="sc-top"><div class="sc-ico ico-w">💰</div></div><div class="sc-lbl">Total Confirmed</div><div class="sc-val" id="payStatVolume">-</div><div class="sc-hint">All confirmed payments</div></div>
+</div>
 
       <div class="card">
         <div class="card-hd">
           <span class="card-hd-title">💳 All Payment Records</span>
-          <button class="card-hd-action" onclick="toast('Exporting payment records...','success')">Export PDF</button>
+          <button class="card-hd-action" onclick="toast('Export is coming soon','')">Export PDF</button>
         </div>
         <div style="overflow-x:auto">
           <table class="tbl" id="paymentsTable"></table>
@@ -694,6 +683,14 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
       </div>
     </div>
 
+    <div class="sec-panel" id="sec-comingsoon">
+      <div style="text-align:center;padding:80px 20px">
+        <div style="font-size:48px;margin-bottom:12px">🚧</div>
+        <div id="comingSoonTitle" style="font-size:18px;font-weight:600;color:var(--dark)">Coming soon</div>
+        <div style="font-size:13px;color:var(--gray);margin-top:6px">This feature is planned for a future release.</div>
+      </div>
+    </div>
+
   </div><!-- end content -->
 </div><!-- end main -->
 
@@ -744,11 +741,14 @@ const sectionTitles = {
   settings:'System Settings', analytics:'Platform Analytics'
 };
 
+const COMING_SOON = ['analytics', 'reports', 'notifications', 'settings'];
 function showSec(name) {
   document.querySelectorAll('.sec-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sn-item').forEach(i => i.classList.remove('active'));
-  document.getElementById('sec-' + name).classList.add('active');
+  const isSoon = COMING_SOON.includes(name);
+  document.getElementById('sec-' + (isSoon ? 'comingsoon' : name)).classList.add('active');
   document.getElementById('tbTitle').textContent = sectionTitles[name] || name;
+  if (isSoon) document.getElementById('comingSoonTitle').textContent = (sectionTitles[name] || name) + ' is coming soon';
   event.currentTarget?.classList.add('active');
   if (name === 'properties') renderPropApprovals('pending');
   if (name === 'notifications') renderNotifs();
@@ -770,36 +770,13 @@ function saveUser() { closeModal('addUser'); toast('User added successfully! ✅
 function sendNotif() { closeModal('sendNotif'); toast('Notification sent to all users! 🔔', 'success'); }
 
 // ── DATA ───────────────────────────────────────────
-const USERS = [
-  {id:1, name:'Emeka Nwachukwu', email:'emeka@gmail.com', role:'tenant', salary:'₦283,333', location:'Lagos', status:'active', joined:'Jun 1, 2026'},
-  {id:2, name:'Adaeze Okonkwo', email:'adaeze@gmail.com', role:'tenant', salary:'₦200,000', location:'Abuja', status:'active', joined:'May 15, 2026'},
-  {id:3, name:'Kemi Adesanya', email:'kemi@gmail.com', role:'landlord', salary:'—', location:'Lagos', status:'active', joined:'Apr 20, 2026'},
-  {id:4, name:'Funmilayo Adedeji', email:'funmi@gmail.com', role:'tenant', salary:'₦175,000', location:'Ibadan', status:'active', joined:'Apr 10, 2026'},
-  {id:5, name:'Chidi Okafor', email:'chidi@gmail.com', role:'tenant', salary:'₦320,000', location:'Lagos', status:'active', joined:'Mar 28, 2026'},
-  {id:6, name:'Ibrahim Musa', email:'ibrahim@gmail.com', role:'landlord', salary:'—', location:'Abuja', status:'active', joined:'Mar 12, 2026'},
-  {id:7, name:'Ngozi Eze', email:'ngozi@gmail.com', role:'tenant', salary:'₦150,000', location:'Enugu', status:'inactive', joined:'Feb 5, 2026'},
-  {id:8, name:'Tunde Balogun', email:'tunde@gmail.com', role:'tenant', salary:'₦250,000', location:'Lagos', status:'active', joined:'Jan 22, 2026'},
-];
+const USERS = [];
 
-const PAYMENTS = [
-  {id:1, tenant:'Emeka Nwachukwu', property:'2-Bed Flat, Lekki', amount:'₦85,000', month:'July 2026', date:'Jul 1, 2026', method:'Bank Transfer', status:'paid'},
-  {id:2, tenant:'Adaeze Okonkwo', property:'1-Bed Flat, Wuse 2', amount:'₦60,000', month:'July 2026', date:'Jul 1, 2026', method:'Online', status:'paid'},
-  {id:3, tenant:'Funmilayo Adedeji', property:'Self-Contain, Bodija', amount:'₦35,000', month:'July 2026', date:'—', method:'—', status:'pending'},
-  {id:4, tenant:'Chidi Okafor', property:'3-Bed Duplex, Maitama', amount:'₦180,000', month:'July 2026', date:'Jul 2, 2026', method:'Bank Transfer', status:'paid'},
-  {id:5, tenant:'Ngozi Eze', property:'Room & Parlour, Kubwa', amount:'₦28,000', month:'July 2026', date:'—', method:'—', status:'overdue'},
-  {id:6, tenant:'Tunde Balogun', property:'Mini Flat, Ikeja', amount:'₦48,000', month:'July 2026', date:'—', method:'—', status:'pending'},
-];
+const PAYMENTS = [];
 
 let REAL_PENDING = [];
 
-const PROPS_APPROVAL = [
-  {id:1, e:'🏠', title:'3-Bedroom Flat', loc:'Surulere, Lagos', price:'₦95,000/mo', landlord:'Kemi Adesanya', status:'pending', beds:3, baths:2},
-  {id:2, e:'🏢', title:'Self-Contain Studio', loc:'Wuse 2, Abuja', price:'₦55,000/mo', landlord:'Ibrahim Musa', status:'pending', beds:0, baths:1},
-  {id:3, e:'🏡', title:'2-Bedroom Duplex', loc:'GRA, Port Harcourt', price:'₦140,000/mo', landlord:'Ola Adeyemi', status:'pending', beds:2, baths:2},
-  {id:4, e:'🏠', title:'Mini Flat', loc:'Yaba, Lagos', price:'₦42,000/mo', landlord:'Kemi Adesanya', status:'approved', beds:1, baths:1},
-  {id:5, e:'🏘', title:'Room & Parlour', loc:'Kubwa, Abuja', price:'₦25,000/mo', landlord:'Ibrahim Musa', status:'approved', beds:1, baths:1},
-  {id:6, e:'🏗', title:'4-Bedroom Villa', loc:'Banana Island, Lagos', price:'₦600,000/mo', landlord:'Ola Adeyemi', status:'rejected', beds:4, baths:4},
-];
+const PROPS_APPROVAL = [];
 
 // ── RENDER FUNCTIONS ───────────────────────────────
 function renderRecentUsers() {
@@ -807,14 +784,17 @@ function renderRecentUsers() {
   if (!tbl) return;
   tbl.innerHTML = `<thead><tr><th>User</th><th>Role</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>`;
   const tbody = document.createElement('tbody');
+  if (!USERS.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--gray)">No users to show yet.</td></tr>';
+  }
   USERS.slice(0, 5).forEach(u => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><div class="uav"><div class="uav-ico ${u.role==='landlord'?'green':''}">👤</div><div><div class="tbl-name">${u.name}</div><div class="tbl-sub">${u.email}</div></div></div></td>
       <td><span class="badge ${u.role==='tenant'?'b-org':u.role==='landlord'?'b-grn':'b-blue'}">${u.role}</span></td>
-      <td>${u.location}</td>
+      <td>${u.location}</td>      <td style="color:var(--gray)">-</td>`;
       <td><span class="badge ${u.status==='active'?'b-grn':'b-gray'}">${u.status}</span></td>
-      <td><div class="act-row"><button class="abtn abtn-org" onclick="toast('Viewing ${u.name}','')">View</button><button class="abtn abtn-ghost" onclick="toast('Editing ${u.name}','')">Edit</button></div></td>`;
+
     tbody.appendChild(tr);
   });
   tbl.appendChild(tbody);
@@ -826,6 +806,9 @@ function renderUsersTable(filter) {
   tbl.innerHTML = `<thead><tr><th>User</th><th>Role</th><th>Monthly Salary</th><th>Location</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead>`;
   const tbody = document.createElement('tbody');
   const filtered = filter === 'all' ? USERS : USERS.filter(u => u.role === filter);
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--gray)">No users to show yet.</td></tr>';
+  }
   filtered.forEach(u => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -835,11 +818,7 @@ function renderUsersTable(filter) {
       <td>${u.location}</td>
       <td>${u.joined}</td>
       <td><span class="badge ${u.status==='active'?'b-grn':'b-gray'}">${u.status==='active'?'● Active':'○ Inactive'}</span></td>
-      <td><div class="act-row">
-        <button class="abtn abtn-org" onclick="toast('Viewing ${u.name}','')">View</button>
-        <button class="abtn abtn-ghost" onclick="toast('Editing ${u.name}','')">Edit</button>
-        <button class="abtn abtn-red" onclick="toast('${u.name} deactivated','danger')">Deactivate</button>
-      </div></td>`;
+      <td style="color:var(--gray)">-</td>`;
     tbody.appendChild(tr);
   });
   tbl.appendChild(tbody);
@@ -850,9 +829,12 @@ function renderPaymentsTable() {
   if (!tbl) return;
   tbl.innerHTML = `<thead><tr><th>Tenant</th><th>Property</th><th>Amount</th><th>Month</th><th>Date Paid</th><th>Method</th><th>Status</th><th>Actions</th></tr></thead>`;
   const tbody = document.createElement('tbody');
+  if (!PAYMENTS.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gray)">No payments to show yet.</td></tr>';
+  }
   PAYMENTS.forEach(p => {
-    const sc = p.status === 'paid' ? 'b-grn' : p.status === 'pending' ? 'b-ylw' : 'b-red';
-    const st = p.status === 'paid' ? '✓ Paid' : p.status === 'pending' ? '⏳ Pending' : '⚠ Overdue';
+        const sc = p.status === 'paid' ? 'b-grn' : p.status === 'pending' ? 'b-ylw' : 'b-red';
+    const st = p.status === 'paid' ? 'Confirmed' : p.status === 'pending' ? 'Pending' : 'Rejected';
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><div class="tbl-name">${p.tenant}</div></td>
@@ -862,10 +844,7 @@ function renderPaymentsTable() {
       <td>${p.date}</td>
       <td>${p.method}</td>
       <td><span class="badge ${sc}">${st}</span></td>
-      <td><div class="act-row">
-        <button class="abtn abtn-org" onclick="toast('Downloading receipt...','success')">Receipt</button>
-        <button class="abtn abtn-ghost" onclick="toast('Viewing payment details','')">View</button>
-      </div></td>`;
+      <td style="color:var(--gray)">-</td>`;
     tbody.appendChild(tr);
   });
   tbl.appendChild(tbody);
@@ -967,7 +946,9 @@ function renderRevChart() {
   const mos = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const vals = [5.8,6.2,6.5,6.1,7.0,7.4,7.8,0,0,0,0,0];
   const c = document.getElementById('revChart');
-  if (!c) return; c.innerHTML = '';
+  if (!c) return;
+  c.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--gray);font-size:13px;width:100%">Monthly payment totals will appear once payments are confirmed.</div>';
+  return;
   const max = Math.max(...vals.filter(v=>v>0));
   mos.forEach((m, i) => {
     const p = vals[i] > 0; const h = p ? (vals[i]/max)*100 : 20;
@@ -1059,8 +1040,63 @@ async function initAdmin(){
           baths: p.bathrooms
         }));
         document.querySelector('.sn-count.org').textContent = REAL_PENDING.length;
+        const dashVals = document.querySelectorAll('#sec-dashboard .stat-grid .sc-val');
+        if (dashVals[3]) dashVals[3].textContent = REAL_PENDING.length;
+        try {
+          const lRes  = await fetch(`${API}/properties`);
+          const lData = await lRes.json();
+          if (lData.success && dashVals[1]) dashVals[1].textContent = lData.count;
+        } catch (e) { /* leave the dash */ }
       }
     } catch(err){ console.warn('Backend not available — using demo data'); }
+  }
+  if (token) {
+    const hdr = { headers: { Authorization: `Bearer ${token}` } };
+    const naira = n => '₦' + Number(n).toLocaleString('en-NG');
+    const fmtDate = d => d ? new Date(d).toLocaleDateString('en-NG', { year:'numeric', month:'short', day:'numeric' }) : '-';
+    const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    try {
+      const [uRes, payRes, sRes] = await Promise.all([
+        fetch(`${API}/admin/users`, hdr),
+        fetch(`${API}/admin/payments`, hdr),
+        fetch(`${API}/admin/stats`, hdr)
+      ]);
+      const uData = await uRes.json();
+      const payData = await payRes.json();
+      const sData = await sRes.json();
+
+      if (uData.success) {
+        uData.data.forEach(u => USERS.push({
+          id: u.user_id, name: `${u.first_name} ${u.last_name}`, email: u.email || u.phone_number,
+          role: u.role, salary: u.monthly_salary ? naira(u.monthly_salary) : '-',
+          location: u.preferred_location || '-', status: u.is_active ? 'active' : 'inactive',
+          joined: fmtDate(u.created_at)
+        }));
+      }
+      if (payData.success) {
+        payData.data.forEach(p => PAYMENTS.push({
+          id: p.payment_id, tenant: p.tenant_name, property: p.property_title, amount: naira(p.amount),
+          month: p.payment_month, date: fmtDate(p.date_paid),
+          method: String(p.payment_method || '').replace('_', ' '),
+          status: p.status === 'confirmed' ? 'paid' : p.status
+        }));
+      }
+      if (sData.success) {
+        const s = sData.data;
+        const dv = document.querySelectorAll('#sec-dashboard .stat-grid .sc-val');
+        if (dv[0]) dv[0].textContent = s.users.total;
+        if (dv[2]) dv[2].textContent = naira(s.payments.confirmed_volume);
+        const tabs = document.querySelectorAll('#sec-users .sec-tab');
+        if (tabs[0]) tabs[0].textContent = `All Users (${s.users.total})`;
+        if (tabs[1]) tabs[1].textContent = `Tenants (${s.users.tenants})`;
+        if (tabs[2]) tabs[2].textContent = `Landlords (${s.users.landlords})`;
+        if (tabs[3]) tabs[3].textContent = `Admins (${s.users.admins})`;
+        setTxt('payStatConfirmed', s.payments.confirmed);
+        setTxt('payStatPending', s.payments.pending);
+        setTxt('payStatRejected', s.payments.rejected);
+        setTxt('payStatVolume', naira(s.payments.confirmed_volume));
+      }
+    } catch (err) { console.warn('Could not load admin data', err); }
   }
   renderRecentUsers();
   renderUsersTable('all');
