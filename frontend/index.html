@@ -929,7 +929,7 @@ input[type=range]{width:100%;accent-color:var(--orange);cursor:pointer}
     </aside>
     <main class="srch-main">
       <div class="res-topbar">
-        <div><div class="res-cnt" id="resCnt">24 Properties Found</div><div class="res-sub">Showing listings in Lagos & Abuja</div></div>
+        <div><div class="res-cnt" id="resCnt">Loading listings…</div><div class="res-sub">Showing available listings</div></div>
         <div class="tb-right">
           <select class="sort-sel" onchange="sortProps(this.value)">
             <option value="aff">Most Affordable</option>
@@ -1238,75 +1238,83 @@ async function doReg(){
 }
 
 // ── SEARCH PAGE ───────────────────────────────────────
-const PROPS=[
-  {id:1,e:'🏠',t:'Modern 2-Bedroom Flat',loc:'Lekki Phase 1, Lagos',p:85000,beds:2,baths:1,sz:65,type:'Flat',tag:'Affordable',tc:'bg-grn',desc:'A well-maintained 2-bedroom flat in Lekki Phase 1. Large windows, tiled floors, functional kitchen. Close to banks, markets, and bus stops.',am:['24hr Power','Running Water','Security','Car Parking']},
-  {id:2,e:'🏡',t:'Cosy Self-Contain Room',loc:'Surulere, Lagos',p:35000,beds:0,baths:1,sz:25,type:'Self-Contain',tag:'Best Value',tc:'bg-grn',desc:'A compact affordable self-contain room perfect for single salary earners. Clean, secure compound with reliable water supply.',am:['Running Water','Security']},
-  {id:3,e:'🏢',t:'Spacious 3-Bedroom Duplex',loc:'Maitama, Abuja',p:180000,beds:3,baths:2,sz:120,type:'Duplex',tag:'New Listing',tc:'bg-org',desc:'An executive 3-bedroom duplex in the prestigious Maitama district. Fully tiled, fitted kitchen, expansive living area.',am:['24hr Power','Running Water','Security','Car Parking','Furnished','Internet']},
-  {id:4,e:'🏠',t:'1-Bedroom Flat with Parking',loc:'Yaba, Lagos',p:55000,beds:1,baths:1,sz:40,type:'Flat',tag:'Affordable',tc:'bg-grn',desc:'A clean 1-bedroom flat in lively Yaba. Close to university, hospitals, and tech hubs. Private bathroom, kitchen, and allocated parking.',am:['Running Water','Car Parking','Security']},
-  {id:5,e:'🏘',t:'Room & Parlour — Workers Special',loc:'Kubwa, Abuja',p:28000,beds:1,baths:1,sz:30,type:'Room & Parlour',tag:'Workers Special',tc:'bg-brn',desc:'Specifically offered for civil servants and salary earners. Very close to the FCT civil service secretariat.',am:['Running Water','Security']},
-  {id:6,e:'🏗',t:'Modern Studio Apartment',loc:'Victoria Island, Lagos',p:130000,beds:0,baths:1,sz:35,type:'Self-Contain',tag:'New Listing',tc:'bg-org',desc:'A brand new studio apartment on Victoria Island with contemporary finishes, air conditioning, and a rooftop common area.',am:['24hr Power','Running Water','Security','Car Parking','Furnished','Internet']},
-  {id:7,e:'🏠',t:'2-Bedroom Bungalow with Garden',loc:'Bodija, Ibadan',p:42000,beds:2,baths:1,sz:70,type:'Bungalow',tag:'Affordable',tc:'bg-grn',desc:'A charming 2-bedroom bungalow with a small garden in quiet Bodija. Perfect for young families with flexible payment options.',am:['Running Water','Security','Car Parking']},
-  {id:8,e:'🏢',t:'Executive 1-Bedroom Serviced Flat',loc:'Wuse 2, Abuja',p:95000,beds:1,baths:1,sz:50,type:'Flat',tag:'Popular',tc:'bg-brn',desc:'A fully serviced 1-bedroom flat in Wuse 2 with 24-hour electricity, daily cleaning, and high-speed internet included.',am:['24hr Power','Running Water','Security','Car Parking','Furnished','Internet']},
-  {id:9,e:'🏡',t:'3-Bedroom Terrace House',loc:'Gwarinpa, Abuja',p:120000,beds:3,baths:2,sz:95,type:'Duplex',tag:'Affordable',tc:'bg-grn',desc:'A well-structured 3-bedroom terrace house in Gwarinpa estate. Good roads, functional drainage, and a family-friendly environment.',am:['Running Water','Security','Car Parking']},
-  {id:10,e:'🏠',t:'Mini Flat — Single Worker Friendly',loc:'Ikeja, Lagos',p:48000,beds:1,baths:1,sz:32,type:'Flat',tag:'Best Value',tc:'bg-grn',desc:'A neatly finished mini flat ideal for single salary earners in Ikeja. Minutes from the airport and major bus routes.',am:['Running Water','Security','24hr Power']},
-  {id:11,e:'🏗',t:'Luxury 4-Bedroom Duplex',loc:'Banana Island, Lagos',p:450000,beds:4,baths:3,sz:200,type:'Duplex',tag:'New Listing',tc:'bg-org',desc:'A stunning luxury duplex on Banana Island with high-end finishes, private pool, and panoramic views of Lagos lagoon.',am:['24hr Power','Running Water','Security','Car Parking','Furnished','Internet']},
-  {id:12,e:'🏘',t:'2-Bedroom Flat Near Market',loc:'Enugu State',p:22000,beds:2,baths:1,sz:55,type:'Flat',tag:'Budget Pick',tc:'bg-grn',desc:'An affordable 2-bedroom flat in Enugu close to Ogbete market. Suited for market workers and salary earners.',am:['Running Water','Security']},
-];
+let PROPS=[];
+ 
 const fn=n=>'₦'+n.toLocaleString('en-NG');
 let srchBudget=0,savedIds=new Set();
 function updBudget(){const v=parseFloat(document.getElementById('srchSalary').value)||0;srchBudget=v*0.3;document.getElementById('budgetRes').innerHTML=v>0?'Max rent: <strong>'+fn(srchBudget)+'/mo</strong>':'Max rent: <strong>—</strong>';}
 function updRange(v){document.getElementById('priceRangeV').textContent='₦0 — '+fn(parseInt(v));}
 function tglPill(el){const p=el.closest('.pill-opts');p.querySelectorAll('.pill').forEach(x=>x.classList.remove('on'));el.classList.add('on');}
-function clrFilters(){document.getElementById('srchSalary').value='';document.getElementById('budgetRes').innerHTML='Max rent: <strong>—</strong>';srchBudget=0;document.getElementById('maxPriceR').value=500000;document.getElementById('priceRangeV').textContent='₦0 — ₦500,000';renderProps(PROPS);gToast('Filters cleared','');}
+function clrFilters(){document.getElementById('srchSalary').value='';document.getElementById('budgetRes').innerHTML='Max rent: <strong>—</strong>';srchBudget=0;document.getElementById('maxPriceR').value=500000;document.getElementById('priceRangeV').textContent='₦0 — ₦500,000';loadProps();gToast('Filters cleared','');}
+function mapProp(p){
+  return {
+    id:p.property_id, e:'🏠', img:p.cover_image_url||'',
+    t:p.title, loc:`${p.city}, ${p.state}`,
+    p:parseFloat(p.monthly_rent), beds:p.bedrooms, baths:p.bathrooms,
+    sz:p.size_sqm?parseFloat(p.size_sqm):'—', type:p.property_type,
+    tag:'Available', tc:'bg-grn',
+    desc:p.description||'No description provided.',
+    am:p.amenities||[]
+  };
+}
+function setCount(n){
+  document.getElementById('resCnt').textContent=n+(n===1?' Property Found':' Properties Found');
+}
+async function loadProps(){
+  try{
+    const res=await fetch(API+'/properties');
+    const data=await res.json();
+    if(!data.success) throw new Error(data.message||'Request failed');
+    PROPS=data.data.map(mapProp);
+    renderProps(PROPS);
+    setCount(PROPS.length);
+  }catch(err){
+    console.error('Could not load listings:',err);
+    PROPS=[];
+    renderProps(PROPS);
+    document.getElementById('resCnt').textContent='Could not load listings';
+    gToast('Could not load listings. Please refresh the page.','');
+  }
+}
 async function applyFlt(){
   const mx=parseInt(document.getElementById('maxPriceR').value);
   const city=document.querySelector('.chk-opts input:checked+span')?.textContent||'';
-  try {
-    let url=API + '/properties?';
+  try{
+    let url=API+'/properties?';
     if(mx) url+=`max_price=${mx}&`;
-    if(city) url+=`city=${city}&`;
+    if(city) url+=`city=${encodeURIComponent(city)}&`;
     const res=await fetch(url);
     const data=await res.json();
-    if(data.success && data.data.length){
-      const mapped=data.data.map(p=>({
-        id:p.property_id, e:'🏠', t:p.title, loc:`${p.city}, ${p.state}`,
-        p:parseFloat(p.monthly_rent), beds:p.bedrooms, baths:p.bathrooms,
-        sz:p.size_sqm||50, type:p.property_type, tag:'Live', tc:'bg-grn',
-        desc:p.description||'A great property in a good location.',
-        am:p.amenities||[]
-      }));
-      renderProps(mapped);
-      document.getElementById('resCnt').textContent=mapped.length+' Properties Found';
-      gToast('Filters applied — '+mapped.length+' results','success');
-      return;
-    }
-  } catch(err){ console.warn('API not available — using local data'); }
-  // Fallback to local data
-  let f=PROPS.filter(p=>p.p<=mx);
-  if(srchBudget>0)f.sort((a,b)=>(b.p<=srchBudget)-(a.p<=srchBudget));
-  renderProps(f);
-  document.getElementById('resCnt').textContent=f.length+' Properties Found';
-  gToast('Filters applied — '+f.length+' results','success');
+    if(!data.success) throw new Error(data.message||'Request failed');
+    PROPS=data.data.map(mapProp);
+    if(srchBudget>0) PROPS.sort((a,b)=>(b.p<=srchBudget)-(a.p<=srchBudget));
+    renderProps(PROPS);
+    setCount(PROPS.length);
+    gToast('Filters applied — '+PROPS.length+' results','success');
+  }catch(err){
+    console.error('Filter failed:',err);
+    gToast('Could not apply filters. Please try again.','');
+  }
   if(window.innerWidth<=768)document.getElementById('srchSidebar').classList.remove('open');
 }
 function sortProps(v){let s=[...PROPS];if(v==='asc')s.sort((a,b)=>a.p-b.p);else if(v==='desc')s.sort((a,b)=>b.p-a.p);else if(v==='new')s.sort((a,b)=>b.id-a.id);else s.sort((a,b)=>a.p-b.p);renderProps(s);}
 function setView(v){const g=document.getElementById('propGrid');g.classList.toggle('lv',v==='list');document.getElementById('gridBtn').classList.toggle('on',v==='grid');document.getElementById('listBtn').classList.toggle('on',v==='list');}
 function renderProps(arr){
   arr=arr||PROPS;const g=document.getElementById('propGrid');if(!g)return;g.innerHTML='';
-  if(!arr.length){g.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px 20px"><div style="font-size:56px;margin-bottom:14px">🔍</div><div style="font-size:18px;font-weight:600">No properties found</div><div style="font-size:13px;color:var(--gray);margin-top:6px">Try adjusting your filters</div></div>';return;}
+  if(!arr.length){g.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px 20px"><div style="font-size:56px;margin-bottom:14px">🔍</div><div style="font-size:18px;font-weight:600">No properties found</div><div style="font-size:13px;color:var(--gray);margin-top:6px">No listings yet. Check back soon or adjust your filters.</div></div>';return;}
   arr.forEach((p,i)=>{
     const isA=srchBudget>0&&p.p<=srchBudget,isO=srchBudget>0&&p.p>srchBudget;
     const pct=srchBudget>0?Math.round((p.p/(srchBudget/0.3))*100):null;
     const sv=savedIds.has(p.id);
     const c=document.createElement('div');c.className='prop-card';c.style.animationDelay=(i*0.05)+'s';c.onclick=()=>openPM(p);
-    c.innerHTML=`<div class="prop-img"><span>${p.e}</span><div class="prop-bgs"><span class="badge ${p.tc}">${p.tag}</span></div><button class="prop-save-btn${sv?' saved':''}" onclick="event.stopPropagation();tglSave(${p.id},this)">${sv?'❤️':'♡'}</button></div>${isA?`<div class="aff-strip ok">✓ Within your salary budget (${pct}% of salary)</div>`:isO?`<div class="aff-strip ov">⚠ Over your salary budget</div>`:''}<div class="prop-body"><div class="prop-loc">📍 ${p.loc}</div><div class="prop-ttl">${p.t}</div><div class="prop-meta"><div class="prop-mi">🛏 ${p.beds===0?'Studio':p.beds+' Bed'+(p.beds>1?'s':'')}</div><div class="prop-mi">🚿 ${p.baths} Bath</div><div class="prop-mi">📐 ${p.sz} m²</div><div class="prop-mi">🏷 ${p.type}</div></div><div class="prop-ft"><div><div class="prop-pm">${fn(p.p)}</div><div class="prop-ps">per month</div></div><button class="btn-view" onclick="event.stopPropagation();openPM(window['_pd${p.id}'])">View Details</button></div></div>`;
+    c.innerHTML=`<div class="prop-img">${p.img?`<img src="${p.img}" alt="${p.t}" style="width:100%;height:100%;object-fit:cover">`:`<span>${p.e}</span>`}<div class="prop-bgs"><span class="badge ${p.tc}">${p.tag}</span></div><button class="prop-save-btn${sv?' saved':''}" onclick="event.stopPropagation();tglSave(${p.id},this)">${sv?'❤️':'♡'}</button></div>${isA?`<div class="aff-strip ok">✓ Within your salary budget (${pct}% of salary)</div>`:isO?`<div class="aff-strip ov">⚠ Over your salary budget</div>`:''}<div class="prop-body"><div class="prop-loc">📍 ${p.loc}</div><div class="prop-ttl">${p.t}</div><div class="prop-meta"><div class="prop-mi">🛏 ${p.beds===0?'Studio':p.beds+' Bed'+(p.beds>1?'s':'')}</div><div class="prop-mi">🚿 ${p.baths} Bath</div><div class="prop-mi">📐 ${p.sz} m²</div><div class="prop-mi">🏷 ${p.type}</div></div><div class="prop-ft"><div><div class="prop-pm">${fn(p.p)}</div><div class="prop-ps">per month</div></div><button class="btn-view" onclick="event.stopPropagation();openPM(window['_pd${p.id}'])">View Details</button></div></div>`;
     window['_pd'+p.id]=p;g.appendChild(c);
   });
 }
 function tglSave(id,btn){if(savedIds.has(id)){savedIds.delete(id);btn.textContent='♡';gToast('Removed from favourites','');}else{savedIds.add(id);btn.textContent='❤️';gToast('Saved to favourites ❤️','success');}}
 function openPM(p){
   window._currentPropId = p.id;
-  document.getElementById('pmImg').innerHTML=`<span style="font-size:74px">${p.e}</span><button class="pm-close" onclick="closePM()">✕</button>`;
+  document.getElementById('pmImg').innerHTML=`${p.img?`<img src="${p.img}" alt="${p.t}" style="width:100%;height:100%;object-fit:cover">`:`<span style="font-size:74px">${p.e}</span>`}<button class="pm-close" onclick="closePM()">✕</button>`;
   document.getElementById('pmTtl').textContent=p.t;
   document.getElementById('pmLoc').innerHTML='📍 '+p.loc;
   document.getElementById('pmMg').innerHTML=`<div class="pm-mi"><div class="pm-mi-ico">🛏</div><div class="pm-mi-lbl">Bedrooms</div><div class="pm-mi-val">${p.beds===0?'Studio':p.beds}</div></div><div class="pm-mi"><div class="pm-mi-ico">🚿</div><div class="pm-mi-lbl">Bathrooms</div><div class="pm-mi-val">${p.baths}</div></div><div class="pm-mi"><div class="pm-mi-ico">📐</div><div class="pm-mi-lbl">Size</div><div class="pm-mi-val">${p.sz} m²</div></div><div class="pm-mi"><div class="pm-mi-ico">🏷</div><div class="pm-mi-lbl">Type</div><div class="pm-mi-val">${p.type}</div></div>`;
@@ -1419,7 +1427,7 @@ function doLogout(){
 }
 
 // ── INIT ──────────────────────────────────────────────
-renderProps();
+loadProps();
 checkNavAuth();
 </script>
 </body>
