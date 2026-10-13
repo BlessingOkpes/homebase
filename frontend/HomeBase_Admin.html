@@ -332,8 +332,23 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
         <span style="font-size:15px;opacity:.5">🔍</span>
         <input type="text" placeholder="Search users, properties..." oninput="handleSearch(this.value)"/>
       </div>
-      <div class="tb-icon-btn" onclick="toast('You have 12 new notifications 🔔','')">
-        🔔<div class="tb-notif-dot"></div>
+            <div class="tb-icon-btn" onclick="toggleBell(event)">
+        🔔<div class="tb-notif-dot" id="bellDot" style="display:none"></div>
+      </div>
+      <style>
+      .np-panel{display:none;position:fixed;top:66px;right:20px;width:340px;max-width:calc(100vw - 32px);background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.15);z-index:300;overflow:hidden}
+      .np-panel.open{display:block}
+      .np-head{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--dark)}
+      .np-count{font-size:11px;font-weight:500;color:var(--gray);margin-right:auto}
+      .np-list{max-height:380px;overflow-y:auto}
+      .np-item{padding:11px 14px;border-bottom:1px solid var(--border);cursor:pointer;background:var(--orange-faint)}
+      .np-title{font-size:12px;font-weight:600;color:var(--dark)}
+      .np-msg{font-size:11px;color:var(--mid);margin-top:2px;line-height:1.5}
+      .np-empty{padding:28px 14px;text-align:center;font-size:12px;color:var(--gray)}
+      </style>
+      <div id="bellPanel" class="np-panel">
+        <div class="np-head"><span>Notifications</span><span id="bellCount" class="np-count"></span></div>
+        <div id="bellList" class="np-list"><div class="np-empty">Nothing waiting for review.</div></div>
       </div>
       <div class="tb-admin-tag">
         <div class="tb-admin-av">👨‍💼</div>
@@ -776,6 +791,45 @@ const PAYMENTS = [];
 
 let REAL_PENDING = [];
 
+// ── BELL + PENDING COUNTS (real data: listings awaiting approval) ──
+function refreshPendingUI() {
+  const n = REAL_PENDING.length;
+  const sn = document.querySelector('.sn-count.org');
+  if (sn) sn.textContent = n;
+  const dv = document.querySelectorAll('#sec-dashboard .stat-grid .sc-val');
+  if (dv[3]) dv[3].textContent = n;
+  const dot = document.getElementById('bellDot');
+  if (dot) dot.style.display = n > 0 ? 'block' : 'none';
+  const cnt = document.getElementById('bellCount');
+  if (cnt) cnt.textContent = n > 0 ? n + ' awaiting review' : 'All caught up';
+  const list = document.getElementById('bellList');
+  if (!list) return;
+  list.innerHTML = '';
+  if (!n) {
+    const e = document.createElement('div');
+    e.className = 'np-empty'; e.textContent = 'Nothing waiting for review.';
+    list.appendChild(e);
+    return;
+  }
+  REAL_PENDING.forEach(p => {
+    const row = document.createElement('div'); row.className = 'np-item';
+    const t = document.createElement('div'); t.className = 'np-title'; t.textContent = 'New listing awaiting approval';
+    const m = document.createElement('div'); m.className = 'np-msg';
+    m.textContent = `${p.title} - ${p.loc} (${p.price}) by ${p.landlord}`;
+    row.append(t, m);
+    row.onclick = () => { document.getElementById('bellPanel').classList.remove('open'); showSec('properties'); };
+    list.appendChild(row);
+  });
+}
+function toggleBell(e) {
+  e.stopPropagation();
+  document.getElementById('bellPanel').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  const p = document.getElementById('bellPanel');
+  if (p && !p.contains(e.target)) p.classList.remove('open');
+});
+
 const PROPS_APPROVAL = [];
 
 // ── RENDER FUNCTIONS ───────────────────────────────
@@ -792,8 +846,9 @@ function renderRecentUsers() {
     tr.innerHTML = `
       <td><div class="uav"><div class="uav-ico ${u.role==='landlord'?'green':''}">👤</div><div><div class="tbl-name">${u.name}</div><div class="tbl-sub">${u.email}</div></div></div></td>
       <td><span class="badge ${u.role==='tenant'?'b-org':u.role==='landlord'?'b-grn':'b-blue'}">${u.role}</span></td>
-      <td>${u.location}</td>      <td style="color:var(--gray)">-</td>`;
+      <td>${u.location}</td>
       <td><span class="badge ${u.status==='active'?'b-grn':'b-gray'}">${u.status}</span></td>
+      <td style="color:var(--gray)">-</td>`;
 
     tbody.appendChild(tr);
   });
@@ -899,7 +954,7 @@ async function approveProperty(id, btn) {
     if (data.success) {
       REAL_PENDING = REAL_PENDING.filter(p => p.id !== id);
       card.style.opacity = '.5'; card.style.pointerEvents = 'none';
-      setTimeout(() => { card.remove(); toast('Property approved and listed! ✅', 'success'); }, 400);
+      refreshPendingUI(); setTimeout(() => { card.remove(); toast('Property approved and listed! ✅', 'success'); }, 400);
     } else {
       toast(data.message || 'Approval failed.', 'danger');
     }
@@ -920,7 +975,7 @@ async function rejectProperty(id, btn) {
     if (data.success) {
       REAL_PENDING = REAL_PENDING.filter(p => p.id !== id);
       card.style.opacity = '.5'; card.style.pointerEvents = 'none';
-      setTimeout(() => { card.remove(); toast('Property rejected and landlord notified.', 'danger'); }, 400);
+      refreshPendingUI(); setTimeout(() => { card.remove(); toast('Property rejected and landlord notified.', 'danger'); }, 400);
     } else {
       toast(data.message || 'Rejection failed.', 'danger');
     }
@@ -1039,7 +1094,7 @@ async function initAdmin(){
           beds: p.bedrooms,
           baths: p.bathrooms
         }));
-        document.querySelector('.sn-count.org').textContent = REAL_PENDING.length;
+        refreshPendingUI();
         const dashVals = document.querySelectorAll('#sec-dashboard .stat-grid .sc-val');
         if (dashVals[3]) dashVals[3].textContent = REAL_PENDING.length;
         try {

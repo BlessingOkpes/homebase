@@ -370,10 +370,27 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
       </div>
     </div>
     <div class="tb-right">
-      <div class="tb-notif" onclick="toast('You have 3 unread notifications','')">
-        🔔<div class="nb-dot"></div>
+      <div class="tb-notif" onclick="toggleNotif(event)">
+        🔔<div class="nb-dot" id="notifDot" style="display:none"></div>
       </div>
-      <button class="btn-add-prop" onclick="openAddProp()">+ Add Property</button>
+      <style>
+      .np-panel{display:none;position:fixed;top:66px;right:20px;width:340px;max-width:calc(100vw - 32px);background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.15);z-index:300;overflow:hidden}
+      .np-panel.open{display:block}
+      .np-head{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--dark)}
+      .np-count{font-size:11px;font-weight:500;color:var(--gray);margin-right:auto}
+      .np-all{border:none;background:none;color:var(--orange);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit}
+      .np-list{max-height:380px;overflow-y:auto}
+      .np-item{padding:11px 14px;border-bottom:1px solid var(--border);cursor:pointer}
+      .np-item.unread{background:var(--orange-faint)}
+      .np-title{font-size:12px;font-weight:600;color:var(--dark)}
+      .np-msg{font-size:11px;color:var(--mid);margin-top:2px;line-height:1.5}
+      .np-time{font-size:10px;color:var(--gray);margin-top:3px}
+      .np-empty{padding:28px 14px;text-align:center;font-size:12px;color:var(--gray)}
+      </style>
+      <div id="notifPanel" class="np-panel">
+        <div class="np-head"><span>Notifications</span><span id="notifCount" class="np-count"></span><button class="np-all" onclick="markAllNotifRead()">Mark all read</button></div>
+        <div id="notifList" class="np-list"><div class="np-empty">Loading...</div></div>
+      </div>
     </div>
   </header>
 
@@ -512,7 +529,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
           <div style="font-size:18px;font-weight:600;color:var(--dark)">My Properties</div>
           <div style="font-size:12px;color:var(--gray)">Manage your listed properties</div>
         </div>
-        <button onclick="openAddProp()" style="padding:9px 18px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 3px 12px rgba(232,96,10,.25)">+ Add New Property</button>
+        <button onclick="showSec('addprop', document.querySelector('.sn-item[onclick*=addprop]'))" style="padding:9px 18px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 3px 12px rgba(232,96,10,.25)">+ Add New Property</button>
       </div>
 
       <div class="sec-tabs">
@@ -659,35 +676,6 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
   </div><!-- end content -->
 </div><!-- end main -->
 
-<!-- ADD PROPERTY MODAL (quick version) -->
-<div class="modal-ov" id="addPropModal" onclick="if(event.target===this)closeAddProp()">
-  <div class="modal">
-    <div class="modal-hd"><h3>🏠 Add New Property</h3><button class="modal-x" onclick="closeAddProp()">✕</button></div>
-    <div class="modal-bd">
-      <div class="ff"><label>Property Title</label><input type="text" placeholder="e.g. Modern 2-Bedroom Flat"/></div>
-      <div class="ff-row">
-        <div class="ff"><label>Type</label><select><option>Flat</option><option>Duplex</option><option>Self-Contain</option><option>Bungalow</option><option>Room & Parlour</option></select></div>
-        <div class="ff"><label>City</label><select><option>Lekki, Lagos</option><option>Surulere, Lagos</option><option>Yaba, Lagos</option><option>Maitama, Abuja</option><option>Wuse, Abuja</option><option>Ibadan</option></select></div>
-      </div>
-      <div class="ff"><label>Full Address</label><input type="text" placeholder="e.g. 15 Admiralty Way, Lekki Phase 1"/></div>
-      <div class="ff-row">
-        <div class="ff"><label>Monthly Rent (₦)</label><input type="number" placeholder="e.g. 85000"/></div>
-        <div class="ff-row" style="grid-template-columns:1fr 1fr">
-          <div class="ff"><label>Beds</label><select><option>1</option><option selected>2</option><option>3</option><option>4+</option></select></div>
-          <div class="ff"><label>Baths</label><select><option selected>1</option><option>2</option><option>3</option></select></div>
-        </div>
-      </div>
-      <div class="ff"><label>Description</label><textarea rows="3" placeholder="Describe the property..."></textarea></div>
-      <div style="background:var(--orange-faint);border-radius:9px;padding:10px 12px;font-size:11px;color:var(--mid)">
-        ℹ️ Your listing will be reviewed by our admin team before going live. Usually approved within 24 hours.
-      </div>
-    </div>
-    <div class="modal-ft">
-      <button class="btn-modal-c" onclick="closeAddProp()">Cancel</button>
-      <button class="btn-modal-p" onclick="submitPropModal()">Submit for Approval</button>
-    </div>
-  </div>
-</div>
 
 <!-- REJECT REASON MODAL -->
 <div class="modal-ov" id="rejectModal" onclick="if(event.target===this)closeReject()">
@@ -1133,21 +1121,7 @@ function renderMessages() {
   });
 }
 
-// ── ADD PROPERTY MODAL ────────────────────────────
-function openAddProp() { document.getElementById('addPropModal').classList.add('open'); document.body.style.overflow = 'hidden'; }
-function closeAddProp() { document.getElementById('addPropModal').classList.remove('open'); document.body.style.overflow = ''; }
-async function submitPropModal() {
-  try {
-    if(token){
-      const res  = await fetch(`${API}/properties`,{
-        method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`},
-        body: JSON.stringify({title:'New Property', location_id:1, property_type:'flat', monthly_rent:0, full_address:'Address'})
-      });
-    }
-  } catch(err){ console.warn('Backend not available'); }
-  closeAddProp();
-  toast('Property submitted for admin approval! ✅ Usually approved within 24 hours.', 'success');
-}
+
 async function submitProperty() {
   const title   = document.getElementById('pTitle').value.trim();
   const type    = document.getElementById('pType').value;
@@ -1216,6 +1190,69 @@ async function submitProperty() {
 
 // ── INIT ──────────────────────────────────────────
 initLandlord();
+loadNotifications();
+setInterval(loadNotifications, 60000);
+
+// ── NOTIFICATIONS (real data from /api/notifications) ──
+let NOTIFS = [];
+async function loadNotifications() {
+  if (!token) return;
+  try {
+    const res  = await fetch(`${API}/notifications`, { headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    if (!data.success) return;
+    NOTIFS = data.data;
+    renderNotifications();
+  } catch (err) { console.warn('Could not load notifications'); }
+}
+function renderNotifications() {
+  const unread = NOTIFS.filter(n => !n.is_read).length;
+  document.getElementById('notifDot').style.display = unread > 0 ? 'block' : 'none';
+  document.getElementById('notifCount').textContent = unread > 0 ? unread + ' unread' : 'All caught up';
+  const list = document.getElementById('notifList');
+  list.innerHTML = '';
+  if (!NOTIFS.length) {
+    const e = document.createElement('div');
+    e.className = 'np-empty'; e.textContent = 'No notifications yet.';
+    list.appendChild(e);
+    return;
+  }
+  NOTIFS.forEach(n => {
+    const row = document.createElement('div');
+    row.className = 'np-item' + (n.is_read ? '' : ' unread');
+    const t = document.createElement('div'); t.className = 'np-title'; t.textContent = n.title;
+    const m = document.createElement('div'); m.className = 'np-msg';   m.textContent = n.message;
+    const d = document.createElement('div'); d.className = 'np-time';
+    d.textContent = new Date(n.created_at).toLocaleString('en-NG', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+    row.append(t, m, d);
+    row.onclick = () => markNotifRead(n.notification_id);
+    list.appendChild(row);
+  });
+}
+function toggleNotif(e) {
+  e.stopPropagation();
+  document.getElementById('notifPanel').classList.toggle('open');
+}
+async function markNotifRead(id) {
+  const n = NOTIFS.find(x => x.notification_id === id);
+  if (!n || n.is_read) return;
+  try {
+    await fetch(`${API}/notifications/${id}/read`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
+    n.is_read = 1;
+    renderNotifications();
+  } catch (err) { console.warn('Could not mark as read'); }
+}
+async function markAllNotifRead() {
+  try {
+    await fetch(`${API}/notifications/read-all`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
+    NOTIFS.forEach(n => { n.is_read = 1; });
+    renderNotifications();
+  } catch (err) { console.warn('Could not mark all as read'); }
+}
+document.addEventListener('click', e => {
+  const p = document.getElementById('notifPanel');
+  if (p && !p.contains(e.target)) p.classList.remove('open');
+});
 
 function toggleSidenav(){
   document.getElementById('sidenav').classList.toggle('open');
