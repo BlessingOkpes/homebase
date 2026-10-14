@@ -906,11 +906,12 @@ input[type=range]{width:100%;accent-color:var(--orange);cursor:pointer}
       <div class="flt-grp">
         <div class="flt-gt">Location</div>
         <div class="chk-opts">
-          <label class="chk-opt"><input type="checkbox" checked/><span>Lagos</span></label>
-          <label class="chk-opt"><input type="checkbox" checked/><span>Abuja</span></label>
+          <label class="chk-opt"><input type="checkbox"/><span>Lagos</span></label>
+          <label class="chk-opt"><input type="checkbox"/><span>Abuja</span></label>
           <label class="chk-opt"><input type="checkbox"/><span>Port Harcourt</span></label>
           <label class="chk-opt"><input type="checkbox"/><span>Ibadan</span></label>
           <label class="chk-opt"><input type="checkbox"/><span>Kano</span></label>
+          <label class="chk-opt"><input type="checkbox"/><span>Enugu</span></label>
         </div>
       </div>
       <div class="div-ln"></div>
@@ -978,14 +979,14 @@ input[type=range]{width:100%;accent-color:var(--orange);cursor:pointer}
           <span style="font-size:18px">📱</span>
           <div>
             <div style="font-size:11px;color:var(--gray)">Phone Number</div>
-            <div style="font-size:14px;font-weight:600;color:var(--dark)" id="landlordPhone">+234 801 234 5678</div>
+            <div style="font-size:14px;font-weight:600;color:var(--dark)" id="landlordPhone"></div>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
           <span style="font-size:18px">📍</span>
           <div>
             <div style="font-size:11px;color:var(--gray)">Property Address</div>
-            <div style="font-size:13px;font-weight:500;color:var(--dark)" id="landlordAddr">15 Admiralty Way, Lekki Phase 1, Lagos</div>
+            <div style="font-size:13px;font-weight:500;color:var(--dark)" id="landlordAddr"></div>
           </div>
         </div>
         <div style="background:#fff;border:1px solid var(--border);border-radius:9px;padding:12px">
@@ -1245,7 +1246,7 @@ let srchBudget=0,savedIds=new Set();
 function updBudget(){const v=parseFloat(document.getElementById('srchSalary').value)||0;srchBudget=v*0.3;document.getElementById('budgetRes').innerHTML=v>0?'Max rent: <strong>'+fn(srchBudget)+'/mo</strong>':'Max rent: <strong>—</strong>';}
 function updRange(v){document.getElementById('priceRangeV').textContent='₦0 — '+fn(parseInt(v));}
 function tglPill(el){const p=el.closest('.pill-opts');p.querySelectorAll('.pill').forEach(x=>x.classList.remove('on'));el.classList.add('on');}
-function clrFilters(){document.getElementById('srchSalary').value='';document.getElementById('budgetRes').innerHTML='Max rent: <strong>—</strong>';srchBudget=0;document.getElementById('maxPriceR').value=500000;document.getElementById('priceRangeV').textContent='₦0 — ₦500,000';loadProps();gToast('Filters cleared','');}
+function clrFilters(){document.getElementById('srchSalary').value='';document.getElementById('budgetRes').innerHTML='Max rent: <strong>—</strong>';srchBudget=0;document.getElementById('maxPriceR').value=500000;document.getElementById('priceRangeV').textContent='₦0 — ₦500,000';resetFilterUI();applyFlt(true);gToast('Filters cleared','');}
 function mapProp(p){
   return {
     id:p.property_id, e:'🏠', img:p.cover_image_url||'',
@@ -1257,47 +1258,166 @@ function mapProp(p){
     am:p.amenities||[]
   };
 }
+let ALL = [];
+let sortMode = 'aff';
+let curPage = 1;
+const PAGE_SIZE = 9;
+const TYPE_MAP = { 'flat':'flat', 'duplex':'duplex', 'self-contain':'self_contain', 'bungalow':'bungalow' };
+const normTxt = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
 function setCount(n){
-  document.getElementById('resCnt').textContent=n+(n===1?' Property Found':' Properties Found');
+  document.getElementById('resCnt').textContent = n + (n === 1 ? ' Property Found' : ' Properties Found');
+}
+function fltGroup(name){
+  return [...document.querySelectorAll('#srchSidebar .flt-grp')].find(g => {
+    const t = g.querySelector('.flt-gt');
+    return t && t.textContent.trim() === name;
+  });
+}
+function activePill(name){
+  const g = fltGroup(name);
+  const on = g && g.querySelector('.pill.on');
+  return on ? on.textContent.trim() : '';
+}
+function chkLabel(c){
+  return c.nextElementSibling.textContent.replace(/^[^A-Za-z0-9]+/, '').trim();
+}
+function checkedLabels(name){
+  const g = fltGroup(name);
+  if (!g) return [];
+  return [...g.querySelectorAll('input[type=checkbox]:checked')].map(chkLabel);
+}
+function readFilters(){
+  return {
+    maxPrice: parseInt(document.getElementById('maxPriceR').value) || 500000,
+    beds: activePill('Bedrooms'),
+    type: activePill('Property Type'),
+    cities: checkedLabels('Location'),
+    amenities: checkedLabels('Amenities')
+  };
+}
+function matchBeds(p, beds){
+  if (!beds || beds === 'Any') return true;
+  if (beds === 'Self-con') return Number(p.beds) === 0;
+  if (beds === '4+ Beds') return Number(p.beds) >= 4;
+  return Number(p.beds) === parseInt(beds);
+}
+function matchType(p, type){
+  if (!type || type === 'All Types') return true;
+  return p.type === TYPE_MAP[type.toLowerCase()];
+}
+function sortList(){
+  if (sortMode === 'desc') PROPS.sort((a, b) => b.p - a.p);
+  else if (sortMode === 'new') PROPS.sort((a, b) => b.id - a.id);
+  else PROPS.sort((a, b) => a.p - b.p);
+}
+function uncheck(group, label){
+  const g = fltGroup(group);
+  if (!g) return;
+  g.querySelectorAll('input[type=checkbox]').forEach(c => { if (chkLabel(c) === label) c.checked = false; });
+}
+function resetPills(group){
+  const g = fltGroup(group);
+  if (!g) return;
+  g.querySelectorAll('.pill').forEach((p, i) => p.classList.toggle('on', i === 0));
+}
+function resetFilterUI(){
+  resetPills('Bedrooms');
+  resetPills('Property Type');
+  document.querySelectorAll('#srchSidebar .chk-opts input[type=checkbox]').forEach(c => { c.checked = false; });
+}
+function renderChips(f){
+  const box = document.getElementById('actTags');
+  if (!box) return;
+  box.innerHTML = '';
+  const chips = [];
+  f.cities.forEach(c => chips.push({ label: c, off: () => uncheck('Location', c) }));
+  f.amenities.forEach(a => chips.push({ label: a, off: () => uncheck('Amenities', a) }));
+  if (f.beds && f.beds !== 'Any') chips.push({ label: f.beds, off: () => resetPills('Bedrooms') });
+  if (f.type && f.type !== 'All Types') chips.push({ label: f.type, off: () => resetPills('Property Type') });
+  if (f.maxPrice < 500000) chips.push({ label: 'Under ' + fn(f.maxPrice), off: () => { document.getElementById('maxPriceR').value = 500000; updRange(500000); } });
+  chips.forEach(c => {
+    const d = document.createElement('div');
+    d.className = 'ftag';
+    d.appendChild(document.createTextNode(c.label + ' '));
+    const b = document.createElement('button');
+    b.textContent = '\u2715';
+    b.onclick = () => { c.off(); applyFlt(true); };
+    d.appendChild(b);
+    box.appendChild(d);
+  });
+}
+function renderPager(pages){
+  const pag = document.querySelector('.pag');
+  if (!pag) return;
+  pag.innerHTML = '';
+  if (pages <= 1) { pag.style.display = 'none'; return; }
+  pag.style.display = '';
+  const mk = (label, page, on, disabled) => {
+    const b = document.createElement('button');
+    b.className = 'pag-btn' + (on ? ' on' : '');
+    b.textContent = label;
+    if (disabled) b.disabled = true; else b.onclick = () => goPage(page);
+    pag.appendChild(b);
+  };
+  mk('\u2039', curPage - 1, false, curPage === 1);
+  for (let i = 1; i <= pages; i++) mk(String(i), i, i === curPage, false);
+  mk('\u203A', curPage + 1, false, curPage === pages);
+}
+function showPage(){
+  const pages = Math.max(1, Math.ceil(PROPS.length / PAGE_SIZE));
+  if (curPage > pages) curPage = pages;
+  const start = (curPage - 1) * PAGE_SIZE;
+  renderProps(PROPS.slice(start, start + PAGE_SIZE));
+  renderPager(pages);
+}
+function goPage(n){
+  curPage = n;
+  showPage();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 async function loadProps(){
-  try{
-    const res=await fetch(API+'/properties');
-    const data=await res.json();
-    if(!data.success) throw new Error(data.message||'Request failed');
-    PROPS=data.data.map(mapProp);
-    renderProps(PROPS);
-    setCount(PROPS.length);
-  }catch(err){
-    console.error('Could not load listings:',err);
-    PROPS=[];
-    renderProps(PROPS);
-    document.getElementById('resCnt').textContent='Could not load listings';
-    gToast('Could not load listings. Please refresh the page.','');
+  try {
+    const res  = await fetch(API + '/properties');
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message || 'Request failed');
+    ALL = data.data.map(mapProp);
+    applyFlt(true);
+  } catch (err) {
+    console.error('Could not load listings:', err);
+    ALL = []; PROPS = [];
+    showPage();
+    renderChips(readFilters());
+    document.getElementById('resCnt').textContent = 'Could not load listings';
+    gToast('Could not load listings. Please refresh the page.', '');
   }
 }
-async function applyFlt(){
-  const mx=parseInt(document.getElementById('maxPriceR').value);
-  const city=document.querySelector('.chk-opts input:checked+span')?.textContent||'';
-  try{
-    let url=API+'/properties?';
-    if(mx) url+=`max_price=${mx}&`;
-    if(city) url+=`city=${encodeURIComponent(city)}&`;
-    const res=await fetch(url);
-    const data=await res.json();
-    if(!data.success) throw new Error(data.message||'Request failed');
-    PROPS=data.data.map(mapProp);
-    if(srchBudget>0) PROPS.sort((a,b)=>(b.p<=srchBudget)-(a.p<=srchBudget));
-    renderProps(PROPS);
-    setCount(PROPS.length);
-    gToast('Filters applied — '+PROPS.length+' results','success');
-  }catch(err){
-    console.error('Filter failed:',err);
-    gToast('Could not apply filters. Please try again.','');
-  }
-  if(window.innerWidth<=768)document.getElementById('srchSidebar').classList.remove('open');
+function applyFlt(quiet){
+  const f = readFilters();
+  PROPS = ALL.filter(p =>
+    (f.maxPrice >= 500000 || p.p <= f.maxPrice) &&
+    matchBeds(p, f.beds) &&
+    matchType(p, f.type) &&
+    (!f.cities.length || f.cities.some(c => p.loc.toLowerCase().includes(c.toLowerCase()))) &&
+    f.amenities.every(a => (p.am || []).some(x => normTxt(x).includes(normTxt(a)) || normTxt(a).includes(normTxt(x))))
+  );
+  sortList();
+  curPage = 1;
+  showPage();
+  renderChips(f);
+  setCount(PROPS.length);
+  if (quiet !== true && window.innerWidth <= 768) document.getElementById('srchSidebar').classList.remove('open');
 }
-function sortProps(v){let s=[...PROPS];if(v==='asc')s.sort((a,b)=>a.p-b.p);else if(v==='desc')s.sort((a,b)=>b.p-a.p);else if(v==='new')s.sort((a,b)=>b.id-a.id);else s.sort((a,b)=>a.p-b.p);renderProps(s);}
+(function wireFilters(){
+  const sb = document.getElementById('srchSidebar');
+  if (!sb) return;
+  sb.addEventListener('change', e => { if (e.target.type === 'checkbox') applyFlt(true); });
+  sb.addEventListener('click', e => { if (e.target.classList.contains('pill')) applyFlt(true); });
+  document.getElementById('maxPriceR').addEventListener('input', () => applyFlt(true));
+  document.getElementById('srchSalary').addEventListener('input', () => applyFlt(true));
+})();
+
+function sortProps(v){sortMode=v;sortList();curPage=1;showPage();}
 function setView(v){const g=document.getElementById('propGrid');g.classList.toggle('lv',v==='list');document.getElementById('gridBtn').classList.toggle('on',v==='grid');document.getElementById('listBtn').classList.toggle('on',v==='list');}
 function renderProps(arr){
   arr=arr||PROPS;const g=document.getElementById('propGrid');if(!g)return;g.innerHTML='';
@@ -1369,29 +1489,45 @@ function markRead(){document.querySelectorAll('.notif-item').forEach(n=>{n.class
 async function revealContact() {
   const panel = document.getElementById('contactReveal');
   const btn   = document.getElementById('contactBtn');
-  if (panel.style.display === 'none' || panel.style.display === '') {
-    panel.style.display = 'block';
-    btn.textContent = '✕ Hide Contact Details';
-    btn.style.background = 'var(--mid)';
-    gToast('Landlord contact details revealed. Visit in person before paying! 🔒', 'success');
-    // Log the reveal to backend if user is logged in
-    const token = localStorage.getItem('hb_token');
-    if(token && window._currentPropId) {
-      try {
-        const res = await fetch(`" + API + "/properties/${window._currentPropId}/contact`,{
-          method:'POST', headers:{Authorization:`Bearer ${token}`}
-        });
-        const data = await res.json();
-        if(data.success && data.data){
-          document.getElementById('landlordPhone').textContent = data.data.landlord_phone || '+234 801 234 5678';
-          document.getElementById('landlordAddr').textContent  = data.data.full_address   || '—';
-        }
-      } catch(err){ console.warn('Contact log failed — using demo data'); }
-    }
-  } else {
+  if (!btn.dataset.label) btn.dataset.label = btn.textContent;
+
+  // A second click hides the details again
+  if (panel.style.display === 'block') {
     panel.style.display = 'none';
-    btn.textContent = '📞 Contact Landlord';
+    btn.textContent = btn.dataset.label;
     btn.style.background = '';
+    return;
+  }
+
+  // Contact details are only for signed-in users
+  const token = localStorage.getItem('hb_token');
+  if (!token || token === 'demo_token') {
+    gToast('Please sign in to see the landlord contact details.', '');
+    closePM();
+    go('auth');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Loading...';
+  try {
+    const res  = await fetch(`${API}/properties/${window._currentPropId}/contact`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (!data.success || !data.data) throw new Error(data.message || 'Could not load the contact details.');
+    document.getElementById('landlordPhone').textContent = data.data.landlord_phone || 'Not available';
+    document.getElementById('landlordAddr').textContent  = data.data.full_address   || 'Not available';
+    panel.style.display = 'block';
+    btn.textContent = 'Hide Contact Details';
+    btn.style.background = 'var(--mid)';
+    gToast('Visit the property in person before paying anyone.', 'success');
+  } catch (err) {
+    btn.textContent = btn.dataset.label;
+    gToast(err.message || 'Could not load the contact details. Please try again.', '');
+  } finally {
+    btn.disabled = false;
   }
 }
 

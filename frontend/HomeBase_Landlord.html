@@ -342,7 +342,21 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
     <a class="sn-item" onclick="showSec('messages',this)"><span class="sn-ico">💬</span>Messages </a>
 
     <div class="sn-sec">Account</div>
-    <a class="sn-item" onclick="showSec('profile',this)"><span class="sn-ico">👤</span>My Profile</a>
+    <a class="sn-item" onclick="showSec('notifications',this)"><span class="sn-ico">&#128276;</span>Notifications<span class="sn-cnt" id="navNotifCount" style="display:none">0</span></a>
+    <div class="sec-panel" id="sec-notifications">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div>
+          <div style="font-size:18px;font-weight:600;color:var(--dark)">Notifications</div>
+          <div style="font-size:12px;color:var(--gray)">Updates on your listings and payment claims</div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button onclick="markAllNotifRead()" style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;color:var(--mid)">Mark all read</button>
+          <button onclick="clearAllNotifs()" style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;color:var(--mid)">Clear all</button>
+        </div>
+      </div>
+      <div class="card"><div id="notifPageList"></div></div>
+    </div>
+    <div class="sec-panel" id="sec-messages"><span class="sn-ico">👤</span>My Profile</a>
     <a class="sn-item" onclick="window.location.href='index.html'"><span class="sn-ico">🌐</span>View Site</a>
     <a class="sn-item" onclick="localStorage.removeItem('hb_token'); localStorage.removeItem('hb_user'); window.location.href='index.html';"><span class="sn-ico">🚪</span>Sign Out</a>
   </div>
@@ -388,7 +402,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
       .np-empty{padding:28px 14px;text-align:center;font-size:12px;color:var(--gray)}
       </style>
       <div id="notifPanel" class="np-panel">
-        <div class="np-head"><span>Notifications</span><span id="notifCount" class="np-count"></span><button class="np-all" onclick="markAllNotifRead()">Mark all read</button></div>
+        <div class="np-head"><span>Notifications</span><span id="notifCount" class="np-count"></span><button class="np-all" onclick="markAllNotifRead()">Mark all read</button><button class="np-all" onclick="openNotifPage()">View all</button></div>
         <div id="notifList" class="np-list"><div class="np-empty">Loading...</div></div>
       </div>
     </div>
@@ -625,6 +639,19 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
     </div>
 
     <!-- ══════════════ MESSAGES ══════════════ -->
+    <div class="sec-panel" id="sec-notifications">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div>
+          <div style="font-size:18px;font-weight:600;color:var(--dark)">Notifications</div>
+          <div style="font-size:12px;color:var(--gray)">Updates on your listings and payment claims</div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button onclick="markAllNotifRead()" style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;color:var(--mid)">Mark all read</button>
+          <button onclick="clearAllNotifs()" style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;color:var(--mid)">Clear all</button>
+        </div>
+      </div>
+      <div class="card"><div id="notifPageList"></div></div>
+    </div>
     <div class="sec-panel" id="sec-messages">
       <div style="margin-bottom:20px">
         <div style="font-size:18px;font-weight:600;color:var(--dark)">Messages</div>
@@ -784,6 +811,7 @@ let REAL_CLAIMS = [];
 const CLAIMS = [];
 
 const MY_PROPS = [];
+let editingPropId = null;
 
 const TENANTS = [];
 
@@ -794,6 +822,7 @@ let rejectingId = null;
 
 // ── SECTION SWITCHING ──────────────────────────────
 const TITLES = {
+  notifications: 'Notifications',
   overview:'Landlord Dashboard', claims:'Payment Claims',
   history:'Payment History', properties:'My Properties',
   addprop:'Add New Property', tenants:'My Tenants',
@@ -808,7 +837,13 @@ function showSec(name, el) {
   if (el) el.classList.add('active');
   if (name === 'claims')     renderClaims('pending');
   if (name === 'history')    renderHistory();
-  if (name === 'properties') renderMyProps('all');
+  if (name === 'addprop' && editingPropId) resetPropForm();
+  if (name === 'properties') {
+    document.querySelectorAll('#sec-properties .sec-tab').forEach((b, i) => b.classList.toggle('active', i === 0));
+    renderMyProps('all');
+    loadMyProps();
+  }
+  if (name === 'notifications') loadNotifications();
   if (name === 'tenants')    renderFullTenants();
   if (name === 'messages')   renderMessages();
 }
@@ -1007,34 +1042,95 @@ function renderHistory() {
 }
 
 // ── MY PROPERTIES ─────────────────────────────────
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+async function loadMyProps() {
+  if (!token) return;
+  try {
+    const res  = await fetch(`${API}/properties/landlord/mine`, { headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    if (!data.success) return;
+    MY_PROPS.length = 0;
+    data.data.forEach(p => MY_PROPS.push({
+      id: p.property_id, e: '\u{1F3E0}', img: p.cover_image_url || '',
+      title: p.title, loc: `${p.city}, ${p.state}`,
+      price: '\u20A6' + Number(p.monthly_rent).toLocaleString('en-NG') + '/mo',
+      beds: p.bedrooms, baths: p.bathrooms, tenant: p.tenant_name || '',
+      status: (p.tenant_name || !p.is_available) ? 'occupied' : 'available',
+      approval: p.is_approved ? 'approved' : 'pending',
+      raw: p
+    }));
+    renderMyProps(window._myFilter || 'all');
+  } catch (err) { console.warn('Could not load your listings'); }
+}
+
 function renderMyProps(filter) {
+  window._myFilter = filter;
   const grid = document.getElementById('myPropGrid');
-  if (!grid) return; grid.innerHTML = '';
-  const filtered = filter==='all' ? MY_PROPS : MY_PROPS.filter(p => filter==='pending' ? p.approval==='pending' : p.status===filter);
+  if (!grid) return;
+  grid.innerHTML = '';
+  const filtered = MY_PROPS.filter(p =>
+    filter === 'pending'   ? p.approval === 'pending' :
+    filter === 'available' ? (p.approval === 'approved' && p.status === 'available') :
+    filter === 'occupied'  ? (p.approval === 'approved' && p.status === 'occupied') : true);
   if (!filtered.length) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--gray)"><div style="font-size:15px;font-weight:600;color:var(--dark)">No listings yet</div><div style="font-size:12px;margin-top:4px">Properties you add will appear here.</div></div>';
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--gray)"><div style="font-size:15px;font-weight:600;color:var(--dark)">No listings here yet</div><div style="font-size:12px;margin-top:4px">Properties you add will appear here.</div></div>';
     return;
   }
   filtered.forEach(p => {
-    const div = document.createElement('div'); div.className = 'prop-card-ll';
+    const pending = p.approval === 'pending';
+    const label = pending ? 'Pending approval' : p.status === 'occupied' ? 'Occupied' : 'Live';
+    const cls   = pending ? 'b-ylw' : p.status === 'occupied' ? 'b-grn' : 'b-org';
+    const note  = (!pending && p.status === 'available') ? '<span style="font-size:11px;color:var(--gray)">Live on Find Housing</span>' : '';
+    const div = document.createElement('div');
+    div.className = 'prop-card-ll';
     div.innerHTML = `
-      <div class="pc-img"><span>${p.e}</span>
-        <div class="pc-status-tag"><span class="badge ${p.approval==='pending'?'b-ylw':p.status==='occupied'?'b-grn':'b-org'}">${p.approval==='pending'?'⏳ Pending':p.status==='occupied'?'● Occupied':'○ Available'}</span></div>
+      <div class="pc-img">
+        ${p.img ? `<img src="${esc(p.img)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">` : `<span>${p.e}</span>`}
+        <div class="pc-status-tag"><span class="badge ${cls}">${label}</span></div>
       </div>
       <div class="pc-body">
-        <div class="pc-title">${p.title}</div>
-        <div class="pc-loc">📍 ${p.loc}</div>
-        <div class="pc-price">${p.price}</div>
-        <div class="pc-meta"><span>🛏 ${p.beds===0?'Studio':p.beds+' Bed'}</span><span>🚿 ${p.baths} Bath</span><span>👤 ${p.tenant}</span></div>
+        <div class="pc-title">${esc(p.title)}</div>
+        <div class="pc-loc">${esc(p.loc)}</div>
+        <div class="pc-price">${esc(p.price)}</div>
+        <div class="pc-meta"><span>${p.beds === 0 ? 'Studio' : p.beds + ' Bed'}</span><span>${p.baths} Bath</span>${p.tenant ? `<span>${esc(p.tenant)}</span>` : ''}</div>
         <div class="pc-acts">
-          <button class="btn-edit-prop" onclick="toast('Editing ${p.title}...','')">✏️ Edit</button>
-          <button class="btn-toggle-prop" onclick="toast('${p.status==='occupied'?'Marked as available':'Marked as occupied'}','success')">${p.status==='occupied'?'Mark Available':'Mark Occupied'}</button>
+          ${pending ? `<button class="btn-edit-prop" onclick="editProperty(${p.id})">Edit</button>` : note}
         </div>
       </div>`;
     grid.appendChild(div);
   });
 }
 
+function resetPropForm() {
+  editingPropId = null;
+  ['pTitle', 'pAddress', 'pRent', 'pSize', 'pDesc'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('pImage').value = '';
+  document.querySelectorAll('.pAmenity').forEach(c => { c.checked = false; });
+  const btn = document.getElementById('submitPropBtn');
+  if (btn) btn.textContent = 'Submit for Approval';
+}
+
+function editProperty(id) {
+  const p = MY_PROPS.find(x => x.id === id);
+  if (!p) return;
+  resetPropForm();
+  showSec('addprop', document.querySelector('.sn-item[onclick*=addprop]'));
+  const r = p.raw;
+  document.getElementById('pTitle').value    = r.title || '';
+  document.getElementById('pType').value     = r.property_type;
+  document.getElementById('pLocation').value = r.location_id;
+  document.getElementById('pAddress').value  = r.full_address || '';
+  document.getElementById('pRent').value     = parseFloat(r.monthly_rent);
+  document.getElementById('pSize').value     = r.size_sqm ? parseFloat(r.size_sqm) : '';
+  document.getElementById('pBeds').value     = r.bedrooms;
+  document.getElementById('pBaths').value    = r.bathrooms;
+  document.getElementById('pDesc').value     = r.description || '';
+  document.querySelectorAll('.pAmenity').forEach(c => { c.checked = (r.amenities || []).includes(c.value); });
+  editingPropId = id;
+  document.getElementById('submitPropBtn').textContent = 'Save Changes';
+  toast('Editing "' + r.title + '". Change what you need, then press Save Changes.', '');
+}
 function filterMyProps(filter, btn) {
   document.querySelectorAll('#sec-properties .sec-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -1139,14 +1235,15 @@ async function submitProperty() {
     return;
   }
 
+  const editing = editingPropId;
   const btn = document.getElementById('submitPropBtn');
   if (btn.disabled) return;
   btn.disabled = true;
-  btn.textContent = 'Submitting...';
+  btn.textContent = editing ? 'Saving...' : 'Submitting...';
 
   try {
-    const res = await fetch(`${API}/properties`, {
-      method: 'POST',
+    const res = await fetch(editing ? `${API}/properties/${editing}` : `${API}/properties`, {
+      method: editing ? 'PATCH' : 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({
         title, property_type: type, location_id: locId,
@@ -1155,17 +1252,18 @@ async function submitProperty() {
         description: desc, amenities
       })
     });
-        const data = await res.json();
+    const data = await res.json();
     if (data.success) {
-      // If a cover photo was chosen, upload it now that we have the new property_id
+      const propId = editing || data.property_id;
+      // If a cover photo was chosen, upload it (it replaces any existing cover)
       const imageFile = document.getElementById('pImage').files[0];
       if (imageFile) {
         const formData = new FormData();
         formData.append('image', imageFile);
         try {
-          const imgRes = await fetch(`${API}/properties/${data.property_id}/image`, {
+          const imgRes = await fetch(`${API}/properties/${propId}/image`, {
             method: 'POST',
-            headers: { Authorization: `Bearer ${token}` }, // no Content-Type — browser sets multipart boundary
+            headers: { Authorization: `Bearer ${token}` }, // no Content-Type -- browser sets multipart boundary
             body: formData
           });
           const imgData = await imgRes.json();
@@ -1174,9 +1272,10 @@ async function submitProperty() {
           toast('Property saved, but photo upload failed.', 'danger');
         }
       }
-      toast('Property submitted for admin approval! ✅ Usually approved within 24 hours.', 'success');
-      ['pTitle','pAddress','pRent','pSize','pDesc'].forEach(id => { document.getElementById(id).value = ''; });
-      document.getElementById('pImage').value = '';
+      toast(editing ? 'Changes saved. Your listing is still waiting for admin approval.' : 'Property submitted for admin approval. You can track it under My Listings.', 'success');
+      resetPropForm();
+      await loadMyProps();
+      showSec('properties', document.querySelector('.sn-item[onclick*=properties]'));
     } else {
       toast(data.message || 'Submission failed.', 'danger');
     }
@@ -1184,14 +1283,16 @@ async function submitProperty() {
     toast('Could not reach server.', 'danger');
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Submit for Approval';
+    btn.textContent = editingPropId ? 'Save Changes' : 'Submit for Approval';
   }
 }
 
 // ── INIT ──────────────────────────────────────────
 initLandlord();
 loadNotifications();
+loadMyProps();
 setInterval(loadNotifications, 60000);
+setInterval(loadMyProps, 60000);
 
 // ── NOTIFICATIONS (real data from /api/notifications) ──
 let NOTIFS = [];
@@ -1205,33 +1306,48 @@ async function loadNotifications() {
     renderNotifications();
   } catch (err) { console.warn('Could not load notifications'); }
 }
+function buildNotifRow(n) {
+  const row = document.createElement('div');
+  row.className = 'np-item' + (n.is_read ? '' : ' unread');
+  const x = document.createElement('button');
+  x.textContent = '\u2715';
+  x.title = 'Delete this notification';
+  x.style.cssText = 'float:right;border:none;background:none;color:var(--gray);font-size:13px;cursor:pointer;padding:0 0 0 8px';
+  x.onclick = e => { e.stopPropagation(); deleteNotif(n.notification_id); };
+  const t = document.createElement('div'); t.className = 'np-title'; t.textContent = n.title;
+  const m = document.createElement('div'); m.className = 'np-msg';   m.textContent = n.message;
+  const d = document.createElement('div'); d.className = 'np-time';
+  d.textContent = new Date(n.created_at).toLocaleString('en-NG', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+  row.append(x, t, m, d);
+  row.onclick = () => markNotifRead(n.notification_id);
+  return row;
+}
 function renderNotifications() {
   const unread = NOTIFS.filter(n => !n.is_read).length;
   document.getElementById('notifDot').style.display = unread > 0 ? 'block' : 'none';
   document.getElementById('notifCount').textContent = unread > 0 ? unread + ' unread' : 'All caught up';
-  const list = document.getElementById('notifList');
-  list.innerHTML = '';
-  if (!NOTIFS.length) {
-    const e = document.createElement('div');
-    e.className = 'np-empty'; e.textContent = 'No notifications yet.';
-    list.appendChild(e);
-    return;
-  }
-  NOTIFS.forEach(n => {
-    const row = document.createElement('div');
-    row.className = 'np-item' + (n.is_read ? '' : ' unread');
-    const t = document.createElement('div'); t.className = 'np-title'; t.textContent = n.title;
-    const m = document.createElement('div'); m.className = 'np-msg';   m.textContent = n.message;
-    const d = document.createElement('div'); d.className = 'np-time';
-    d.textContent = new Date(n.created_at).toLocaleString('en-NG', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
-    row.append(t, m, d);
-    row.onclick = () => markNotifRead(n.notification_id);
-    list.appendChild(row);
+  const badge = document.getElementById('navNotifCount');
+  if (badge) { badge.textContent = unread; badge.style.display = unread > 0 ? '' : 'none'; }
+  ['notifList', 'notifPageList'].forEach(id => {
+    const list = document.getElementById(id);
+    if (!list) return;
+    list.innerHTML = '';
+    if (!NOTIFS.length) {
+      const e = document.createElement('div');
+      e.className = 'np-empty'; e.textContent = 'No notifications yet.';
+      list.appendChild(e);
+      return;
+    }
+    NOTIFS.forEach(n => list.appendChild(buildNotifRow(n)));
   });
 }
 function toggleNotif(e) {
   e.stopPropagation();
   document.getElementById('notifPanel').classList.toggle('open');
+}
+function openNotifPage() {
+  document.getElementById('notifPanel').classList.remove('open');
+  document.querySelector('.sn-item[onclick*=notifications]').click();
 }
 async function markNotifRead(id) {
   const n = NOTIFS.find(x => x.notification_id === id);
@@ -1249,11 +1365,30 @@ async function markAllNotifRead() {
     renderNotifications();
   } catch (err) { console.warn('Could not mark all as read'); }
 }
+async function deleteNotif(id) {
+  try {
+    const res  = await fetch(`${API}/notifications/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
+    NOTIFS = NOTIFS.filter(n => n.notification_id !== id);
+    renderNotifications();
+  } catch (err) { toast('Could not delete that notification.', 'danger'); }
+}
+async function clearAllNotifs() {
+  if (!NOTIFS.length) return;
+  if (!confirm('Delete all your notifications?')) return;
+  try {
+    const res  = await fetch(`${API}/notifications`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
+    NOTIFS = [];
+    renderNotifications();
+  } catch (err) { toast('Could not clear your notifications.', 'danger'); }
+}
 document.addEventListener('click', e => {
   const p = document.getElementById('notifPanel');
   if (p && !p.contains(e.target)) p.classList.remove('open');
 });
-
 function toggleSidenav(){
   document.getElementById('sidenav').classList.toggle('open');
   document.getElementById('mobileBackdrop').classList.toggle('show');

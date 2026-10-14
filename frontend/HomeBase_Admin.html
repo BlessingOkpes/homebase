@@ -347,7 +347,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
       .np-empty{padding:28px 14px;text-align:center;font-size:12px;color:var(--gray)}
       </style>
       <div id="bellPanel" class="np-panel">
-        <div class="np-head"><span>Notifications</span><span id="bellCount" class="np-count"></span></div>
+        <div class="np-head"><span>Notifications</span><span id="bellCount" class="np-count"></span><button onclick="document.getElementById('bellPanel').classList.remove('open');document.querySelector('.sn-item[onclick*=notifications]').click()" style="border:none;background:none;color:var(--orange);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">View all</button></div>
         <div id="bellList" class="np-list"><div class="np-empty">Nothing waiting for review.</div></div>
       </div>
       <div class="tb-admin-tag">
@@ -484,8 +484,8 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
           <div style="font-size:12px;color:var(--gray)">Review, approve, or reject property listings</div>
         </div>
         <div style="display:flex;gap:10px">
-          <span class="badge b-ylw" style="padding:6px 14px;font-size:11px">⏳ 7 Pending</span>
-          <span class="badge b-grn" style="padding:6px 14px;font-size:11px">✓ 124 Approved</span>
+          <span class="badge b-ylw" style="padding:6px 14px;font-size:11px">⏳ <span id="badgePending">0</span> Pending</span>
+          <span class="badge b-grn" style="padding:6px 14px;font-size:11px">✓ <span id="badgeApproved">0</span> Approved</span>
         </div>
       </div>
 
@@ -592,9 +592,8 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
         <div>
           <div style="font-size:18px;font-weight:600;color:var(--dark)">Notifications</div>
-          <div style="font-size:12px;color:var(--gray)">System alerts and platform notifications</div>
+          <div style="font-size:12px;color:var(--gray)">New listings, new accounts and messages you send</div>
         </div>
-        <div style="display:flex;gap:10px">
           <button onclick="toast('All notifications marked as read','success')" style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;color:var(--mid)">Mark all read</button>
           <button onclick="openModal('sendNotif')" style="padding:8px 16px;border:none;border-radius:8px;background:var(--orange);color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer">+ Send Notification</button>
         </div>
@@ -735,10 +734,9 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
   <div class="modal">
     <div class="modal-hd"><h3>🔔 Send Notification</h3><button class="modal-x" onclick="closeModal('sendNotif')">✕</button></div>
     <div class="modal-bd">
-      <div class="ff"><label>Send To</label><select><option>All Users</option><option>All Tenants</option><option>All Landlords</option><option>Specific User</option></select></div>
-      <div class="ff"><label>Notification Title</label><input type="text" placeholder="e.g. System Maintenance Notice"/></div>
-      <div class="ff"><label>Type</label><select><option>System</option><option>Rent Reminder</option><option>Payment Confirmed</option><option>New Listing</option><option>Overdue Alert</option></select></div>
-      <div class="ff"><label>Message</label><textarea rows="4" placeholder="Enter your notification message here..."></textarea></div>
+      <div class="ff"><label>Send To</label><select id="snAudience"><option value="all">All Users</option><option value="tenants">All Tenants</option><option value="landlords">All Landlords</option></select></div>
+      <div class="ff"><label>Notification Title</label><input id="snTitle" type="text" maxlength="100" placeholder="e.g. System Maintenance Notice"/></div>
+      <div class="ff"><label>Message</label><textarea id="snMessage" rows="4" placeholder="Enter your notification message here..."></textarea></div>
     </div>
     <div class="modal-ft"><button class="btn-modal-c" onclick="closeModal('sendNotif')">Cancel</button><button class="btn-modal-p" onclick="sendNotif()">Send Notification</button></div>
   </div>
@@ -756,7 +754,7 @@ const sectionTitles = {
   settings:'System Settings', analytics:'Platform Analytics'
 };
 
-const COMING_SOON = ['analytics', 'reports', 'notifications', 'settings'];
+const COMING_SOON = ['analytics', 'reports', 'settings'];
 function showSec(name) {
   document.querySelectorAll('.sec-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sn-item').forEach(i => i.classList.remove('active'));
@@ -782,7 +780,6 @@ function toast(msg, type) {
 function openModal(name) { document.getElementById(name + 'Modal').classList.add('open'); document.body.style.overflow = 'hidden'; }
 function closeModal(name) { document.getElementById(name + 'Modal').classList.remove('open'); document.body.style.overflow = ''; }
 function saveUser() { closeModal('addUser'); toast('User added successfully! ✅', 'success'); }
-function sendNotif() { closeModal('sendNotif'); toast('Notification sent to all users! 🔔', 'success'); }
 
 // ── DATA ───────────────────────────────────────────
 const USERS = [];
@@ -798,29 +795,10 @@ function refreshPendingUI() {
   if (sn) sn.textContent = n;
   const dv = document.querySelectorAll('#sec-dashboard .stat-grid .sc-val');
   if (dv[3]) dv[3].textContent = n;
-  const dot = document.getElementById('bellDot');
-  if (dot) dot.style.display = n > 0 ? 'block' : 'none';
-  const cnt = document.getElementById('bellCount');
-  if (cnt) cnt.textContent = n > 0 ? n + ' awaiting review' : 'All caught up';
-  const list = document.getElementById('bellList');
-  if (!list) return;
-  list.innerHTML = '';
-  if (!n) {
-    const e = document.createElement('div');
-    e.className = 'np-empty'; e.textContent = 'Nothing waiting for review.';
-    list.appendChild(e);
-    return;
-  }
-  REAL_PENDING.forEach(p => {
-    const row = document.createElement('div'); row.className = 'np-item';
-    const t = document.createElement('div'); t.className = 'np-title'; t.textContent = 'New listing awaiting approval';
-    const m = document.createElement('div'); m.className = 'np-msg';
-    m.textContent = `${p.title} - ${p.loc} (${p.price}) by ${p.landlord}`;
-    row.append(t, m);
-    row.onclick = () => { document.getElementById('bellPanel').classList.remove('open'); showSec('properties'); };
-    list.appendChild(row);
-  });
+  const bp = document.getElementById('badgePending');
+  if (bp) bp.textContent = n;
 }
+
 function toggleBell(e) {
   e.stopPropagation();
   document.getElementById('bellPanel').classList.toggle('open');
@@ -831,6 +809,27 @@ document.addEventListener('click', e => {
 });
 
 const PROPS_APPROVAL = [];
+
+// Live (approved + available) listings, loaded from the real API
+async function reloadApproved() {
+  try {
+    const res  = await fetch(`${API}/properties`);
+    const data = await res.json();
+    if (!data.success) return;
+    PROPS_APPROVAL.length = 0;
+    data.data.forEach(p => PROPS_APPROVAL.push({
+      id: p.property_id, e: '\u{1F3E0}', img: p.cover_image_url || null,
+      title: p.title, loc: `${p.city}, ${p.state}`,
+      price: `\u20A6${Number(p.monthly_rent).toLocaleString()}/mo`,
+      landlord: p.landlord_name || 'N/A', status: 'approved',
+      beds: p.bedrooms, baths: p.bathrooms
+    }));
+    const ba = document.getElementById('badgeApproved');
+    if (ba) ba.textContent = PROPS_APPROVAL.length;
+    const dv = document.querySelectorAll('#sec-dashboard .stat-grid .sc-val');
+    if (dv[1]) dv[1].textContent = PROPS_APPROVAL.length;
+  } catch (err) { console.warn('Could not load approved listings'); }
+}
 
 // ── RENDER FUNCTIONS ───────────────────────────────
 function renderRecentUsers() {
@@ -954,7 +953,7 @@ async function approveProperty(id, btn) {
     if (data.success) {
       REAL_PENDING = REAL_PENDING.filter(p => p.id !== id);
       card.style.opacity = '.5'; card.style.pointerEvents = 'none';
-      refreshPendingUI(); setTimeout(() => { card.remove(); toast('Property approved and listed! ✅', 'success'); }, 400);
+      refreshPendingUI(); reloadApproved(); setTimeout(() => { card.remove(); toast('Property approved and listed! ✅', 'success'); }, 400);
     } else {
       toast(data.message || 'Approval failed.', 'danger');
     }
@@ -1027,27 +1026,122 @@ function renderGrowthChart() {
   });
 }
 
-// ── NOTIFICATIONS ─────────────────────────────────
-const NOTIFS = [
-  {ico:'🏠', type:'org', text:'<strong>New property</strong> submitted by Kemi Adesanya — requires review and approval.', time:'5 min ago', unread:true},
-  {ico:'👤', type:'grn', text:'<strong>Emeka Nwachukwu</strong> registered as a new tenant from Lagos.', time:'18 min ago', unread:true},
-  {ico:'💳', type:'grn', text:'<strong>Payment confirmed:</strong> ₦85,000 received from Emeka Nwachukwu for July 2026.', time:'1 hr ago', unread:true},
-  {ico:'⚠️', type:'red', text:'<strong>Overdue alert:</strong> Ngozi Eze has not paid July 2026 rent (₦28,000).', time:'2 hr ago', unread:true},
-  {ico:'✅', type:'org', text:'<strong>Property approved:</strong> 2-Bedroom flat in Wuse 2, Abuja is now live.', time:'3 hr ago', unread:false},
-  {ico:'🔔', type:'blue', text:'<strong>12 reminders</strong> sent automatically for August 2026 upcoming rent due dates.', time:'6 hr ago', unread:false},
-  {ico:'👤', type:'grn', text:'<strong>Funmilayo Adedeji</strong> updated her salary profile — new budget: ₦52,500/month.', time:'1 day ago', unread:false},
-  {ico:'🧾', type:'org', text:'<strong>Receipt generated</strong> for Chidi Okafor — ₦180,000 payment for July 2026.', time:'1 day ago', unread:false},
-];
-
+// ── NOTIFICATIONS (real data from /api/notifications — the bell and this page show the same list) ──
+let ANOTIFS = [];
+async function loadAdminNotifs() {
+  try {
+    const res  = await fetch(`${API}/notifications`, { headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    if (!data.success) return;
+    ANOTIFS = data.data;
+    renderNotifs();
+  } catch (err) { console.warn('Could not load notifications'); }
+}
+function notifRow(n) {
+  const row = document.createElement('div');
+  row.className = 'np-item';
+  if (n.is_read) row.style.background = '#fff';
+  const x = document.createElement('button');
+  x.textContent = '\u2715';
+  x.title = 'Delete this notification';
+  x.style.cssText = 'float:right;border:none;background:none;color:var(--gray);font-size:13px;cursor:pointer;padding:0 0 0 8px';
+  x.onclick = e => { e.stopPropagation(); deleteAdminNotif(n.notification_id); };
+  const t = document.createElement('div'); t.className = 'np-title'; t.textContent = n.title;
+  const m = document.createElement('div'); m.className = 'np-msg';   m.textContent = n.message;
+  const d = document.createElement('div'); d.className = 'np-msg';   d.style.fontSize = '10px';
+  d.textContent = new Date(n.created_at).toLocaleString('en-NG', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+  row.append(x, t, m, d);
+  row.onclick = () => markAdminNotifRead(n.notification_id);
+  return row;
+}
 function renderNotifs() {
-  const list = document.getElementById('notifList');
-  if (!list) return; list.innerHTML = '';
-  NOTIFS.forEach(n => {
-    const div = document.createElement('div');
-    div.className = 'act-item' + (n.unread ? ' new' : '');
-    div.innerHTML = `<div class="act-ico ${n.type}">${n.ico}</div><div class="act-info"><div class="act-text">${n.text}</div><div class="act-time">${n.time}</div></div>${n.unread?'<div style="width:8px;height:8px;border-radius:50%;background:var(--orange);flex-shrink:0;margin-top:6px"></div>':''}`;
-    list.appendChild(div);
-  });
+  const unread = ANOTIFS.filter(n => !n.is_read).length;
+  const dot = document.getElementById('bellDot');
+  if (dot) dot.style.display = unread > 0 ? 'block' : 'none';
+  const cnt = document.getElementById('bellCount');
+  if (cnt) cnt.textContent = unread > 0 ? unread + ' unread' : 'All caught up';
+
+  const fill = (list) => {
+    if (!ANOTIFS.length) {
+      const e = document.createElement('div');
+      e.className = 'np-empty'; e.textContent = 'No notifications yet.';
+      list.appendChild(e);
+      return;
+    }
+    ANOTIFS.forEach(n => list.appendChild(notifRow(n)));
+  };
+
+  const bell = document.getElementById('bellList');
+  if (bell) { bell.innerHTML = ''; fill(bell); }
+
+  const page = document.getElementById('notifList');
+  if (page) {
+    page.innerHTML = '';
+    const bar = document.createElement('div');
+    bar.style.cssText = 'display:flex;gap:10px;justify-content:flex-end;padding:12px 16px;border-bottom:1px solid var(--border)';
+    const btn = "padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;color:var(--mid)";
+    bar.innerHTML =
+      `<button onclick="markAllAdminNotifs()" style="${btn}">Mark all read</button>` +
+      `<button onclick="clearAllAdminNotifs()" style="${btn}">Clear all</button>` +
+      `<button onclick="openModal('sendNotif')" style="padding:8px 16px;border:none;border-radius:8px;background:var(--orange);color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer">+ Send Notification</button>`;
+    page.appendChild(bar);
+    fill(page);
+  }
+}
+async function markAdminNotifRead(id) {
+  const n = ANOTIFS.find(x => x.notification_id === id);
+  if (!n || n.is_read) return;
+  try {
+    await fetch(`${API}/notifications/${id}/read`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
+    n.is_read = 1;
+    renderNotifs();
+  } catch (err) { console.warn('Could not mark as read'); }
+}
+async function markAllAdminNotifs() {
+  try {
+    await fetch(`${API}/notifications/read-all`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
+    ANOTIFS.forEach(n => { n.is_read = 1; });
+    renderNotifs();
+  } catch (err) { console.warn('Could not mark all as read'); }
+}
+async function deleteAdminNotif(id) {
+  try {
+    const res  = await fetch(`${API}/notifications/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
+    ANOTIFS = ANOTIFS.filter(n => n.notification_id !== id);
+    renderNotifs();
+  } catch (err) { toast('Could not delete that notification.', 'danger'); }
+}
+async function clearAllAdminNotifs() {
+  if (!ANOTIFS.length) return;
+  if (!confirm('Delete all your notifications?')) return;
+  try {
+    const res  = await fetch(`${API}/notifications`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
+    ANOTIFS = [];
+    renderNotifs();
+  } catch (err) { toast('Could not clear your notifications.', 'danger'); }
+}
+async function sendNotif() {
+  const audience = document.getElementById('snAudience').value;
+  const title    = document.getElementById('snTitle').value.trim();
+  const message  = document.getElementById('snMessage').value.trim();
+  if (!title || !message) { toast('Please enter a title and a message.', 'danger'); return; }
+  try {
+    const res  = await fetch(`${API}/notifications/broadcast`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ audience, title, message })
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
+    closeModal('sendNotif');
+    document.getElementById('snTitle').value = '';
+    document.getElementById('snMessage').value = '';
+    toast(data.message, 'success');
+  } catch (err) { toast(err.message || 'Could not send the notification.', 'danger'); }
 }
 
 function handleSearch(val) {
@@ -1097,11 +1191,7 @@ async function initAdmin(){
         refreshPendingUI();
         const dashVals = document.querySelectorAll('#sec-dashboard .stat-grid .sc-val');
         if (dashVals[3]) dashVals[3].textContent = REAL_PENDING.length;
-        try {
-          const lRes  = await fetch(`${API}/properties`);
-          const lData = await lRes.json();
-          if (lData.success && dashVals[1]) dashVals[1].textContent = lData.count;
-        } catch (e) { /* leave the dash */ }
+        reloadApproved();
       }
     } catch(err){ console.warn('Backend not available — using demo data'); }
   }
@@ -1160,6 +1250,8 @@ async function initAdmin(){
 }
 
 initAdmin();
+loadAdminNotifs();
+setInterval(loadAdminNotifs, 60000);
 </script>
 </body>
 </html>

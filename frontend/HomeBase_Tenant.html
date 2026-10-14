@@ -881,17 +881,82 @@ function renderHomeCard(tenancy) {
 }
 
 // ── NOTIFICATIONS ─────────────────────────────────
+let TNOTIFS = [];
+function updateNotifBadges() {
+  const unread = TNOTIFS.filter(n => !n.is_read).length;
+  const b = document.getElementById('unreadBadge');
+  if (b) { b.textContent = unread; b.style.display = unread > 0 ? 'flex' : 'none'; }
+  const d = document.getElementById('notifDot');
+  if (d) d.style.display = unread > 0 ? 'block' : 'none';
+}
+function fmtNotifTime(v) {
+  const d = new Date(v);
+  return isNaN(d) ? (v || '') : d.toLocaleString('en-NG', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+
 function renderNotifs(notifs) {
+  if (Array.isArray(notifs)) TNOTIFS = notifs;
   const el = document.getElementById('notifList');
-  if (!el) return; el.innerHTML = '';
-  if (!notifs || !notifs.length) { el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray)">No notifications yet.</div>'; return; }
-  notifs.forEach(n => {
-    const ico = n.type==='payment_confirmed'?'✅':n.type==='payment_rejected'?'❌':n.type==='new_listing'?'🏠':'🔔';
+  if (!el) return;
+  el.innerHTML = '';
+  if (!TNOTIFS.length) {
+    el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray)">No notifications yet.</div>';
+    updateNotifBadges();
+    return;
+  }
+  const bar = document.createElement('div');
+  bar.style.cssText = 'text-align:right;margin-bottom:8px';
+  bar.innerHTML = '<button onclick="clearAllNotifs()" style="border:none;background:none;color:var(--orange);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Clear all</button>';
+  el.appendChild(bar);
+  TNOTIFS.forEach(n => {
+    const ico = n.type === 'payment_confirmed' ? '\u2705' : n.type === 'payment_rejected' ? '\u274C' : n.type === 'new_listing' ? '\u{1F3E0}' : '\u{1F514}';
     const div = document.createElement('div');
     div.className = 'notif-item' + (!n.is_read ? ' unread' : '');
-    div.innerHTML = `<div class="${!n.is_read?'ni-dot':'ni-dot read'}"></div><div style="flex:1"><div class="ni-text"><strong>${n.title}</strong> — ${n.message}</div><div class="ni-time">${n.created_at||''}</div></div><span style="font-size:18px">${ico}</span>`;
+    const dot = document.createElement('div');
+    dot.className = n.is_read ? 'ni-dot read' : 'ni-dot';
+    const body = document.createElement('div');
+    body.style.flex = '1';
+    const text = document.createElement('div');
+    text.className = 'ni-text';
+    const strong = document.createElement('strong');
+    strong.textContent = n.title;
+    text.append(strong, document.createTextNode(' \u2014 ' + n.message));
+    const time = document.createElement('div');
+    time.className = 'ni-time';
+    time.textContent = fmtNotifTime(n.created_at);
+    body.append(text, time);
+    const icon = document.createElement('span');
+    icon.style.fontSize = '18px';
+    icon.textContent = ico;
+    const x = document.createElement('button');
+    x.textContent = '\u2715';
+    x.title = 'Delete this notification';
+    x.style.cssText = 'border:none;background:none;color:var(--gray);font-size:14px;cursor:pointer;margin-left:6px';
+    x.onclick = () => deleteNotif(n.notification_id);
+    div.append(dot, body, icon, x);
     el.appendChild(div);
   });
+  updateNotifBadges();
+}
+async function deleteNotif(id) {
+  try {
+    const res  = await fetch(`${API}/notifications/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
+    TNOTIFS = TNOTIFS.filter(n => n.notification_id !== id);
+    renderNotifs();
+  } catch (err) { toast('Could not delete that notification.', 'danger'); }
+}
+async function clearAllNotifs() {
+  if (!TNOTIFS.length) return;
+  if (!confirm('Delete all your notifications?')) return;
+  try {
+    const res  = await fetch(`${API}/notifications`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
+    TNOTIFS = [];
+    renderNotifs();
+  } catch (err) { toast('Could not clear your notifications.', 'danger'); }
 }
 
 // ── SAVED PROPERTIES ──────────────────────────────
@@ -1081,6 +1146,7 @@ async function saveProfile() {
 async function markAllRead() {
   try {
     await fetch(`${API}/notifications/read-all`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
+    TNOTIFS.forEach(n => { n.is_read = 1; });
   } catch (err) {}
   document.querySelectorAll('.notif-item').forEach(n => { n.classList.remove('unread'); const d = n.querySelector('.ni-dot'); if (d) d.className = 'ni-dot read'; });
   document.getElementById('unreadBadge').style.display = 'none';

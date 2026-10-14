@@ -56,6 +56,15 @@ router.post('/register', async (req, res) => {
       await db.execute('INSERT INTO affordability_profiles (user_id, monthly_salary) VALUES (?, ?)', [userId, monthly_salary]);
     }
 
+    // Tell every admin about the new account (never blocks registration)
+    try {
+      await db.execute(
+        `INSERT INTO notifications (user_id, title, message, type)
+         SELECT user_id, ?, ?, 'system' FROM users WHERE role = 'admin' AND is_active = 1`,
+        [`New ${userRole} registered`, `${first_name.trim()} ${last_name.trim()} just registered as a ${userRole}.`]
+      );
+    } catch (notifyErr) { console.error('Admin notify error:', notifyErr); }
+
     const user  = { user_id: userId, phone_number: phone_number.trim(), role: userRole };
     const token = generateToken(user);
 

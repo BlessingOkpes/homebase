@@ -159,6 +159,15 @@ router.post('/', protect, async (req, res) => {
       }
     }
 
+    // Tell every admin there is a new listing to review (never blocks the submission)
+    try {
+      await db.execute(
+        `INSERT INTO notifications (user_id, title, message, type)
+         SELECT user_id, ?, ?, 'system' FROM users WHERE role = 'admin' AND is_active = 1`,
+        ['New listing awaiting approval', `"${title}" (₦${Number(monthly_rent).toLocaleString('en-NG')}/month) was submitted and needs your review.`]
+      );
+    } catch (notifyErr) { console.error('Admin notify error:', notifyErr); }
+
     return res.status(201).json({ success: true, message: 'Property submitted for admin approval.', property_id: propertyId });
   } catch (err) {
     console.error('Create property error:', err);
@@ -247,12 +256,22 @@ router.get('/saved/list', protect, async (req, res) => {
 // PATCH /api/properties/:id/approve — admin approves a pending listing
 router.patch('/:id/approve', protect, adminOnly, async (req, res) => {
   try {
+    const [found] = await db.execute(
+      'SELECT landlord_id, title FROM properties WHERE property_id = ?',
+      [req.params.id]
+    );
     const [result] = await db.execute(
       'UPDATE properties SET is_approved = 1 WHERE property_id = ?',
       [req.params.id]
     );
     if (result.affectedRows === 0) {
       return res.status(404).json({ success: false, message: 'Property not found.' });
+    }
+    if (found.length) {
+      await db.execute(
+        'INSERT INTO notifications (user_id, title, message, type) VALUES (?, ?, ?, ?)',
+        [found[0].landlord_id, 'Listing Approved ✅', `Your listing "${found[0].title}" has been approved and is now live on Find Housing.`, 'new_listing']
+      );
     }
     return res.status(200).json({ success: true, message: 'Property approved and now live.' });
   } catch (err) {
@@ -264,12 +283,22 @@ router.patch('/:id/approve', protect, adminOnly, async (req, res) => {
 // PATCH /api/properties/:id/reject — admin rejects a pending listing
 router.patch('/:id/reject', protect, adminOnly, async (req, res) => {
   try {
+    const [found] = await db.execute(
+      'SELECT landlord_id, title FROM properties WHERE property_id = ? AND is_approved = 0',
+      [req.params.id]
+    );
     const [result] = await db.execute(
       'DELETE FROM properties WHERE property_id = ? AND is_approved = 0',
       [req.params.id]
     );
     if (result.affectedRows === 0) {
       return res.status(404).json({ success: false, message: 'Property not found or already approved.' });
+    }
+    if (found.length) {
+      await db.execute(
+        'INSERT INTO notifications (user_id, title, message, type) VALUES (?, ?, ?, ?)',
+        [found[0].landlord_id, 'Listing Not Approved', `Your listing "${found[0].title}" was not approved by the admin team. You can correct the details and submit it again.`, 'system']
+      );
     }
     return res.status(200).json({ success: true, message: 'Property rejected.' });
   } catch (err) {
@@ -298,6 +327,81 @@ router.get('/admin/pending', protect, adminOnly, async (req, res) => {
     return res.status(200).json({ success: true, count: rows.length, data: rows });
   } catch (err) {
     console.error('Get pending properties error:', err);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+});
+
+// GET /api/properties/landlord/mine — the logged-in landlord's own listings (pending + approved)
+router.get('/landlord/mine', protect, async (req, res) => {
+  try {
+    if (req.user.role !== 'landlord' && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Only landlords can view their listings.' });
+    }
+    const [rows] = await db.execute(
+      `SELECT p.property_id, p.location_id, p.title, p.description, p.property_type,
+              p.bedrooms, p.bathrooms, p.size_sqm, p.monthly_rent, p.full_address,
+              p.is_available, p.is_approved, p.created_at,
+              l.city, l.state,
+              pi.image_url AS cover_image_url,
+              (SELECT CONCAT(u.first_name, ' ', u.last_name)
+                 FROM tenancies t JOIN users u ON t.tenant_id = u.user_id
+                WHERE t.property_id = p.property_id AND t.status = 'active'
+                LIMIT 1) AS tenant_name
+       FROM properties p
+       JOIN locations l ON p.location_id = l.location_id
+       LEFT JOIN property_images pi ON pi.property_id = p.property_id AND pi.is_cover = 1
+       WHERE p.landlord_id = ?
+       ORDER BY p.created_at DESC`,
+      [req.user.user_id]
+    );
+    for (const prop of rows) {
+      const [am] = await db.execute('SELECT amenity_name FROM property_amenities WHERE property_id = ?', [prop.property_id]);
+      prop.amenities = am.map(a => a.amenity_name);
+    }
+    return res.status(200).json({ success: true, count: rows.length, data: rows });
+  } catch (err) {
+    console.error('Landlord listings error:', err);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+});
+
+// PATCH /api/properties/:id — landlord edits their own listing while it is still waiting for approval
+router.patch('/:id', protect, async (req, res) => {
+  try {
+    const [rows] = await db.execute('SELECT landlord_id, is_approved FROM properties WHERE property_id = ?', [req.params.id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Property not found.' });
+    }
+    if (rows[0].landlord_id !== req.user.user_id) {
+      return res.status(403).json({ success: false, message: 'You can only edit your own listings.' });
+    }
+    if (rows[0].is_approved) {
+      return res.status(400).json({ success: false, message: 'This listing is already live. Contact the admin team to change it.' });
+    }
+
+    const { location_id, title, description, property_type, bedrooms, bathrooms, size_sqm, monthly_rent, full_address, amenities } = req.body;
+    if (!title || !monthly_rent || !full_address || !location_id || !property_type) {
+      return res.status(400).json({ success: false, message: 'Title, rent, address, location and type are required.' });
+    }
+
+    await db.execute(
+      `UPDATE properties
+          SET location_id = ?, title = ?, description = ?, property_type = ?, bedrooms = ?,
+              bathrooms = ?, size_sqm = ?, monthly_rent = ?, full_address = ?
+        WHERE property_id = ?`,
+      [location_id, title, description || null, property_type, bedrooms ?? 1, bathrooms ?? 1, size_sqm || null, monthly_rent, full_address, req.params.id]
+    );
+
+    await db.execute('DELETE FROM property_amenities WHERE property_id = ?', [req.params.id]);
+    if (Array.isArray(amenities)) {
+      for (const amenity of amenities) {
+        await db.execute('INSERT INTO property_amenities (property_id, amenity_name) VALUES (?, ?)', [req.params.id, amenity]);
+      }
+    }
+
+    return res.status(200).json({ success: true, message: 'Listing updated.', property_id: Number(req.params.id) });
+  } catch (err) {
+    console.error('Edit property error:', err);
     return res.status(500).json({ success: false, message: 'Server error.' });
   }
 });
