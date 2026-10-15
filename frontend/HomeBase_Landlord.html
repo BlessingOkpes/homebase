@@ -334,7 +334,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
     <a class="sn-item" onclick="showSec('addprop',this)"><span class="sn-ico">➕</span>Add Property</a>
 
     <div class="sn-sec">Payments</div>
-    <a class="sn-item" onclick="showSec('claims',this)"><span class="sn-ico">⏳</span>Payment Claims<span class="sn-cnt" id="navClaimCount">3</span></a>
+    <a class="sn-item" onclick="showSec('claims',this)"><span class="sn-ico">⏳</span>Payment Claims<span class="sn-cnt" id="navClaimCount">0</span></a>
     <a class="sn-item" onclick="showSec('history',this)"><span class="sn-ico">📋</span>Payment History</a>
 
     <div class="sn-sec">Tenants</div>
@@ -343,23 +343,11 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
 
     <div class="sn-sec">Account</div>
     <a class="sn-item" onclick="showSec('notifications',this)"><span class="sn-ico">&#128276;</span>Notifications<span class="sn-cnt" id="navNotifCount" style="display:none">0</span></a>
-    <div class="sec-panel" id="sec-notifications">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-        <div>
-          <div style="font-size:18px;font-weight:600;color:var(--dark)">Notifications</div>
-          <div style="font-size:12px;color:var(--gray)">Updates on your listings and payment claims</div>
-        </div>
-        <div style="display:flex;gap:10px">
-          <button onclick="markAllNotifRead()" style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;color:var(--mid)">Mark all read</button>
-          <button onclick="clearAllNotifs()" style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;color:var(--mid)">Clear all</button>
-        </div>
-      </div>
-      <div class="card"><div id="notifPageList"></div></div>
-    </div>
-    <div class="sec-panel" id="sec-messages"><span class="sn-ico">👤</span>My Profile</a>
-    <a class="sn-item" onclick="window.location.href='index.html'"><span class="sn-ico">🌐</span>View Site</a>
-    <a class="sn-item" onclick="localStorage.removeItem('hb_token'); localStorage.removeItem('hb_user'); window.location.href='index.html';"><span class="sn-ico">🚪</span>Sign Out</a>
+    <a class="sn-item" onclick="showSec('profile',this)"><span class="sn-ico">&#128100;</span>My Profile</a>
+    <a class="sn-item" onclick="window.location.href='index.html'"><span class="sn-ico">&#127760;</span>View Site</a>
+    <a class="sn-item" onclick="localStorage.removeItem('hb_token'); localStorage.removeItem('hb_user'); window.location.href='index.html';"><span class="sn-ico">&#128682;</span>Sign Out</a>
   </div>
+
   <div class="sn-bottom">
     <div class="sn-user">
       <div class="sn-av">🧑‍💼</div>
@@ -424,12 +412,12 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
           <div class="sc-top"><div class="sc-ico i-g">💳</div><span class="sc-bd bd-up">↑ This month</span></div>
           <div class="sc-lbl">Confirmed Payments</div>
           <div class="sc-val">₦360k</div>
-          <div class="sc-hint">4 payments confirmed</div>
+          <div class="sc-hint">0 payments confirmed</div>
         </div>
         <div class="stat-card">
           <div class="sc-top"><div class="sc-ico i-r">⏳</div><span class="sc-bd bd-dn">Action needed</span></div>
           <div class="sc-lbl">Pending Claims</div>
-          <div class="sc-val">3</div>
+          <div class="sc-val">0</div>
           <div class="sc-hint">Awaiting your confirmation</div>
         </div>
         <div class="stat-card">
@@ -444,7 +432,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
       <div style="background:var(--yellow-bg);border:1.5px solid var(--yellow);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:14px;margin-bottom:20px;cursor:pointer" onclick="showSec('claims',document.querySelector('.sn-item:nth-child(8)'))">
         <span style="font-size:28px">⏳</span>
         <div style="flex:1">
-          <div style="font-size:14px;font-weight:600;color:#7a5500" id="pendingClaimsBanner">3 Payment Claims Awaiting Your Confirmation</div>
+          <div style="font-size:14px;font-weight:600;color:#7a5500" id="pendingClaimsBanner">0 Payment Claims Awaiting Your Confirmation</div>
           <div style="font-size:12px;color:#a07000;margin-top:2px">Your tenants have submitted payment claims. Review and confirm or reject them.</div>
         </div>
         <span style="font-size:18px;color:#7a5500">→</span>
@@ -464,7 +452,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
         <div class="card">
           <div class="card-hd">
             <span class="ch-ttl">📈 Monthly Income (2026)</span>
-            <span style="font-size:11px;color:var(--gray)">Total: ₦1.44M</span>
+            <span style="font-size:11px;color:var(--gray)">Total: ₦<span id="incomeTotal">0</span></span>
           </div>
           <div class="chart-wrap">
             <div class="chart-bars" id="incomeChart"></div>
@@ -802,6 +790,7 @@ function updateClaimCounts() {
   updateLandlordStats();
   const total = CLAIMS.filter(c=>c.status==='pending').length + REAL_CLAIMS.length;
   document.getElementById('navClaimCount').textContent = total;
+  renderIncomeChart();
   document.getElementById('pendingTabBtn').textContent = `⏳ Pending (${total})`;
   document.getElementById('pendingClaimsBanner').textContent = `${total} Payment Claim${total===1?'':'s'} Awaiting Your Confirmation`;
 }
@@ -813,6 +802,20 @@ const CLAIMS = [];
 const MY_PROPS = [];
 let editingPropId = null;
 
+function updateOverviewProps() {
+  const cards = document.querySelectorAll('#sec-overview .stat-card');
+  const live    = MY_PROPS.filter(p => p.approval === 'approved').length;
+  const pending = MY_PROPS.filter(p => p.approval === 'pending').length;
+  const tenants = MY_PROPS.filter(p => p.tenant).length;
+  if (cards[0]) {
+    cards[0].querySelector('.sc-val').textContent  = MY_PROPS.length;
+    cards[0].querySelector('.sc-hint').textContent = `${live} live, ${pending} awaiting approval`;
+  }
+  if (cards[3]) {
+    cards[3].querySelector('.sc-val').textContent  = tenants;
+    cards[3].querySelector('.sc-hint').textContent = tenants === 1 ? '1 tenant renting from you' : `${tenants} tenants renting from you`;
+  }
+}
 const TENANTS = [];
 
 const MESSAGES = [];
@@ -843,7 +846,7 @@ function showSec(name, el) {
     renderMyProps('all');
     loadMyProps();
   }
-  if (name === 'notifications') loadNotifications();
+  if (name === 'notifications') loadNotifications().then(() => { if (NOTIFS.some(n => !n.is_read)) markAllNotifRead(); });
   if (name === 'tenants')    renderFullTenants();
   if (name === 'messages')   renderMessages();
 }
@@ -858,16 +861,30 @@ function toast(msg, type) {
 
 // ── CHART ──────────────────────────────────────────
 function renderIncomeChart() {
-  const mos = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const vals = [240,240,240,240,240,240,240,0,0,0,0,0];
   const c = document.getElementById('incomeChart');
   if (!c) return;
-  c.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--gray);font-size:13px;width:100%">Your monthly income chart will appear once payments are confirmed.</div>';
-  return;
-  vals.forEach((v, i) => {
-    const p = v > 0; const h = p ? (v/240)*100 : 20;
-    const col = document.createElement('div'); col.className = 'chart-col';
-    col.innerHTML = `<div class="chart-bar" style="height:${h}%;background:${p?'var(--orange)':'var(--border)'};min-height:6px" data-tip="${p?'₦'+v+'k':'Upcoming'}"></div><span class="chart-mo">${mos[i]}</span>`;
+  const mos = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const year = new Date().getFullYear();
+  const totals = new Array(12).fill(0);
+  CLAIMS.filter(x => x.status === 'confirmed').forEach(x => {
+    const [mName, y] = String(x.month).split(' ');
+    const idx = new Date(`${mName} 1, ${y}`).getMonth();
+    if (Number(y) === year && !isNaN(idx)) totals[idx] += Number(x.amount) || 0;
+  });
+  const sum = totals.reduce((a, b) => a + b, 0);
+  const tot = document.getElementById('incomeTotal');
+  if (tot) tot.textContent = sum >= 1e6 ? (sum / 1e6).toFixed(2) + 'M' : sum >= 1e3 ? Math.round(sum / 1e3) + 'k' : String(sum);
+  if (!sum) {
+    c.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--gray);font-size:13px;width:100%">Your monthly income chart will appear once payments are confirmed.</div>';
+    return;
+  }
+  const max = Math.max(...totals);
+  c.innerHTML = '';
+  totals.forEach((v, i) => {
+    const h = v > 0 ? Math.max((v / max) * 100, 8) : 6;
+    const col = document.createElement('div');
+    col.className = 'chart-col';
+    col.innerHTML = `<div class="chart-bar" style="height:${h}%;background:${v > 0 ? 'var(--orange)' : 'var(--border)'};min-height:6px" data-tip="${v > 0 ? '\u20A6' + Math.round(v / 1000) + 'k' : 'None'}"></div><span class="chart-mo">${mos[i]}</span>`;
     c.appendChild(col);
   });
 }
@@ -1060,6 +1077,7 @@ async function loadMyProps() {
       approval: p.is_approved ? 'approved' : 'pending',
       raw: p
     }));
+    updateOverviewProps();
     renderMyProps(window._myFilter || 'all');
   } catch (err) { console.warn('Could not load your listings'); }
 }

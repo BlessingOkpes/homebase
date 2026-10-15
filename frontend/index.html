@@ -391,7 +391,7 @@ input[type=range]{width:100%;accent-color:var(--orange);cursor:pointer}
   font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;
   box-shadow:0 4px 12px rgba(232,96,10,0.25);transition:transform .2s,box-shadow .2s}
 .btn-apply:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(232,96,10,0.35)}
-.srch-main{flex:1;padding:22px;overflow-y:auto}
+.srch-main{flex:1;min-width:0;padding:22px;overflow-y:auto}
 .res-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px}
 .res-cnt{font-size:17px;font-weight:600;color:var(--dark)}
 .res-sub{font-size:12px;color:var(--gray)}
@@ -407,7 +407,7 @@ input[type=range]{width:100%;accent-color:var(--orange);cursor:pointer}
   border-radius:50px;padding:4px 11px;font-size:11px;font-weight:500;color:var(--brown)}
 .ftag button{background:none;border:none;cursor:pointer;font-size:12px;color:var(--orange);line-height:1;padding:0}
 .ftag button:hover{color:var(--red)}
-.prop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:20px}
+.prop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(270px,100%),1fr));gap:20px}
 .prop-grid.lv{grid-template-columns:1fr}
 .prop-card{background:#fff;border-radius:14px;border:1.5px solid var(--border);overflow:hidden;
   transition:transform .3s,box-shadow .3s,border-color .3s;cursor:pointer;animation:fadeCard .4s ease both}
@@ -645,6 +645,7 @@ input[type=range]{width:100%;accent-color:var(--orange);cursor:pointer}
 @media(max-width:480px){
   .sum-grid{grid-template-columns:1fr}.inp-row,.ff-row,.role-sel,.soc-row{grid-template-columns:1fr}
   .pm-mg{grid-template-columns:repeat(2,1fr)}.ft-in{grid-template-columns:1fr}
+  .srch-main{padding:14px}.prop-card{min-width:0}.prop-img{height:200px}.prop-img img{width:100%;height:100%;object-fit:cover}.res-topbar{gap:8px}
 }
 </style>
 </head>
@@ -855,6 +856,10 @@ input[type=range]{width:100%;accent-color:var(--orange);cursor:pointer}
           <div class="field"><label>Phone Number <span style="color:var(--orange);font-size:11px">(Primary contact — required)</span></label><div class="iw"><span class="ii">📱</span><input type="tel" id="rgPhone" placeholder="+234 801 234 5678"/></div><div class="emsg" id="rgPhoneErr">Phone number is required.</div></div>
           <div class="field"><label>Email Address <span id="emailOptLabel" style="color:var(--gray);font-size:11px">(optional for landlords)</span></label><div class="iw"><span class="ii">✉️</span><input type="email" id="rgEmail" placeholder="you@example.com"/></div><div class="emsg" id="rgEmailErr">Enter a valid email.</div></div>
           <div class="field"><label>Password</label><div class="iw"><span class="ii">🔒</span><input type="password" id="rgPw" placeholder="Create a strong password" oninput="chkStr(this.value)"/><button class="tpw" type="button" onclick="tglPw('rgPw',this)">👁️</button></div><div class="str-bar"><div class="str-seg" id="s1"></div><div class="str-seg" id="s2"></div><div class="str-seg" id="s3"></div><div class="str-seg" id="s4"></div></div><div class="str-txt" id="strTxt"></div><div class="emsg" id="rgPwErr">Min 8 characters.</div></div>
+          <div id="tenantFields">
+            <div class="field"><label>Monthly Salary (&#8358;) <span style="color:var(--orange);font-size:11px">(used to estimate your rent budget)</span></label><div class="iw"><span class="ii">&#8358;</span><input type="number" id="rgSalary" placeholder="e.g. 250000" oninput="rgBudget()"/></div><div class="emsg" id="rgSalaryErr">Enter your monthly salary.</div><div id="rgBudgetNote" style="font-size:12px;color:var(--mid);margin-top:6px"></div></div>
+            <div class="field"><label>Preferred Location <span style="color:var(--gray);font-size:11px">(we will notify you about new listings here)</span></label><div class="iw"><span class="ii">&#128205;</span><select id="rgLoc"><option value="">Loading locations...</option></select></div><div class="emsg" id="rgLocErr">Choose your preferred location.</div></div>
+          </div>
           <div class="check-row"><input type="checkbox" id="agreeT"/><label for="agreeT">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a> of HomeBase.</label></div>
           <button class="btn-auth" id="rgBtn" onclick="doReg()">Create My Account</button>
         </div>
@@ -1112,6 +1117,13 @@ input[type=range]{width:100%;accent-color:var(--orange);cursor:pointer}
 <script>
 // ── PAGE ROUTER ──────────────────────────────────────
 function go(p){
+  // The old demo dashboard is gone: signed-in users go to their real dashboard, everyone else is asked to sign in
+  if (p === 'dash') {
+    const tok = localStorage.getItem('hb_token');
+    if (tok && tok !== 'demo_token') { goToDashboard(); return; }
+    gToast('Please sign in to open your dashboard.', '');
+    p = 'auth';
+  }
   document.querySelectorAll('.pg').forEach(x=>x.classList.remove('on'));
   document.getElementById('pg-'+p).classList.add('on');
   window.scrollTo(0,0);
@@ -1145,11 +1157,53 @@ function switchTab(t){
   document.getElementById('rgTab').classList.toggle('on',t==='rg');
   sl.classList.toggle('reg',t==='rg');
 }
+function rgBudget() {
+  const v = parseFloat(document.getElementById('rgSalary').value) || 0;
+  const note = document.getElementById('rgBudgetNote');
+  if (note) note.innerHTML = v > 0 ? 'Your estimated rent budget: <strong>' + fn(v * 0.3) + '/month</strong> (30% of your salary)' : '';
+}
+async function loadRegLocations() {
+  const sel = document.getElementById('rgLoc');
+  if (!sel) return;
+  try {
+    const res  = await fetch(API + '/auth/locations');
+    const data = await res.json();
+    if (!data.success) throw new Error('failed');
+    sel.innerHTML = '';
+    const first = document.createElement('option');
+    first.value = ''; first.textContent = 'Choose a location';
+    sel.appendChild(first);
+    data.data.forEach(l => {
+      const o = document.createElement('option');
+      o.value = l.label; o.textContent = l.label;
+      sel.appendChild(o);
+    });
+  } catch (err) {
+    sel.innerHTML = '<option value="">Could not load locations. Refresh the page.</option>';
+  }
+}
+async function prefillBudget() {
+  const tok = localStorage.getItem('hb_token');
+  if (!tok || tok === 'demo_token') return;
+  try {
+    const user = JSON.parse(localStorage.getItem('hb_user') || '{}');
+    if (user.role !== 'tenant') return;
+    const res  = await fetch(API + '/affordability', { headers: { Authorization: 'Bearer ' + tok } });
+    const data = await res.json();
+    if (data.success && data.data && Number(data.data.monthly_salary) > 0) {
+      document.getElementById('srchSalary').value = Number(data.data.monthly_salary);
+      updBudget();
+      if (ALL.length) applyFlt(true);
+    }
+  } catch (err) { /* the search still works without a saved budget */ }
+}
 function selRole(r){
   document.getElementById('roleTenant').classList.toggle('sel',r==='tenant');
   document.getElementById('roleLandlord').classList.toggle('sel',r==='landlord');
   const lbl = document.getElementById('emailOptLabel');
   if(lbl) lbl.style.display = r==='landlord' ? 'inline' : 'none';
+  const tf = document.getElementById('tenantFields');
+  if(tf) tf.style.display = r==='landlord' ? 'none' : 'block';
 }
 function tglPw(id,btn){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';btn.textContent=i.type==='password'?'👁️':'🙈'}
 function chkStr(v){
@@ -1209,6 +1263,11 @@ async function doReg(){
   if(!ph){const el=document.getElementById('rgPhoneErr');if(el)el.classList.add('on');ok=false;}
   if(!isLandlord && !valEmail(e)){document.getElementById('rgEmailErr').classList.add('on');ok=false;}
   if(p.length<8){document.getElementById('rgPwErr').classList.add('on');ok=false;}
+  if(!isLandlord){
+    ['rgSalaryErr','rgLocErr'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('on');});
+    if(!(parseFloat(document.getElementById('rgSalary').value)>0)){document.getElementById('rgSalaryErr').classList.add('on');ok=false;}
+    if(!document.getElementById('rgLoc').value){document.getElementById('rgLocErr').classList.add('on');ok=false;}
+  }
   if(!ag){gToast('Please agree to the Terms of Service','danger');ok=false;}
   if(!ok)return;
   const btn=document.getElementById('rgBtn');
@@ -1217,7 +1276,9 @@ async function doReg(){
   try {
     const res  = await fetch(API + '/auth/register',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({first_name:f, last_name:l, phone_number:ph, email:e||null, password:p, role})
+      body: JSON.stringify({first_name:f, last_name:l, phone_number:ph, email:e||null, password:p, role,
+        monthly_salary: isLandlord ? null : document.getElementById('rgSalary').value,
+        preferred_location: isLandlord ? null : document.getElementById('rgLoc').value})
     });
     const data = await res.json();
     if(data.success){
@@ -1564,6 +1625,8 @@ function doLogout(){
 
 // ── INIT ──────────────────────────────────────────────
 loadProps();
+loadRegLocations();
+prefillBudget();
 checkNavAuth();
 </script>
 </body>

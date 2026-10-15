@@ -412,7 +412,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
               <div style="font-family:'Playfair Display',serif;font-size:30px;color:var(--orange)" id="budgetResult">₦0 <span style="font-size:13px;font-weight:400;color:var(--gray);font-family:'DM Sans',sans-serif">/month</span></div>
             </div>
             <div style="font-size:11px;color:var(--mid)" id="budgetNote">Enter your salary to see your safe rental budget.</div>
-            <div class="ff"><label>Preferred Location</label><input type="text" id="prefLocation" placeholder="e.g. Lagos"/></div>
+            <div class="ff"><label>Preferred Location</label><select id="prefLocation"><option value="">Loading locations...</option></select></div>
             <div class="ff"><label>Preferred Bedrooms</label><select id="prefBeds"><option value="">Any</option><option value="0">Studio</option><option value="1">1 Bedroom</option><option value="2">2 Bedrooms</option><option value="3">3 Bedrooms</option></select></div>
             <button onclick="saveBudget()" style="padding:12px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 3px 12px rgba(232,96,10,.22)">Save My Budget Profile</button>
           </div>
@@ -475,10 +475,10 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
         <div style="font-size:11px;color:var(--mid);line-height:1.6">Submit this form <strong>after</strong> paying your landlord directly. Your claim will be <strong>pending</strong> until your landlord confirms it on their dashboard.</div>
       </div>
       <div class="ff-row">
-        <div class="ff"><label>Payment Month</label><select id="claimMonth"><option>July 2026</option><option>August 2026</option><option>September 2026</option></select></div>
+        <div class="ff"><label>Payment Month</label><select id="claimMonth"></select>
         <div class="ff"><label>Payment Type</label><select id="claimType"><option>Monthly Rent</option><option>Electricity Bill</option><option>Water Bill</option><option>Service Charge</option></select></div>
       </div>
-      <div class="ff"><label>Property</label><input type="text" id="claimProperty" placeholder="Your property address"/></div>
+      <div class="ff"><label>Property</label><select id="claimProperty"></select></div>
       <div class="ff-row">
         <div class="ff"><label>Amount Paid (₦)</label><input type="number" id="claimAmount" placeholder="e.g. 85000"/></div>
         <div class="ff"><label>Date Paid</label><input type="date" id="claimDate"/></div>
@@ -536,6 +536,7 @@ async function init() {
     } else {
       dashData = data.data;
       renderAll();
+      loadLocations();
     }
   } catch (err) {
     showLoadError('Could not reach the server. It may be waking up, so wait a few seconds and try again.');
@@ -648,7 +649,7 @@ function renderPayTable(pays, tblId) {
       <td style="font-size:11px;color:var(--gray)">${p.property_title||p.full_address||'—'}</td>
       <td style="font-weight:600;color:var(--dark)">₦${parseFloat(p.amount).toLocaleString()}</td>
       <td>${p.date_paid||'—'}</td>
-      <td>${p.payment_method||'—'}</td>
+      <td>${(p.payment_method||'—').replace('_',' ')}</td>
       <td><span class="badge ${sc}">${st}</span></td>
       <td>${p.status==='confirmed' ? `<button class="abtn abtn-org" onclick="generateReceipt(${p.payment_id})">Receipt</button>` : '<span style="font-size:11px;color:var(--gray)">—</span>'}</td>`;
     tb.appendChild(tr);
@@ -1057,6 +1058,28 @@ function calcBudget() {
   }
 }
 
+async function loadLocations() {
+  const sel = document.getElementById('prefLocation');
+  if (!sel) return;
+  let list = [];
+  try {
+    const res  = await fetch(`${API}/auth/locations`);
+    const data = await res.json();
+    if (data.success) list = data.data;
+  } catch (err) { /* leave the list empty */ }
+  sel.innerHTML = '';
+  const any = document.createElement('option');
+  any.value = ''; any.textContent = list.length ? 'Any location' : 'Could not load locations';
+  sel.appendChild(any);
+  list.forEach(l => {
+    const o = document.createElement('option');
+    o.value = l.label; o.textContent = l.label;
+    sel.appendChild(o);
+  });
+  const saved = dashData && dashData.profile && dashData.profile.preferred_location;
+  if (saved) sel.value = saved;
+}
+
 async function saveBudget() {
   const salary   = document.getElementById('salaryInput').value;
   const location = document.getElementById('prefLocation').value;
@@ -1076,29 +1099,86 @@ async function saveBudget() {
 }
 
 let claimPropertyId = null, claimPropertyTitle = '';
+
+// Homes this tenant can pay for: current tenancy, saved homes, and homes they have paid for before
+function claimChoices() {
+  const map = new Map();
+  if (dashData && dashData.tenancy) map.set(Number(dashData.tenancy.property_id), dashData.tenancy.property_title || dashData.tenancy.full_address);
+  ((dashData && dashData.saved) || []).forEach(p => map.set(Number(p.property_id), p.title));
+  ((dashData && dashData.payments) || []).forEach(p => map.set(Number(p.property_id), p.property_title || p.full_address));
+  return map;
+}
+function claimMonths() {
+  const out = [];
+  const now = new Date();
+  for (let i = -3; i <= 1; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    out.push(d.toLocaleString('en-US', { month: 'long', year: 'numeric' }));
+  }
+  return out;
+}
 function openClaimFor(id, title) {
   claimPropertyId = id;
   claimPropertyTitle = title;
   openClaimModal();
 }
-// ── PAYMENT CLAIM ─────────────────────────────────
-function openClaimModal() { document.getElementById('claimModal').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function openClaimModal() {
+  const sel = document.getElementById('claimProperty');
+  const choices = claimChoices();
+  sel.innerHTML = '';
+  if (!choices.size) {
+    const o = document.createElement('option');
+    o.value = '';
+    o.textContent = 'No home linked yet. Save a home first, or ask your landlord to add you.';
+    sel.appendChild(o);
+  }
+  choices.forEach((title, id) => {
+    const o = document.createElement('option');
+    o.value = id;
+    o.textContent = title;
+    sel.appendChild(o);
+  });
+  if (claimPropertyId && choices.has(Number(claimPropertyId))) sel.value = String(claimPropertyId);
+  const ms = document.getElementById('claimMonth');
+  ms.innerHTML = '';
+  claimMonths().forEach((m, i) => {
+    const o = document.createElement('option');
+    o.textContent = m;
+    if (i === 3) o.selected = true;
+    ms.appendChild(o);
+  });
+  document.getElementById('claimModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
 function closeClaimModal() { document.getElementById('claimModal').classList.remove('open'); document.body.style.overflow = ''; }
+
+async function refreshDashboard() {
+  try {
+    const res  = await fetch(`${API}/tenants/dashboard`, { headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    if (data.success) { dashData = data.data; renderAll(); }
+  } catch (err) { console.warn('Could not refresh your dashboard'); }
+}
 
 async function submitClaim() {
   const amount = document.getElementById('claimAmount').value;
   const month  = document.getElementById('claimMonth').value;
-  if (!amount) { toast('Please enter the amount paid', 'danger'); return; }
-  if (!claimPropertyId) { toast('Please select a property from Find Housing first', 'danger'); return; }
+  const propId = document.getElementById('claimProperty').value;
+  if (!propId) { toast('Choose the home you paid for. If none is listed, save the home first or ask your landlord to add you.', 'danger'); return; }
+  if (!amount || Number(amount) <= 0) { toast('Please enter the amount paid', 'danger'); return; }
+
+  const [mName, yStr] = month.split(' ');
+  const mIdx = new Date(`${mName} 1, ${yStr}`).getMonth();
+  const methods = { 'Bank Transfer': 'bank_transfer', 'Cash': 'cash', 'POS': 'pos' };
 
   const payload = {
-    property_id:    claimPropertyId,
+    property_id:    propId,
     amount,
     payment_month:  month,
-    payment_year:   2026,
-    due_date:       '2026-07-01',
-    date_paid:      document.getElementById('claimDate').value,
-    payment_method: document.getElementById('claimMethod').value,
+    payment_year:   Number(yStr),
+    due_date:       `${yStr}-${String(mIdx + 1).padStart(2, '0')}-01`,
+    date_paid:      document.getElementById('claimDate').value || null,
+    payment_method: methods[document.getElementById('claimMethod').value] || 'bank_transfer',
     reference_no:   document.getElementById('claimRef').value,
     notes:          document.getElementById('claimNote').value,
   };
@@ -1110,13 +1190,13 @@ async function submitClaim() {
       body: JSON.stringify(payload)
     });
     const data = await res.json();
+    if (!data.success) { toast(data.message || 'Could not submit your claim.', 'danger'); return; }
     closeClaimModal();
-    toast(data.success ? 'Payment claim submitted! ⏳ Awaiting landlord confirmation.' : data.message, data.success ? 'success' : 'danger');
-    if (data.success) {
-      dashData.payments.unshift({ payment_id: Date.now(), payment_month: month, property_title: claimPropertyTitle, amount, date_paid: payload.date_paid, payment_method: payload.payment_method, status: 'pending' });
-      dashData.summary.pending++;
-      renderAll();
-    }
+    document.getElementById('claimAmount').value = '';
+    document.getElementById('claimRef').value = '';
+    document.getElementById('claimNote').value = '';
+    toast('Payment claim submitted. Awaiting landlord confirmation.', 'success');
+    await refreshDashboard();
   } catch (err) {
     toast('Could not reach server.', 'danger');
   }

@@ -135,6 +135,17 @@ router.post('/', protect, async (req, res) => {
        'rent_reminder']
     );
 
+    // Let every admin know a claim was filed (information only: the landlord confirms or rejects it)
+    try {
+      const [who] = await db.execute('SELECT first_name, last_name FROM users WHERE user_id = ?', [req.user.user_id]);
+      const name = who.length ? `${who[0].first_name} ${who[0].last_name}` : 'A tenant';
+      await db.execute(
+        `INSERT INTO notifications (user_id, title, message, type)
+         SELECT user_id, ?, ?, 'system' FROM users WHERE role = 'admin' AND is_active = 1`,
+        ['New payment claim', `${name} submitted a payment claim of ₦${parseFloat(amount).toLocaleString()} for ${payment_month}. The landlord will confirm or reject it.`]
+      );
+    } catch (notifyErr) { console.error('Admin notify error:', notifyErr); }
+
     return res.status(201).json({
       success: true,
       message: 'Payment claim submitted successfully! Awaiting landlord confirmation.',

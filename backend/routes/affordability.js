@@ -26,6 +26,12 @@ router.get('/', protect, async (req, res) => {
 router.put('/', protect, async (req, res) => {
   try {
     const { monthly_salary, preferred_location, preferred_bedrooms, preferred_type } = req.body;
+    if (preferred_location) {
+      const [locRows] = await db.execute("SELECT 1 FROM locations WHERE CONCAT(city, ', ', state) = ?", [preferred_location]);
+      if (locRows.length === 0) {
+        return res.status(400).json({ success: false, message: 'Please choose a location from the list.' });
+      }
+    }
     if (!monthly_salary || isNaN(monthly_salary) || monthly_salary < 0) {
       return res.status(400).json({ success: false, message: 'Valid monthly salary is required.' });
     }

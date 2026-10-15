@@ -273,6 +273,27 @@ router.patch('/:id/approve', protect, adminOnly, async (req, res) => {
         [found[0].landlord_id, 'Listing Approved ✅', `Your listing "${found[0].title}" has been approved and is now live on Find Housing.`, 'new_listing']
       );
     }
+    // Tell every tenant who registered for this location (never blocks the approval)
+    try {
+      const [loc] = await db.execute(
+        `SELECT p.title, p.monthly_rent, l.city, l.state
+           FROM properties p JOIN locations l ON p.location_id = l.location_id
+          WHERE p.property_id = ?`,
+        [req.params.id]
+      );
+      if (loc.length) {
+        const label = `${loc[0].city}, ${loc[0].state}`;
+        await db.execute(
+          `INSERT INTO notifications (user_id, title, message, type)
+           SELECT ap.user_id, ?, ?, 'new_listing'
+             FROM affordability_profiles ap
+             JOIN users u ON u.user_id = ap.user_id
+            WHERE u.role = 'tenant' AND u.is_active = 1 AND ap.preferred_location = ?`,
+          [`New listing in ${label}`, `"${loc[0].title}" (₦${Number(loc[0].monthly_rent).toLocaleString('en-NG')}/month) is now available in ${label}.`, label]
+        );
+      }
+    } catch (notifyErr) { console.error('Tenant notify error:', notifyErr); }
+
     return res.status(200).json({ success: true, message: 'Property approved and now live.' });
   } catch (err) {
     console.error('Approve property error:', err);

@@ -17,8 +17,7 @@ const generateToken = (user) => jwt.sign(
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
   try {
-    const { first_name, last_name, phone_number, email, password, role, monthly_salary } = req.body;
-
+    const { first_name, last_name, phone_number, email, password, role, monthly_salary, preferred_location } = req.body;
     if (!first_name || !last_name || !phone_number || !password) {
       return res.status(400).json({ success: false, message: 'First name, last name, phone number and password are required.' });
     }
@@ -27,6 +26,22 @@ router.post('/register', async (req, res) => {
     const userRole = ['tenant','landlord'].includes(role) ? role : 'tenant';
     if (userRole === 'tenant' && !email) {
       return res.status(400).json({ success: false, message: 'Email is required for tenants.' });
+    }
+
+    // Tenants give a salary (for the rent budget) and a preferred location from our list
+    let preferredLocation = null;
+    if (userRole === 'tenant') {
+      if (!monthly_salary || isNaN(monthly_salary) || Number(monthly_salary) <= 0) {
+        return res.status(400).json({ success: false, message: 'Monthly salary is required for tenants.' });
+      }
+      if (!preferred_location) {
+        return res.status(400).json({ success: false, message: 'Please choose your preferred location.' });
+      }
+      const [locRows] = await db.execute("SELECT 1 FROM locations WHERE CONCAT(city, ', ', state) = ?", [preferred_location]);
+      if (locRows.length === 0) {
+        return res.status(400).json({ success: false, message: 'Please choose a location from the list.' });
+      }
+      preferredLocation = preferred_location;
     }
 
     // Check phone uniqueness
@@ -53,7 +68,7 @@ router.post('/register', async (req, res) => {
 
     // Create affordability profile for tenants
     if (userRole === 'tenant' && monthly_salary) {
-      await db.execute('INSERT INTO affordability_profiles (user_id, monthly_salary) VALUES (?, ?)', [userId, monthly_salary]);
+      await db.execute('INSERT INTO affordability_profiles (user_id, monthly_salary, preferred_location) VALUES (?, ?, ?)', [userId, monthly_salary, preferredLocation]);
     }
 
     // Tell every admin about the new account (never blocks registration)
@@ -77,6 +92,19 @@ router.post('/register', async (req, res) => {
   } catch (err) {
     console.error('Register error:', err);
     return res.status(500).json({ success: false, message: 'Server error. Please try again.' });
+  }
+});
+
+// GET /api/auth/locations — public list of the locations used for listings and tenant preferences
+router.get('/locations', async (req, res) => {
+  try {
+    const [rows] = await db.execute('SELECT location_id, city, state FROM locations ORDER BY state, city');
+    return res.status(200).json({
+      success: true,
+      data: rows.map(r => ({ location_id: r.location_id, city: r.city, state: r.state, label: `${r.city}, ${r.state}` }))
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error.' });
   }
 });
 
