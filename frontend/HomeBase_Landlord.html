@@ -352,7 +352,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
     <div class="sn-user">
       <div class="sn-av">🧑‍💼</div>
       <div>
-        <div class="sn-uname">Kemi Adesanya</div>
+        <div class="sn-uname">Landlord</div>
         <div class="sn-urole">Landlord · Lagos</div>
       </div>
     </div>
@@ -368,7 +368,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
       </button>
       <div>
         <div class="tb-title" id="tbTitle">Landlord Dashboard</div>
-        <div class="tb-sub" id="tbSub">Welcome back, Kemi · Wednesday July 29, 2026</div>
+        <div class="tb-sub" id="tbSub">Welcome back</div>
       </div>
     </div>
     <div class="tb-right">
@@ -411,7 +411,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
         <div class="stat-card">
           <div class="sc-top"><div class="sc-ico i-g">💳</div><span class="sc-bd bd-up">↑ This month</span></div>
           <div class="sc-lbl">Confirmed Payments</div>
-          <div class="sc-val">₦360k</div>
+          <div class="sc-val">₦0</div>
           <div class="sc-hint">0 payments confirmed</div>
         </div>
         <div class="stat-card">
@@ -509,10 +509,10 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
       </div>
 
       <div class="stat-grid" style="margin-bottom:20px">
-        <div class="stat-card"><div class="sc-top"><div class="sc-ico i-g">✅</div><span class="sc-bd bd-up">2026</span></div><div class="sc-lbl">Total Confirmed</div><div class="sc-val">₦1.44M</div><div class="sc-hint">All properties</div></div>
-        <div class="stat-card"><div class="sc-top"><div class="sc-ico i-b">📋</div><span class="sc-bd bd-ok">Total</span></div><div class="sc-lbl">No. of Payments</div><div class="sc-val">24</div><div class="sc-hint">Jan – Jul 2026</div></div>
-        <div class="stat-card"><div class="sc-top"><div class="sc-ico i-r">✗</div><span class="sc-bd bd-dn">Rejected</span></div><div class="sc-lbl">Rejected Claims</div><div class="sc-val">1</div><div class="sc-hint">Dispute resolved</div></div>
-        <div class="stat-card org"><div class="sc-top"><div class="sc-ico i-w">📅</div><span class="sc-bd bd-wt">This month</span></div><div class="sc-lbl">July 2026 Income</div><div class="sc-val">₦360k</div><div class="sc-hint">3 properties confirmed</div></div>
+        <div class="stat-card"><div class="sc-top"><div class="sc-ico i-g">✅</div><span class="sc-bd bd-up">2026</span></div><div class="sc-lbl">Total Confirmed</div><div class="sc-val">₦0</div><div class="sc-hint">All properties</div></div>
+        <div class="stat-card"><div class="sc-top"><div class="sc-ico i-b">📋</div><span class="sc-bd bd-ok">Total</span></div><div class="sc-lbl">No. of Payments</div><div class="sc-val">0</div><div class="sc-hint">This year</div></div>
+        <div class="stat-card"><div class="sc-top"><div class="sc-ico i-r">✗</div><span class="sc-bd bd-dn">Rejected</span></div><div class="sc-lbl">Rejected Claims</div><div class="sc-val">0</div><div class="sc-hint"></div></div>
+        <div class="stat-card org"><div class="sc-top"><div class="sc-ico i-w">📅</div><span class="sc-bd bd-wt">Pending</span></div><div class="sc-lbl">Awaiting Confirmation</div><div class="sc-val">₦0</div><div class="sc-hint"></div></div>
       </div>
 
       <div class="card">
@@ -663,22 +663,22 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
           <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
             <div style="display:flex;align-items:center;gap:16px;margin-bottom:8px">
               <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--orange-light),var(--orange-mid));display:flex;align-items:center;justify-content:center;font-size:28px">🧑‍💼</div>
-              <div><div style="font-size:16px;font-weight:600;color:var(--dark)">Kemi Adesanya</div><div style="font-size:12px;color:var(--gray)">Landlord · Member since Jan 2026</div></div>
+              <div><div id="profName" style="font-size:16px;font-weight:600;color:var(--dark)">Landlord</div><div style="font-size:12px;color:var(--gray)">Landlord account</div></div>
             </div>
-            <div class="ff"><label>First Name</label><input type="text" value="Kemi"/></div>
-            <div class="ff"><label>Last Name</label><input type="text" value="Adesanya"/></div>
-            <div class="ff"><label>Phone Number (Primary Contact)</label><input type="tel" value="+234 801 234 5678"/></div>
-            <div class="ff"><label>Email Address (optional)</label><input type="email" value="kemi@example.com"/></div>
-            <button onclick="toast('Profile updated successfully! ✅','success')" style="padding:11px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Save Changes</button>
+            <div class="ff"><label>First Name</label><input type="text" id="profFirst" value="" readonly/></div>
+            <div class="ff"><label>Last Name</label><input type="text" id="profLast" value="" readonly/></div>
+            <div class="ff"><label>Phone Number (Primary Contact)</label><input type="tel" id="profPhone" value="" readonly/></div>
+            <div class="ff"><label>Email Address (optional)</label><input type="email" id="profEmail" value="" readonly/></div>
+            <button disabled style="padding:11px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:not-allowed;opacity:.55">Profile editing coming soon</button>
           </div>
         </div>
         <div class="card">
           <div class="card-hd"><span class="ch-ttl">🔒 Security</span></div>
           <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
-            <div class="ff"><label>Current Password</label><input type="password" placeholder="Enter current password"/></div>
-            <div class="ff"><label>New Password</label><input type="password" placeholder="Enter new password"/></div>
-            <div class="ff"><label>Confirm New Password</label><input type="password" placeholder="Repeat new password"/></div>
-            <button onclick="toast('Password updated successfully! 🔒','success')" style="padding:11px;border:none;border-radius:9px;background:var(--dark);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Update Password</button>
+            <div class="ff"><label>Current Password</label><input type="password" placeholder="Enter current password" disabled/></div>
+            <div class="ff"><label>New Password</label><input type="password" placeholder="Enter new password" disabled/></div>
+            <div class="ff"><label>Confirm New Password</label><input type="password" placeholder="Repeat new password" disabled/></div>
+            <button disabled style="padding:11px;border:none;border-radius:9px;background:var(--dark);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;cursor:not-allowed;opacity:.55">Password change coming soon</button>
             <div style="padding:12px;background:var(--orange-faint);border-radius:9px;border:1px solid var(--border)">
               <div style="font-size:12px;font-weight:600;color:var(--brown);margin-bottom:4px">📱 Your Phone is Your Key</div>
               <div style="font-size:12px;color:var(--mid);line-height:1.6">Your phone number is shown to tenants who want to contact you about a property. Keep it up to date so tenants can reach you easily.</div>
@@ -736,6 +736,11 @@ async function initLandlord(){
     document.querySelector('.sn-uname').textContent = currentUser.first_name+' '+currentUser.last_name;
     document.querySelector('.sn-urole').textContent  = 'Landlord · '+( currentUser.city||'Nigeria');
     document.getElementById('tbSub').textContent = 'Welcome back, '+currentUser.first_name+' · '+new Date().toDateString();
+    // Fill the My Profile section with the signed-in landlord's own details
+    const _set=(id,v)=>{const el=document.getElementById(id); if(el) el.value=v||'';};
+    _set('profFirst',currentUser.first_name); _set('profLast',currentUser.last_name);
+    _set('profPhone',currentUser.phone_number||currentUser.phone); _set('profEmail',currentUser.email);
+    const _pn=document.getElementById('profName'); if(_pn) _pn.textContent=(currentUser.first_name+' '+(currentUser.last_name||'')).trim();
   }
   // Load claims from API
   if(token){
@@ -783,7 +788,7 @@ function updateLandlordStats() {
   setCard('sec-history', 0, naira(sum(confirmed)));
   setCard('sec-history', 1, confirmed.length);
   setCard('sec-history', 2, rejected.length);
-  setCard('sec-history', 3, naira(sum(pending)), undefined, 'Awaiting Confirmation');
+  setCard('sec-history', 3, naira(sum(pending)), `${pending.length} claim${pending.length === 1 ? '' : 's'} awaiting`, 'Awaiting Confirmation');
 }
 
 function updateClaimCounts() {

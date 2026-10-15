@@ -1003,117 +1003,6 @@ input[type=range]{width:100%;accent-color:var(--orange);cursor:pointer}
   </div>
 </div>
 
-<!-- ═══════════════════════════════════
-     PAGE 4 — DASHBOARD
-═══════════════════════════════════ -->
-<div class="pg" id="pg-dash">
-  <div class="dash-wrap">
-    <aside class="dash-nav">
-      <div class="dn-menu">
-        <div class="dn-sec">Main</div>
-        <a class="dn-item" onclick="go('landing')"><span class="dn-ico">🏠</span>Home</a>
-        <a class="dn-item on"><span class="dn-ico">💳</span>Rent Payments</a>
-        <a class="dn-item" onclick="go('search')"><span class="dn-ico">🔍</span>Find Housing</a>
-        <a class="dn-item"><span class="dn-ico">📁</span>My Lease</a>
-        <div class="dn-sec">Manage</div>
-        <a class="dn-item"><span class="dn-ico">🔔</span>Reminders<span class="dn-badge">3</span></a>
-        <a class="dn-item"><span class="dn-ico">🧾</span>Receipts</a>
-        <a class="dn-item"><span class="dn-ico">📈</span>Reports</a>
-        <a class="dn-item"><span class="dn-ico">❤️</span>Saved Homes</a>
-        <div class="dn-sec">Account</div>
-        <a class="dn-item"><span class="dn-ico">⚙️</span>Settings</a>
-        <a class="dn-item" onclick="go('auth')"><span class="dn-ico">🚪</span>Sign Out</a>
-      </div>
-      <div class="dn-bot"><div class="dn-user"><div class="dn-av">👤</div><div><div class="dn-uname">Emeka Nwachukwu</div><div class="dn-urole">Bank Officer · Lagos</div></div></div></div>
-    </aside>
-    <div class="dash-main">
-      <div class="dash-topbar">
-        <div><div class="dt-title">Rent Payment Dashboard</div><div class="dt-sub">June 2026 · Lekki Phase 1, Lagos</div></div>
-        <div class="dt-right">
-          <div class="notif-btn" onclick="gToast('You have 3 unread notifications 🔔','')">🔔<div class="notif-dot"></div></div>
-          <button class="btn-record" onclick="openPayModal()">+ Record Payment</button>
-        </div>
-      </div>
-      <div class="dash-content">
-        <div class="sum-grid">
-          <div class="sum-card org-card"><div class="sc-top"><div class="sc-ico ic-w">💳</div><span class="sc-bdg sb-wt">On Track</span></div><div class="sc-lbl">Next Rent Due</div><div class="sc-val">₦85,000</div><div class="sc-hint">July 1, 2026 · 29 days left</div></div>
-          <div class="sum-card"><div class="sc-top"><div class="sc-ico ic-g">✅</div><span class="sc-bdg sb-up">All Paid</span></div><div class="sc-lbl">Payments This Year</div><div class="sc-val">6</div><div class="sc-hint">Jan – Jun 2026 on time</div></div>
-          <div class="sum-card"><div class="sc-top"><div class="sc-ico ic-o">💰</div><span class="sc-bdg sb-ok">30% ✓</span></div><div class="sc-lbl">Total Paid (2026)</div><div class="sc-val">₦510k</div><div class="sc-hint">January – June 2026</div></div>
-          <div class="sum-card"><div class="sc-top"><div class="sc-ico ic-g">🏆</div><span class="sc-bdg sb-up">Great!</span></div><div class="sc-lbl">Overdue Payments</div><div class="sc-val">0</div><div class="sc-hint">Perfect streak!</div></div>
-        </div>
-        <div class="two-col">
-          <div class="card"><div class="card-hd"><span class="ch-ttl">📋 Payment History</span><button class="ch-act" onclick="gToast('Downloading PDF... 🧾','success')">Export PDF</button></div><div style="overflow-x:auto"><table class="pay-tbl"><thead><tr><th>Month</th><th>Property</th><th>Amount</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody id="payBody"></tbody></table></div></div>
-          <div class="card"><div class="card-hd"><span class="ch-ttl">📅 Upcoming Dues</span><button class="ch-act" onclick="gToast('Reminder set! 🔔','success')">+ Reminder</button></div>
-            <div class="due-list">
-              <div class="due-item urg"><div class="due-ico">🚨</div><div class="due-info"><div class="due-ttl">Electricity Bill</div><div class="due-addr">Lekki, Lagos</div></div><div class="due-right"><div class="due-amt">₦8,500</div><div class="due-days dd-urg">Due in 2 days</div></div></div>
-              <div class="due-item sn"><div class="due-ico">⚠️</div><div class="due-info"><div class="due-ttl">Service Charge</div><div class="due-addr">Lekki, Lagos</div></div><div class="due-right"><div class="due-amt">₦12,000</div><div class="due-days dd-sn">Due in 7 days</div></div></div>
-              <div class="due-item ok"><div class="due-ico">💧</div><div class="due-info"><div class="due-ttl">Water Bill</div><div class="due-addr">Lekki, Lagos</div></div><div class="due-right"><div class="due-amt">₦3,200</div><div class="due-days dd-ok">Due in 15 days</div></div></div>
-              <div class="due-item ok"><div class="due-ico">🏠</div><div class="due-info"><div class="due-ttl">Monthly Rent</div><div class="due-addr">Lekki, Lagos</div></div><div class="due-right"><div class="due-amt">₦85,000</div><div class="due-days dd-ok">Due in 29 days</div></div></div>
-            </div>
-          </div>
-        </div>
-        <div class="three-col">
-          <div class="card"><div class="card-hd"><span class="ch-ttl">💡 Budget Overview</span><button class="ch-act">Edit</button></div>
-            <div class="bdg-body">
-              <div class="brow"><span class="blbl">Monthly Salary</span><span class="bval">₦283,333</span></div>
-              <div class="brow"><span class="blbl">Max Safe Rent (30%)</span><span class="bval" style="color:var(--orange)">₦85,000 ✓</span></div>
-              <div class="prog-track"><div class="prog-fill" style="width:30%"></div></div>
-              <div class="prog-note">You are spending exactly 30% of your salary on rent — within the safe affordability threshold.</div>
-              <div class="bb-list">
-                <div class="bb-row"><div class="bb-dot" style="background:var(--orange)"></div><div class="bb-lbl">Rent</div><div class="bb-val">₦85,000</div></div>
-                <div class="bb-row"><div class="bb-dot" style="background:var(--yellow)"></div><div class="bb-lbl">Electricity</div><div class="bb-val">₦8,500</div></div>
-                <div class="bb-row"><div class="bb-dot" style="background:var(--blue)"></div><div class="bb-lbl">Water</div><div class="bb-val">₦3,200</div></div>
-                <div class="bb-row"><div class="bb-dot" style="background:var(--green)"></div><div class="bb-lbl">Service Charge</div><div class="bb-val">₦12,000</div></div>
-                <div class="bb-row bb-tot"><div class="bb-dot" style="background:var(--dark)"></div><div class="bb-lbl">Total Housing</div><div class="bb-val">₦108,700</div></div>
-              </div>
-            </div>
-          </div>
-          <div class="card"><div class="card-hd"><span class="ch-ttl">📈 Payment Trend</span><span style="font-size:10px;color:var(--gray)">2026</span></div><div class="chart-body"><div class="chart-bars" id="chartBars"></div><div class="chart-legend"><div class="cl-item"><div class="cl-dot" style="background:var(--orange)"></div>Paid</div><div class="cl-item"><div class="cl-dot" style="background:var(--border)"></div>Upcoming</div></div></div></div>
-          <div class="card"><div class="card-hd"><span class="ch-ttl">🔔 Notifications</span><button class="ch-act" onclick="markRead()">Mark all read</button></div>
-            <div class="notif-body">
-              <div class="notif-item unread"><div class="ni-dot"></div><div><div class="ni-text"><strong>Rent reminder:</strong> ₦85,000 due in 29 days.</div><div class="ni-time">2 hours ago</div></div></div>
-              <div class="notif-item unread"><div class="ni-dot"></div><div><div class="ni-text"><strong>Electricity bill</strong> ₦8,500 due in 2 days!</div><div class="ni-time">5 hours ago</div></div></div>
-              <div class="notif-item unread"><div class="ni-dot"></div><div><div class="ni-text"><strong>June rent</strong> marked as paid. Receipt ready.</div><div class="ni-time">1 day ago</div></div></div>
-              <div class="notif-item"><div class="ni-dot read"></div><div><div class="ni-text">New listing in <strong>Surulere</strong> matches your salary budget.</div><div class="ni-time">3 days ago</div></div></div>
-              <div class="notif-item"><div class="ni-dot read"></div><div><div class="ni-text"><strong>May rent</strong> paid! 6-month streak 🎉</div><div class="ni-time">1 month ago</div></div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Pay Modal -->
-<div class="pay-modal-ov" id="payModalOv" onclick="if(event.target===this)closePayModal()">
-  <div class="pay-modal">
-    <div class="pay-modal-hd"><h3>💳 Record Rent Payment</h3><button class="pay-modal-x" onclick="closePayModal()">✕</button></div>
-    <div class="pay-modal-bd">
-      <!-- Info banner -->
-      <div style="background:var(--orange-faint);border:1.5px solid var(--border);border-radius:10px;padding:12px;display:flex;gap:10px;align-items:flex-start">
-        <span style="font-size:18px;flex-shrink:0">ℹ️</span>
-        <div style="font-size:11px;color:var(--mid);line-height:1.6">Your payment will be marked <strong>Pending Confirmation</strong> until your landlord verifies it. Make sure you have paid the landlord directly (cash or bank transfer) before logging it here.</div>
-      </div>
-      <div class="ff-row">
-        <div class="ff"><label>Payment Month</label><select><option>July 2026</option><option>August 2026</option></select></div>
-        <div class="ff"><label>Payment Type</label><select><option>Monthly Rent</option><option>Electricity Bill</option><option>Water Bill</option><option>Service Charge</option></select></div>
-      </div>
-      <div class="ff"><label>Property / Address</label><input type="text" value="Modern 2-Bedroom Flat, Lekki Phase 1"/></div>
-      <div class="ff-row">
-        <div class="ff"><label>Amount (₦)</label><input type="number" placeholder="e.g. 85000"/></div>
-        <div class="ff"><label>Date Paid</label><input type="date" id="payDate"/></div>
-      </div>
-      <div class="ff"><label>Payment Method</label><select><option>Bank Transfer</option><option>Cash</option><option>POS</option></select></div>
-      <div class="ff"><label>Reference No. (optional)</label><input type="text" placeholder="e.g. TRF2026070185 or Teller No."/></div>
-      <div class="ff"><label>Notes (optional)</label><textarea rows="2" placeholder="e.g. Paid at Access Bank Lekki branch"></textarea></div>
-      <div style="background:var(--yellow-bg);border:1px solid var(--yellow);border-radius:9px;padding:10px 12px;font-size:11px;color:#7a5500">
-        ⏳ <strong>Status after submission:</strong> Pending — your landlord will confirm or reject this payment claim.
-      </div>
-    </div>
-    <div class="pay-modal-ft"><button class="btn-cancel-pay" onclick="closePayModal()">Cancel</button><button class="btn-save-pay" onclick="savePay()">Submit Payment Claim</button></div>
-  </div>
-</div>
-
 <script>
 // ── PAGE ROUTER ──────────────────────────────────────
 function go(p){
@@ -1129,7 +1018,6 @@ function go(p){
   window.scrollTo(0,0);
   document.getElementById('mobMenu').classList.remove('open');
   if(p==='search') setTimeout(renderProps,80);
-  if(p==='dash') setTimeout(()=>{renderPayTable();renderChart();},80);
 }
 window.addEventListener('scroll',()=>document.getElementById('mainNav').classList.toggle('scrolled',window.scrollY>10));
 
@@ -1514,37 +1402,6 @@ function closePM(){
   if(panel){panel.style.display='none';}
   if(btn){btn.textContent='📞 Contact Landlord';btn.style.background='';}
 }
-
-// ── DASHBOARD ─────────────────────────────────────────
-const pays=[
-  {mo:'June 2026',addr:'Lekki, Lagos',amt:85000,date:'Jun 1, 2026',st:'confirmed'},
-  {mo:'May 2026',addr:'Lekki, Lagos',amt:85000,date:'May 1, 2026',st:'confirmed'},
-  {mo:'Apr 2026',addr:'Lekki, Lagos',amt:85000,date:'Apr 2, 2026',st:'confirmed'},
-  {mo:'Mar 2026',addr:'Lekki, Lagos',amt:85000,date:'Mar 1, 2026',st:'confirmed'},
-  {mo:'Feb 2026',addr:'Lekki, Lagos',amt:85000,date:'Feb 1, 2026',st:'confirmed'},
-  {mo:'Jan 2026',addr:'Lekki, Lagos',amt:85000,date:'Jan 2, 2026',st:'confirmed'},
-  {mo:'Jul 2026',addr:'Lekki, Lagos',amt:85000,date:'—',st:'pending'},
-];
-function renderPayTable(){
-  const b=document.getElementById('payBody');if(!b)return;b.innerHTML='';
-  pays.forEach(p=>{
-    const sc=p.st==='confirmed'?'s-paid':p.st==='pending'?'s-pend':p.st==='rejected'?'s-over':'s-over';
-    const st=p.st==='confirmed'?'✓ Confirmed':p.st==='pending'?'⏳ Awaiting Landlord':p.st==='rejected'?'✗ Rejected':'⚠ Overdue';
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td><span class="pay-mo">${p.mo}</span></td><td><div class="pc-d"><div class="pc-av">🏠</div><div style="font-size:11px">${p.addr}</div></div></td><td style="font-weight:600;color:var(--dark)">₦${p.amt.toLocaleString()}</td><td>${p.date}</td><td><span class="sbadge ${sc}">${st}</span></td><td><div class="act-row"><button class="bsm bsm-o" onclick="gToast('Downloading receipt for ${p.mo} 🧾','success')">Receipt</button><button class="bsm bsm-g" onclick="gToast('Viewing ${p.mo}','')">View</button></div></td>`;
-    b.appendChild(tr);
-  });
-}
-function renderChart(){
-  const mos=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const paid=[85,85,85,85,85,85,0,0,0,0,0,0];
-  const c=document.getElementById('chartBars');if(!c)return;c.innerHTML='';
-  mos.forEach((m,i)=>{const p=paid[i]>0;const h=p?(paid[i]/100)*100:22;const col=document.createElement('div');col.className='chart-col';col.innerHTML=`<div class="chart-bar" style="height:${h}%;background:${p?'var(--orange)':'var(--border)'};min-height:6px" data-tip="${p?'₦'+paid[i]+'k':'Upcoming'}"></div><span class="chart-mo">${m}</span>`;c.appendChild(col);});
-}
-function openPayModal(){document.getElementById('payDate').value=new Date().toISOString().split('T')[0];document.getElementById('payModalOv').classList.add('open');document.body.style.overflow='hidden';}
-function closePayModal(){document.getElementById('payModalOv').classList.remove('open');document.body.style.overflow='';}
-function savePay(){closePayModal();pays.unshift({mo:'July 2026',addr:'Lekki, Lagos',amt:85000,date:'Jul 1, 2026',st:'paid'});renderPayTable();gToast('Payment recorded successfully! ✅','success');}
-function markRead(){document.querySelectorAll('.notif-item').forEach(n=>{n.classList.remove('unread');const d=n.querySelector('.ni-dot');if(d)d.className='ni-dot read';});gToast('All notifications marked as read','');}
 
 // ── CONTACT REVEAL ───────────────────────────────────
 async function revealContact() {

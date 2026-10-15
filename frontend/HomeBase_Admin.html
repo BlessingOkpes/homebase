@@ -654,10 +654,10 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
         <div style="font-size:12px;color:var(--gray)">Detailed performance metrics for HomeBase</div>
       </div>
       <div class="stat-grid">
-        <div class="stat-card"><div class="sc-top"><div class="sc-ico ico-o">📈</div><span class="sc-trend tr-up">↑ 23%</span></div><div class="sc-lbl">User Growth (Monthly)</div><div class="sc-val">+47</div><div class="sc-hint">vs last month</div></div>
-        <div class="stat-card"><div class="sc-top"><div class="sc-ico ico-g">🏠</div><span class="sc-trend tr-up">↑ 18%</span></div><div class="sc-lbl">New Listings (Monthly)</div><div class="sc-val">+22</div><div class="sc-hint">vs last month</div></div>
-        <div class="stat-card"><div class="sc-top"><div class="sc-ico ico-b">💳</div><span class="sc-trend tr-up">↑ 12%</span></div><div class="sc-lbl">Payment Volume</div><div class="sc-val">₦7.8M</div><div class="sc-hint">July 2026</div></div>
-        <div class="stat-card orange"><div class="sc-top"><div class="sc-ico ico-w">⭐</div><span class="sc-trend tr-wt">98%</span></div><div class="sc-lbl">Satisfaction Rate</div><div class="sc-val">98%</div><div class="sc-hint">From user feedback</div></div>
+        <div class="stat-card"><div class="sc-top"><div class="sc-ico ico-o">📈</div></div><div class="sc-lbl">User Growth (Monthly)</div><div class="sc-val">—</div><div class="sc-hint">No data yet</div></div>
+        <div class="stat-card"><div class="sc-top"><div class="sc-ico ico-g">🏠</div></div><div class="sc-lbl">New Listings (Monthly)</div><div class="sc-val">—</div><div class="sc-hint">No data yet</div></div>
+        <div class="stat-card"><div class="sc-top"><div class="sc-ico ico-b">💳</div></div><div class="sc-lbl">Payment Volume</div><div class="sc-val">—</div><div class="sc-hint">No data yet</div></div>
+        <div class="stat-card orange"><div class="sc-top"><div class="sc-ico ico-w">⭐</div></div><div class="sc-lbl">Satisfaction Rate</div><div class="sc-val">—</div><div class="sc-hint">No data yet</div></div>
       </div>
       <div class="g2">
         <div class="card">
@@ -669,27 +669,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
         </div>
         <div class="card">
           <div class="card-hd"><span class="card-hd-title">🏠 Properties by Location</span></div>
-          <div style="padding:18px;display:flex;flex-direction:column;gap:12px">
-            <div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;color:var(--mid)">Lagos</span><span style="font-size:12px;font-weight:600;color:var(--dark)">68 listings</span></div>
-              <div class="ms-bar" style="height:8px"><div class="ms-fill" style="width:55%"></div></div>
-            </div>
-            <div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;color:var(--mid)">Abuja</span><span style="font-size:12px;font-weight:600;color:var(--dark)">34 listings</span></div>
-              <div class="ms-bar" style="height:8px"><div class="ms-fill" style="width:27%"></div></div>
-            </div>
-            <div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;color:var(--mid)">Ibadan</span><span style="font-size:12px;font-weight:600;color:var(--dark)">12 listings</span></div>
-              <div class="ms-bar" style="height:8px"><div class="ms-fill" style="width:10%"></div></div>
-            </div>
-            <div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;color:var(--mid)">Port Harcourt</span><span style="font-size:12px;font-weight:600;color:var(--dark)">6 listings</span></div>
-              <div class="ms-bar" style="height:8px"><div class="ms-fill" style="width:5%"></div></div>
-            </div>
-            <div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;color:var(--mid)">Others</span><span style="font-size:12px;font-weight:600;color:var(--dark)">4 listings</span></div>
-              <div class="ms-bar" style="height:8px"><div class="ms-fill" style="width:3%"></div></div>
-            </div>
+          <div style="padding:40px 20px;text-align:center;color:var(--gray);font-size:13px">No data yet
           </div>
         </div>
       </div>
@@ -995,33 +975,15 @@ function filterProps(status, btn) {
 
 // ── CHARTS ────────────────────────────────────────
 function renderRevChart() {
-  const mos = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const vals = [5.8,6.2,6.5,6.1,7.0,7.4,7.8,0,0,0,0,0];
   const c = document.getElementById('revChart');
   if (!c) return;
   c.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--gray);font-size:13px;width:100%">Monthly payment totals will appear once payments are confirmed.</div>';
-  return;
-  const max = Math.max(...vals.filter(v=>v>0));
-  mos.forEach((m, i) => {
-    const p = vals[i] > 0; const h = p ? (vals[i]/max)*100 : 20;
-    const col = document.createElement('div'); col.className = 'chart-col';
-    col.innerHTML = `<div class="chart-bar" style="height:${h}%;background:${p?'var(--orange)':'var(--border)'};min-height:6px" data-tip="${p?'₦'+vals[i]+'M':'Upcoming'}"></div><span class="chart-mo">${m}</span>`;
-    c.appendChild(col);
-  });
 }
 
 function renderGrowthChart() {
-  const mos = ['Jan','Feb','Mar','Apr','May','Jun','Jul'];
-  const vals = [18, 24, 30, 27, 38, 42, 47];
   const c = document.getElementById('growthChart');
-  if (!c) return; c.innerHTML = '';
-  const max = Math.max(...vals);
-  mos.forEach((m, i) => {
-    const h = (vals[i]/max)*100;
-    const col = document.createElement('div'); col.className = 'chart-col';
-    col.innerHTML = `<div class="chart-bar" style="height:${h}%;background:var(--orange);min-height:6px" data-tip="+${vals[i]} users"></div><span class="chart-mo">${m}</span>`;
-    c.appendChild(col);
-  });
+  if (!c) return;
+  c.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--gray);font-size:13px;width:100%">No data yet</div>';
 }
 
 // ── NOTIFICATIONS (real data from /api/notifications — the bell and this page show the same list) ──

@@ -301,12 +301,10 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
         <div class="card">
           <div class="card-hd">
             <span class="ch-ttl">📅 Upcoming Due Dates</span>
-            <button class="ch-act" onclick="toast('Reminder set! 7 days before due date 🔔','success')">+ Reminder</button>
+            <button class="ch-act" onclick="toast('Reminders are coming soon','')">+ Reminder</button>
           </div>
           <div class="due-list">
-            <div class="due-item urg"><div class="due-ico">🚨</div><div class="due-info"><div class="due-ttl">Electricity Bill</div><div class="due-addr">Your property</div></div><div class="due-right"><div class="due-amt">₦8,500</div><div class="due-days dd-urg">Due in 2 days</div></div></div>
-            <div class="due-item sn"><div class="due-ico">⚠️</div><div class="due-info"><div class="due-ttl">Service Charge</div><div class="due-addr">Your property</div></div><div class="due-right"><div class="due-amt">₦12,000</div><div class="due-days dd-sn">Due in 7 days</div></div></div>
-            <div class="due-item ok"><div class="due-ico">🏠</div><div class="due-info"><div class="due-ttl">Monthly Rent</div><div class="due-addr" id="duePropAddr">Your property</div></div><div class="due-right"><div class="due-amt" id="dueRentAmt">₦—</div><div class="due-days dd-ok">Due in 29 days</div></div></div>
+            <div class="due-item ok" id="dueRentItem"><div class="due-ico">🏠</div><div class="due-info"><div class="due-ttl">Monthly Rent</div><div class="due-addr" id="duePropAddr">Your property</div></div><div class="due-right"><div class="due-amt" id="dueRentAmt">₦—</div><div class="due-days dd-ok" id="dueRentDays">—</div></div></div>
           </div>
         </div>
       </div>
@@ -545,34 +543,17 @@ async function init() {
    }
   }
 
-// ── DEMO DATA (when backend not running) ──────────
-function loadDemoData() {
-  dashData = {
-    summary: { confirmed: 6, pending: 1, rejected: 0, totalPaid: 510000, unreadNotifs: 3 },
-    payments: [
-      {payment_id:1, payment_month:'June 2026', property_title:'Modern 2-Bed Flat', amount:85000, date_paid:'Jun 1, 2026', payment_method:'Bank Transfer', status:'confirmed'},
-      {payment_id:2, payment_month:'May 2026',  property_title:'Modern 2-Bed Flat', amount:85000, date_paid:'May 1, 2026', payment_method:'Bank Transfer', status:'confirmed'},
-      {payment_id:3, payment_month:'Apr 2026',  property_title:'Modern 2-Bed Flat', amount:85000, date_paid:'Apr 2, 2026', payment_method:'Cash', status:'confirmed'},
-      {payment_id:4, payment_month:'Mar 2026',  property_title:'Modern 2-Bed Flat', amount:85000, date_paid:'Mar 1, 2026', payment_method:'Bank Transfer', status:'confirmed'},
-      {payment_id:5, payment_month:'Jul 2026',  property_title:'Modern 2-Bed Flat', amount:85000, date_paid:null, payment_method:'—', status:'pending'},
-    ],
-    profile: { monthly_salary: 283333, max_rent_budget: 85000 },
-    notifications: [
-      {notification_id:1, title:'Rent Reminder', message:'Your rent of ₦85,000 is due in 29 days.', type:'rent_reminder', is_read:0, created_at:'2026-07-02'},
-      {notification_id:2, title:'Payment Confirmed ✅', message:'Your June 2026 rent payment has been confirmed by your landlord.', type:'payment_confirmed', is_read:0, created_at:'2026-07-01'},
-      {notification_id:3, title:'Electricity Due', message:'Your electricity bill of ₦8,500 is due in 2 days.', type:'rent_reminder', is_read:0, created_at:'2026-06-30'},
-      {notification_id:4, title:'New Listing', message:'A new 2-bedroom flat in Surulere matches your budget.', type:'new_listing', is_read:1, created_at:'2026-06-28'},
-    ],
-    saved: [
-      {property_id:2, title:'Cosy Self-Contain', monthly_rent:35000, city:'Surulere', state:'Lagos'},
-      {property_id:8, title:'Executive 1-Bed Flat', monthly_rent:95000, city:'Wuse 2', state:'Abuja'},
-    ],
-    tenancy: { property_title:'Modern 2-Bedroom Flat', full_address:'15 Admiralty Way, Lekki Phase 1, Lagos', landlord_name:'Kemi Adesanya', landlord_phone:'+234 801 234 5678', monthly_rent:85000, start_date:'Jan 1, 2026' },
-  };
-
-  // Demo user
-  currentUser = JSON.parse(localStorage.getItem('hb_user') || '{"first_name":"Emeka","last_name":"Nwachukwu","phone_number":"+234 801 234 5678","email":"emeka@example.com","monthly_salary":283333}');
-  renderAll();
+// ── NEXT RENT DUE ─────────────────────────────────
+// Rent is assumed due on the same day of the month as the tenancy start date
+function nextRentDue(startDate) {
+  const s = startDate ? new Date(startDate) : null;
+  if (!s || isNaN(s)) return null;
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  if (s > now) return { date: s, days: Math.ceil((s - now) / 86400000) };
+  const dueOn = (y, m) => new Date(y, m, Math.min(s.getDate(), new Date(y, m + 1, 0).getDate()));
+  let d = dueOn(now.getFullYear(), now.getMonth());
+  if (d < now) d = dueOn(now.getFullYear(), now.getMonth() + 1);
+  return { date: d, days: Math.round((d - now) / 86400000) };
 }
 
 // ── RENDER ALL ────────────────────────────────────
@@ -594,10 +575,27 @@ function renderAll() {
   // Next due from tenancy
   if (tenancy) {
     document.getElementById('nextDueAmt').textContent = '₦' + parseFloat(tenancy.monthly_rent).toLocaleString('en-NG');
-    document.getElementById('nextDueHint').textContent = 'August 2026 · Due in 29 days';
-    document.getElementById('nextDueLabel').textContent = 'On Track';
+    // Work out the next rent due date from the tenancy start date (same day each month)
+    const nd = nextRentDue(tenancy.start_date);
+    const nHint = document.getElementById('nextDueHint'), nLbl = document.getElementById('nextDueLabel');
+    const dDays = document.getElementById('dueRentDays'), dItem = document.getElementById('dueRentItem');
+    if (nd) {
+      const txt = nd.days === 0 ? 'Due today' : 'Due in ' + nd.days + ' day' + (nd.days === 1 ? '' : 's');
+      const cls = nd.days <= 3 ? 'urg' : nd.days <= 7 ? 'sn' : 'ok';
+      nHint.textContent = nd.date.toLocaleDateString('en-NG', { day:'numeric', month:'long', year:'numeric' }) + ' · ' + txt;
+      nLbl.textContent = nd.days <= 7 ? 'Due Soon' : 'On Track';
+      if (dDays) { dDays.textContent = txt; dDays.className = 'due-days dd-' + cls; }
+      if (dItem) dItem.className = 'due-item ' + cls;
+    } else {
+      nHint.textContent = 'Due date not set';
+      nLbl.textContent = '—';
+      if (dDays) dDays.textContent = 'Due date not set';
+    }
     document.getElementById('dueRentAmt').textContent = '₦' + parseFloat(tenancy.monthly_rent).toLocaleString('en-NG');
     document.getElementById('duePropAddr').textContent = tenancy.property_title || tenancy.full_address;
+  } else {
+    document.getElementById('nextDueHint').textContent = 'No active tenancy yet';
+    const _d = document.getElementById('dueRentDays'); if (_d) _d.textContent = 'No active tenancy';
   }
 
   // Notifications badge
