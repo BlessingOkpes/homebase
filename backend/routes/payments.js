@@ -103,13 +103,23 @@ router.post('/', protect, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Property not found.' });
     }
     const landlord_id = propRows[0].landlord_id;
+
+    // A tenant can only claim a payment for the home they actually rent
+    const [tenancyRows] = await db.execute(
+      "SELECT tenancy_id FROM tenancies WHERE tenant_id = ? AND property_id = ? AND status = 'active' LIMIT 1",
+      [req.user.user_id, property_id]
+    );
+    if (tenancyRows.length === 0) {
+      return res.status(403).json({ success: false, message: 'You can only submit payment claims for the home you rent.' });
+    }
+
     const [result] = await db.execute(
       `INSERT INTO rent_payments
-         (tenant_id, property_id, landlord_id, amount, payment_month,
+         (tenancy_id, tenant_id, property_id, landlord_id, amount, payment_month,
           payment_year, period_covered, due_date, date_paid,
           payment_method, reference_no, status, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
-      [req.user.user_id, property_id, landlord_id, amount, payment_month,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
+      [tenancyRows[0].tenancy_id, req.user.user_id, property_id, landlord_id, amount, payment_month,
        payment_year || new Date().getFullYear(), period_covered || null,
        due_date, date_paid || null, payment_method || 'bank_transfer',
        reference_no || null, notes || null]

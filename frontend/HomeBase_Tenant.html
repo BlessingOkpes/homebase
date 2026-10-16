@@ -29,23 +29,78 @@ const API = window.location.hostname === 'localhost' || window.location.hostname
 html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);background:var(--offwhite);overflow-x:hidden}
 
 /* SIDEBAR */
-.sidenav{width:var(--side);min-width:var(--side);background:linear-gradient(180deg,var(--brown) 0%,var(--dark) 100%);height:100vh;position:fixed;top:0;left:0;display:flex;flex-direction:column;z-index:100;transition:left .3s}
-.sn-brand{padding:22px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.1);text-decoration:none}
+.sidenav{width:var(--side);min-width:var(--side);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:100;transition:left .3s;
+  background:rgba(95,36,0,.88);
+  backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);
+  border-right:1px solid rgba(255,255,255,.26);
+  box-shadow:inset -1px 0 0 rgba(255,255,255,.1),inset 0 1px 0 rgba(255,255,255,.18),8px 0 32px rgba(45,21,0,.28)}
+.sn-brand{padding:22px 18px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.12);text-decoration:none}
 .sn-logo{width:36px;height:36px;background:linear-gradient(135deg,var(--orange),var(--orange-light));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px}
 .sn-name{font-family:'Playfair Display',serif;font-size:20px;color:#fff}
-.sn-badge{background:var(--orange);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:auto}
-.sn-menu{flex:1;padding:18px 10px;display:flex;flex-direction:column;gap:3px;overflow-y:auto}
-.sn-sec{font-size:9px;font-weight:600;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;padding:12px 12px 4px}
-.sn-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;text-decoration:none;transition:all .2s}
+.sn-badge{background:var(--orange);color:#fff;font-size:9px;font-weight:700;padding:3px 8px;border-radius:50px;margin-left:auto;letter-spacing:.5px}
+.sn-menu{flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:3px;overflow-y:auto}
+.sn-sec{font-size:9px;font-weight:600;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1px;padding:12px 12px 4px}
+.sn-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;font-size:13px;font-weight:500;color:rgba(255,255,255,.78);cursor:pointer;text-decoration:none;transition:all .2s}
+.sn-item{border:1px solid transparent}
+/* glass pill sidebar items, like the "affordable listings" badge */
+.sidenav .sn-item{border-radius:999px;padding:10px 16px}
+.sidenav .sn-item:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.sidenav .sn-item.active{
+  background:linear-gradient(180deg,rgba(255,255,255,.3) 0%,rgba(255,255,255,.08) 55%),rgba(255,255,255,.14);
+  border-color:rgba(255,255,255,.4);color:#fff;font-weight:600;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.6),inset 0 -2px 6px rgba(0,0,0,.18),0 6px 16px rgba(0,0,0,.22)}
+/* one solid orange for every button */
+.btn-claim,.btn-modal-p,button[style*="linear-gradient(135deg,var(--orange)"]{background:var(--orange)!important;box-shadow:0 3px 10px rgba(232,96,10,.25)}
+.btn-claim:hover,.btn-modal-p:hover,button[style*="linear-gradient(135deg,var(--orange)"]:hover{background:#d4560a!important}
+/* one solid orange for every button */
+.btn-claim,.btn-modal-p,button[style*="linear-gradient(135deg,var(--orange)"]{background:var(--orange)!important;box-shadow:0 3px 10px rgba(232,96,10,.25)}
+.btn-claim:hover,.btn-modal-p:hover,button[style*="linear-gradient(135deg,var(--orange)"]:hover{background:#d4560a!important}
+/* one solid orange for every button */
+.btn-claim,.btn-modal-p,button[style*="linear-gradient(135deg,var(--orange)"]{background:var(--orange)!important;box-shadow:0 3px 10px rgba(232,96,10,.25)}
+.btn-claim:hover,.btn-modal-p:hover,button[style*="linear-gradient(135deg,var(--orange)"]:hover{background:#d4560a!important}
 .sn-item:hover{background:rgba(255,255,255,.08);color:#fff}
-.sn-item.active{background:rgba(232,96,10,.3);color:#fff;font-weight:600;border-left:3px solid var(--orange)}
-.sn-ico{font-size:16px;width:19px;text-align:center;flex-shrink:0}
+.sn-item.active{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.22);color:#fff;font-weight:600;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 6px 16px rgba(0,0,0,.18)}
+.sn-ico{width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff}
+.sn-ico svg,.sn-av svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .sn-cnt{margin-left:auto;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:50px}
-.sn-bottom{padding:12px 10px;border-top:1px solid rgba(255,255,255,.1)}
-.sn-user{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;background:rgba(255,255,255,.07)}
-.sn-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--orange-light),var(--orange-mid));display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.sn-bottom{padding:12px 12px 16px;border-top:1px solid rgba(255,255,255,.12)}
+.sn-user{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12)}
+.sn-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--orange-light),var(--orange-mid));display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff}
 .sn-uname{font-size:12px;font-weight:600;color:#fff}
-.sn-urole{font-size:10px;color:rgba(255,255,255,.45);margin-top:1px}
+.sn-urole{font-size:10px;color:rgba(255,255,255,.6);margin-top:1px}
+/* soft glass scrollbars */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(122,48,0,.4);border-radius:10px;border:1px solid rgba(255,255,255,.35);background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:rgba(122,48,0,.65)}
+.sn-menu::-webkit-scrollbar-thumb{background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.1)}
+@supports (-moz-appearance:none){*{scrollbar-width:thin;scrollbar-color:rgba(122,48,0,.45) transparent}}
+/* sidebar slides in below 1100px */
+@media(max-width:1100px){
+  .sidenav:not(.open){left:calc(-1 * var(--side) - 60px);box-shadow:none}
+  body .sidenav.open{left:0;box-shadow:inset -1px 0 0 rgba(255,255,255,.1),8px 0 32px rgba(0,0,0,.4)}
+  body .main{margin-left:0}
+  .topbar .hamburger{display:flex}
+  .mobile-backdrop.show{display:block}
+  .sidenav .sidenav-close{display:flex;align-items:center;justify-content:center;position:absolute;top:50%;right:-14px;
+    transform:translateY(-50%);width:28px;height:48px;border-radius:0 12px 12px 0;
+    background:var(--orange);border:none;color:#fff;font-size:20px;cursor:pointer;z-index:2;box-shadow:2px 0 8px rgba(0,0,0,.25)}
+}
+/* cleaner phone header */
+@media(max-width:640px){
+  body .topbar{padding:0 12px;height:56px}
+  .topbar .tb-left{gap:10px;min-width:0;flex:1}
+  .topbar .tb-left>div{min-width:0}
+  .topbar .tb-title{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topbar .tb-sub{display:none}
+  .topbar .tb-right{gap:8px;flex-shrink:0}
+  .topbar .tb-notif{width:38px;height:38px}
+  .topbar .btn-claim{width:38px;height:38px;padding:0;justify-content:center;font-size:0;gap:0;border-radius:10px}
+  .topbar .btn-claim::before{content:'+';font-size:24px;font-weight:500;line-height:1}
+  .main .content{padding:14px}
+}
 
 /* MAIN */
 .main{margin-left:var(--side);min-height:100vh;display:flex;flex-direction:column}
@@ -210,26 +265,26 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
   </a>
   <div class="sn-menu">
     <div class="sn-sec">Overview</div>
-    <a class="sn-item active" onclick="showSec('overview',this)"><span class="sn-ico">📊</span>Dashboard</a>
+    <a class="sn-item active" onclick="showSec('overview',this)"><span class="sn-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span>Dashboard</a>
 
     <div class="sn-sec">Housing</div>
-    <a class="sn-item" onclick="showSec('search',this)"><span class="sn-ico">🔍</span>Find Housing</a>
-    <a class="sn-item" onclick="showSec('saved',this)"><span class="sn-ico">❤️</span>Saved Homes</a>
-    <a class="sn-item" onclick="showSec('myhome',this)"><span class="sn-ico">🏠</span>My Home</a>
+    <a class="sn-item" onclick="showSec('search',this)"><span class="sn-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>Find Housing</a>
+    <a class="sn-item" onclick="showSec('saved',this)"><span class="sn-ico"><svg viewBox="0 0 24 24"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z"/></svg></span>Saved Homes</a>
+    <a class="sn-item" onclick="showSec('myhome',this)"><span class="sn-ico"><svg viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg></span>My Home</a>
 
     <div class="sn-sec">Payments</div>
-    <a class="sn-item" onclick="showSec('payments',this)"><span class="sn-ico">💳</span>My Payments</a>
-    <a class="sn-item" onclick="openClaimModal()"><span class="sn-ico">➕</span>Submit Claim</a>
+    <a class="sn-item" onclick="showSec('payments',this)"><span class="sn-ico"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span>My Payments</a>
+    <a class="sn-item" onclick="openClaimModal()"><span class="sn-ico"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15h6"/></svg></span>Submit Claim</a>
 
     <div class="sn-sec">Account</div>
-    <a class="sn-item" onclick="showSec('budget',this)"><span class="sn-ico">🧮</span>My Budget</a>
-    <a class="sn-item" onclick="showSec('notifications',this)"><span class="sn-ico">🔔</span>Notifications<span class="sn-cnt" id="unreadBadge">0</span></a>
-    <a class="sn-item" onclick="showSec('profile',this)"><span class="sn-ico">👤</span>My Profile</a>
-    <a class="sn-item" onclick="doLogout()"><span class="sn-ico">🚪</span>Sign Out</a>
+    <a class="sn-item" onclick="showSec('budget',this)"><span class="sn-ico"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8"/><path d="M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h.01M12 19h.01M16 19h.01"/></svg></span>My Budget</a>
+    <a class="sn-item" onclick="showSec('notifications',this)"><span class="sn-ico"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>Notifications<span class="sn-cnt" id="unreadBadge">0</span></a>
+    <a class="sn-item" onclick="showSec('profile',this)"><span class="sn-ico"><svg viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>My Profile</a>
+    <a class="sn-item" onclick="doLogout()"><span class="sn-ico"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg></span>Sign Out</a>
   </div>
   <div class="sn-bottom">
     <div class="sn-user">
-      <div class="sn-av">👤</div>
+      <div class="sn-av"><svg viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
       <div>
         <div class="sn-uname" id="sidebarName">Loading...</div>
         <div class="sn-urole">Tenant</div>
@@ -473,7 +528,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
         <div style="font-size:11px;color:var(--mid);line-height:1.6">Submit this form <strong>after</strong> paying your landlord directly. Your claim will be <strong>pending</strong> until your landlord confirms it on their dashboard.</div>
       </div>
       <div class="ff-row">
-        <div class="ff"><label>Payment Month</label><select id="claimMonth"></select>
+        <div class="ff"><label>Payment Month</label><select id="claimMonth"></select></div>
         <div class="ff"><label>Payment Type</label><select id="claimType"><option>Monthly Rent</option><option>Electricity Bill</option><option>Water Bill</option><option>Service Charge</option></select></div>
       </div>
       <div class="ff"><label>Property</label><select id="claimProperty"></select></div>
@@ -1012,7 +1067,6 @@ async function searchProperties() {
           <div style="font-size:11px;color:var(--gray);margin-bottom:7px">📍 ${p.city}, ${p.state}</div>
           <div style="font-size:16px;font-weight:700;color:var(--orange);margin-bottom:9px">₦${parseFloat(p.monthly_rent).toLocaleString()}/mo</div>
           <div style="display:flex;gap:6px">
-            <button class="abtn abtn-org" onclick="openClaimFor(${p.property_id}, '${p.title.replace(/'/g, "\\'")}')">Pay Rent</button>
             <button class="abtn abtn-ghost" onclick="saveProperty(${p.property_id})">♡ Save</button>
           </div>
         </div>`;
@@ -1098,12 +1152,10 @@ async function saveBudget() {
 
 let claimPropertyId = null, claimPropertyTitle = '';
 
-// Homes this tenant can pay for: current tenancy, saved homes, and homes they have paid for before
+// A tenant can only claim payment for the home they currently rent
 function claimChoices() {
   const map = new Map();
   if (dashData && dashData.tenancy) map.set(Number(dashData.tenancy.property_id), dashData.tenancy.property_title || dashData.tenancy.full_address);
-  ((dashData && dashData.saved) || []).forEach(p => map.set(Number(p.property_id), p.title));
-  ((dashData && dashData.payments) || []).forEach(p => map.set(Number(p.property_id), p.property_title || p.full_address));
   return map;
 }
 function claimMonths() {
@@ -1127,7 +1179,7 @@ function openClaimModal() {
   if (!choices.size) {
     const o = document.createElement('option');
     o.value = '';
-    o.textContent = 'No home linked yet. Save a home first, or ask your landlord to add you.';
+    o.textContent = 'No home linked yet. Ask your landlord to add you as their tenant.';
     sel.appendChild(o);
   }
   choices.forEach((title, id) => {
@@ -1162,7 +1214,7 @@ async function submitClaim() {
   const amount = document.getElementById('claimAmount').value;
   const month  = document.getElementById('claimMonth').value;
   const propId = document.getElementById('claimProperty').value;
-  if (!propId) { toast('Choose the home you paid for. If none is listed, save the home first or ask your landlord to add you.', 'danger'); return; }
+  if (!propId) { toast('You have no home linked yet. Ask your landlord to add you as their tenant.', 'danger'); return; }
   if (!amount || Number(amount) <= 0) { toast('Please enter the amount paid', 'danger'); return; }
 
   const [mName, yStr] = month.split(' ');
@@ -1273,5 +1325,6 @@ function closeSidenav(){
 }
 
 </script>
+<script src="hb-icons.js"></script>
 </body>
 </html>
