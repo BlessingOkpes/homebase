@@ -83,11 +83,6 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
 .tb-icon-btn:hover{background:var(--orange-pale)}
 .tb-notif-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;
   background:var(--red);border-radius:50%;border:2px solid #fff}
-.tb-admin-tag{display:flex;align-items:center;gap:8px;padding:6px 14px;
-  background:var(--orange-pale);border:1px solid var(--border);border-radius:9px;cursor:pointer}
-.tb-admin-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--orange-mid));
-  display:flex;align-items:center;justify-content:center;font-size:13px}
-.tb-admin-name{font-size:13px;font-weight:600;color:var(--brown)}
 
 /* ── CONTENT ── */
 .content{padding:24px;flex:1}
@@ -280,6 +275,22 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
   .g2,.g3{grid-template-columns:1fr}.stat-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:480px){.stat-grid{grid-template-columns:1fr}.ff-row{grid-template-columns:1fr}}
+
+/* cleaner phone header (matches Tenant) */
+@media(max-width:768px){
+  .sidenav:not(.open){left:calc(-1 * var(--side) - 60px);box-shadow:none}
+}
+@media(max-width:640px){
+  body .topbar{padding:0 12px;height:56px}
+  .topbar .tb-left{gap:10px;min-width:0;flex:1}
+  .topbar .tb-left>div{min-width:0}
+  .topbar .tb-title{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topbar .tb-sub{display:none}
+  .topbar .tb-right{gap:8px;flex-shrink:0}
+  .topbar .tb-icon-btn{width:38px;height:38px}
+  body .np-panel{top:60px;right:12px}
+  .main .content{padding:14px}
+}
 </style>
 </head>
 <body>
@@ -354,10 +365,6 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
       <div id="bellPanel" class="np-panel">
         <div class="np-head"><span>Notifications</span><span id="bellCount" class="np-count"></span><button onclick="document.getElementById('bellPanel').classList.remove('open');document.querySelector('.sn-item[onclick*=notifications]').click()" style="border:none;background:none;color:var(--orange);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">View all</button></div>
         <div id="bellList" class="np-list"><div class="np-empty">Nothing waiting for review.</div></div>
-      </div>
-      <div class="tb-admin-tag">
-        <div class="tb-admin-av">👨‍💼</div>
-        <span class="tb-admin-name">Super Admin</span>
       </div>
     </div>
   </header>
@@ -1131,9 +1138,6 @@ function closeSidenav(){
 // ── INIT ──────────────────────────────────────────
 async function initAdmin(){
   // Verify admin role
-  if(currentUser.first_name){
-    document.querySelector('.tb-admin-name').textContent = currentUser.first_name+' (Admin)';
-  }
   // Try to load real data from API
   if(token){
     try {

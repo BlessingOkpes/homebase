@@ -313,6 +313,22 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
     box-shadow:2px 0 8px rgba(0,0,0,.25)}
 }
 @media(max-width:480px){.stat-grid{grid-template-columns:1fr}.ff-row{grid-template-columns:1fr}}
+
+/* cleaner phone header (matches Tenant) */
+@media(max-width:768px){
+  .sidenav:not(.open){left:calc(-1 * var(--side) - 60px);box-shadow:none}
+}
+@media(max-width:640px){
+  body .topbar{padding:0 12px;height:56px}
+  .topbar .tb-left{gap:10px;min-width:0;flex:1}
+  .topbar .tb-left>div{min-width:0}
+  .topbar .tb-title{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topbar .tb-sub{display:none}
+  .topbar .tb-right{gap:8px;flex-shrink:0}
+  .topbar .tb-notif{width:38px;height:38px}
+  body .np-panel{top:60px;right:12px}
+  .main .content{padding:14px}
+}
 </style>
 </head>
 <body>
