@@ -550,6 +550,14 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--dark);backgro
   </div>
 </div>
 
+<!-- HOME DETAILS MODAL -->
+<div class="modal-ov" id="dtModal" onclick="if(event.target===this)closeDetails()">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-hd"><h3>🏠 Home Details</h3><button class="modal-x" onclick="closeDetails()">✕</button></div>
+    <div style="padding:20px 22px" id="dtBody"></div>
+  </div>
+</div>
+
 <div class="toast" id="toastEl"></div>
 
 <script>
@@ -897,6 +905,7 @@ function renderHomeCard(tenancy) {
   if (el) el.innerHTML = info;
   if (td) td.innerHTML = `
     <div style="display:flex;flex-direction:column;gap:14px">
+      <button onclick="openDetails(${Number(tenancy.property_id)}, true)" style="padding:11px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">🏠 View Full Details &amp; Photos</button>
       <div style="background:var(--offwhite);border-radius:9px;padding:12px;border:1px solid var(--border)">
         <div style="font-size:11px;color:var(--gray);margin-bottom:3px">Property</div>
         <div style="font-size:14px;font-weight:600;color:var(--dark)">${tenancy.property_title||'—'}</div>
@@ -930,7 +939,7 @@ function renderHomeCard(tenancy) {
           <div style="font-size:14px;font-weight:600;color:var(--dark)">${tenancy.landlord_phone||'—'}</div>
         </div>
       </div>
-      <button onclick="toast('Calling landlord... 📞','success')" style="padding:11px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">📞 Call Landlord</button>
+      <a href="tel:${tenancy.landlord_phone||''}" style="padding:11px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--orange-mid));color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;display:block">📞 Call Landlord</a>
     </div>`;
 }
 
@@ -1017,6 +1026,7 @@ async function clearAllNotifs() {
 function renderSaved(saved) {
   const grid = document.getElementById('savedGrid');
   if (!grid) return;
+  savedIds = new Set((saved || []).map(p => Number(p.property_id)));
   if (!saved || !saved.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray)">No saved homes yet. <a onclick="showSec(\'search\',null)" style="color:var(--orange);cursor:pointer">Start searching →</a></div>'; return; }
   grid.innerHTML = '';
   const EMOJIS = ['🏠','🏡','🏢','🏗','🏘'];
@@ -1025,7 +1035,7 @@ function renderSaved(saved) {
     const coverImg = p.cover_image_url
       ? `<div class="sc-img" style="background-size:cover;background-position:center;background-image:url('${p.cover_image_url}');font-size:0"></div>`
       : `<div class="sc-img">${EMOJIS[i%EMOJIS.length]}</div>`;
-    div.innerHTML = `${coverImg}<div class="sc-body"><div class="sc-ttl">${p.title}</div><div class="sc-loc">📍 ${p.city}, ${p.state}</div><div class="sc-price">₦${parseFloat(p.monthly_rent).toLocaleString()}/mo</div><div style="display:flex;gap:6px"><button class="abtn abtn-org" onclick="toast('Viewing property details','')">View</button><button class="abtn abtn-ghost" onclick="toast('Removed from saved','')">Remove</button></div></div>`;
+    div.innerHTML = `${coverImg}<div class="sc-body"><div class="sc-ttl">${p.title}</div><div class="sc-loc">📍 ${p.city}, ${p.state}</div><div class="sc-price">₦${parseFloat(p.monthly_rent).toLocaleString()}/mo</div><div style="display:flex;gap:6px"><button class="abtn abtn-org" onclick="openDetails(${p.property_id})">View Details</button><button class="abtn abtn-ghost" onclick="saveProperty(${p.property_id})">Remove</button></div></div>`;
     grid.appendChild(div);
   });
 }
@@ -1066,9 +1076,12 @@ async function searchProperties() {
           <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:3px">${p.title}</div>
           <div style="font-size:11px;color:var(--gray);margin-bottom:7px">📍 ${p.city}, ${p.state}</div>
           <div style="font-size:16px;font-weight:700;color:var(--orange);margin-bottom:9px">₦${parseFloat(p.monthly_rent).toLocaleString()}/mo</div>
-          <div style="display:flex;gap:6px">
-            <button class="abtn abtn-ghost" onclick="saveProperty(${p.property_id})">♡ Save</button>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="abtn abtn-org" onclick="openDetails(${p.property_id})">View Details</button>
+            <button class="abtn abtn-ghost" onclick="contactLandlord(${p.property_id}, this, 'contact-${p.property_id}')">📞 Contact</button>
+            <button class="abtn abtn-ghost${savedids.has(number(p.property_id)) ? ' is-saved' : ''}" data-save="${p.property_id}" onclick="saveProperty(${p.property_id}, this)">${savedIds.has(Number(p.property_id)) ? '❤️ Saved' : '♡ Save'}</button>
           </div>
+          <div id="contact-${p.property_id}"></div>
         </div>`;
       el.appendChild(div);
     });
@@ -1077,15 +1090,131 @@ async function searchProperties() {
   }
 }
 
-async function saveProperty(id) {
+// Ids of the homes this tenant has saved (filled from the dashboard)
+let savedIds = new Set();
+// A saved home shows a filled heart (the icon set only draws outlines)
+document.head.appendChild(Object.assign(document.createElement('style'), { textContent: '.is-saved .hbi{fill:currentColor}' }));
+function setSaveBtn(b, saved) { b.classList.toggle('is-saved', saved); b.textContent = saved ? '❤️ Saved' : '♡ Save'; }
+function escH(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function saveProperty(id, btn) {
   try {
     const res  = await fetch(`${API}/properties/${id}/save`, { method:'POST', headers:{ Authorization:`Bearer ${token}` } });
     const data = await res.json();
+    if (!data.success) { toast(data.message || 'Could not save this home.', 'danger'); return; }
+    if (data.saved) savedIds.add(Number(id)); else savedIds.delete(Number(id));
+    document.querySelectorAll(`[data-save="${id}"]`).forEach(b => setSaveBtn(b, data.saved));
     toast(data.saved ? 'Saved to favourites ❤️' : 'Removed from saved', data.saved ? 'success' : '');
+    refreshDashboard();   // updates the Saved Homes page
   } catch (err) {
     toast('Could not save. Is backend running?', 'danger');
   }
 }
+
+// Reveal the landlord's phone (logged by the backend) with Call and WhatsApp links
+async function contactLandlord(id, btn, boxId) {
+  const box = document.getElementById(boxId);
+  if (box && box.dataset.open === '1') { box.innerHTML = ''; box.dataset.open = ''; return; }
+  const old = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
+  try {
+    const res  = await fetch(`${API}/properties/${id}/contact`, { method:'POST', headers:{ Authorization:`Bearer ${token}` } });
+    const data = await res.json();
+    if (!data.success || !data.data) { toast(data.message || 'Could not load the contact details.', 'danger'); return; }
+    const d = data.data;
+    const digits = String(d.landlord_phone || '').replace(/\D/g, '');
+    const intl = digits.startsWith('234') ? digits : (digits.startsWith('0') ? '234' + digits.slice(1) : digits);
+    const msg = encodeURIComponent('Hello, I found your listing on HomeBase and I am interested in it.');
+    box.innerHTML = digits ? `
+      <div style="margin-top:9px;padding:10px;background:var(--orange-faint);border:1px solid var(--border);border-radius:9px;font-size:12px;color:var(--dark)">
+        <div style="font-weight:600;margin-bottom:2px">${escH(d.landlord_name)}</div>
+        <div style="margin-bottom:8px">📱 ${escH(d.landlord_phone)}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <a class="abtn abtn-org" style="text-decoration:none" href="tel:${escH(d.landlord_phone)}">📞 Call</a>
+          <a class="abtn abtn-org" style="text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/${intl}?text=${msg}">💬 WhatsApp</a>
+        </div>
+        <div style="margin-top:8px;font-size:10px;color:var(--gray)">Visit the home in person before paying anyone.</div>
+      </div>` : '<div style="margin-top:9px;font-size:12px;color:var(--gray)">This landlord has not added a phone number yet.</div>';
+    box.dataset.open = '1';
+  } catch (err) {
+    toast('Could not load the contact details.', 'danger');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = old; }
+  }
+}
+
+// Pick an icon for an amenity from its name
+function amenIcon(name) {
+  const n = String(name || '').toLowerCase();
+  if (/secur|guard|cctv|gate|fence|alarm/.test(n)) return '🛡';
+  if (/water|borehole|well/.test(n)) return '💧';
+  if (/light|electric|power|generator|solar|inverter|nepa/.test(n)) return '🔌';
+  if (/park|garage|car/.test(n)) return '🚗';
+  if (/wifi|wi-fi|internet|broadband/.test(n)) return '📶';
+  if (/furnish|furniture/.test(n)) return '🪑';
+  return '✓';
+}
+
+// Orange line icons in soft circles for the details popup (same look as the rest of the page)
+document.head.appendChild(Object.assign(document.createElement('style'), { textContent:
+  '.dt-ico{width:38px;height:38px;border-radius:50%;background:var(--orange-pale);color:var(--orange);border:1px solid rgba(232,96,10,.18);display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:17px}' +
+  '.dt-ico .hbi{width:19px;height:19px}' +
+  '.dt-chip{display:inline-flex;align-items:center;gap:7px;background:var(--offwhite);border:1px solid var(--border);color:var(--dark);border-radius:30px;padding:4px 12px 4px 4px;font-size:11px;font-weight:500}' +
+  '.dt-chip-ico{width:24px;height:24px;border-radius:50%;background:var(--orange-pale);color:var(--orange);display:inline-flex;align-items:center;justify-content:center}' +
+  '.dt-chip-ico .hbi{width:13px;height:13px}'
+}));
+
+// Full details popup: all photos, facts, amenities
+let dtImages = [];
+function dtShow(i) {
+  const big = document.getElementById('dtBig');
+  if (!big || !dtImages.length) return;
+  big.src = dtImages[i];
+  document.querySelectorAll('#dtThumbs img').forEach((t, k) => { t.style.outline = k === i ? '2px solid var(--orange)' : 'none'; });
+}
+async function openDetails(id, isMine) {
+  const body = document.getElementById('dtBody');
+  document.getElementById('dtModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--gray)">Loading details...</div>';
+  try {
+    const res  = await fetch(`${API}/properties/${id}`);
+    const data = await res.json();
+    if (!data.success || !data.data) { body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--gray)">Could not load this home.</div>'; return; }
+    const p = data.data;
+    dtImages = (p.images && p.images.length) ? p.images : (p.cover_image_url ? [p.cover_image_url] : []);
+    const gallery = dtImages.length ? `
+      <div style="background:#1c1208;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;max-height:340px">
+        <img id="dtBig" src="${escH(dtImages[0])}" alt="" style="max-width:100%;max-height:340px;object-fit:contain;display:block">
+      </div>
+      ${dtImages.length > 1 ? `<div id="dtThumbs" style="display:flex;gap:8px;margin-top:8px;overflow-x:auto;padding-bottom:4px">${dtImages.map((u, k) => `<img src="${escH(u)}" alt="" onclick="dtShow(${k})" style="height:56px;width:76px;object-fit:cover;border-radius:7px;cursor:pointer;flex:none">`).join('')}</div>` : ''}`
+      : '<div style="height:160px;border-radius:12px;background:var(--orange-pale);display:flex;align-items:center;justify-content:center;font-size:48px">🏠</div>';
+    const amen = (p.amenities && p.amenities.length)
+      ? p.amenities.map(a => `<span class="dt-chip"><span class="dt-chip-ico">${amenIcon(a)}</span>${escH(a)}</span>`).join('')
+      : '<span style="font-size:12px;color:var(--gray)">No amenities listed.</span>';
+    const fact = (ico, lbl, val) => `<div style="background:var(--offwhite);border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center"><div class="dt-ico">${ico}</div><div style="font-size:10px;color:var(--gray)">${lbl}</div><div style="font-size:13px;font-weight:600;color:var(--dark);margin-top:2px">${escH(val)}</div></div>`;
+    const type = String(p.property_type || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    body.innerHTML = `
+      ${gallery}
+      <div style="font-size:18px;font-weight:700;color:var(--dark);margin-top:14px">${escH(p.title)}</div>
+      <div style="font-size:12px;color:var(--gray);margin:3px 0 10px">📍 ${escH(isMine ? p.full_address : (p.city + ', ' + p.state))}</div>
+      <div style="font-size:22px;font-weight:700;color:var(--orange);margin-bottom:12px">₦${parseFloat(p.monthly_rent || 0).toLocaleString()}<span style="font-size:12px;font-weight:400;color:var(--gray)"> /month</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-bottom:14px">
+        ${fact('🛏', 'Bedrooms', p.bedrooms)}${fact('🛁', 'Bathrooms', p.bathrooms)}${fact('📐', 'Size', p.size_sqm ? p.size_sqm + ' sqm' : '—')}${fact('🏠', 'Type', type || '—')}
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--dark);margin-bottom:6px">Amenities</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">${amen}</div>
+      ${p.description ? `<div style="font-size:12px;font-weight:600;color:var(--dark);margin-bottom:5px">About this home</div><div style="font-size:13px;color:var(--mid);line-height:1.6;margin-bottom:14px">${escH(p.description)}</div>` : ''}
+      <div style="font-size:12px;color:var(--gray);margin-bottom:12px">Landlord: <strong style="color:var(--dark)">${escH(p.landlord_name || '—')}</strong></div>
+      ${isMine ? '' : `<div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="abtn abtn-org" style="padding:9px 16px;font-size:12px" onclick="contactLandlord(${Number(p.property_id)}, this, 'dtContact')">📞 Contact Landlord</button>
+        <button class="abtn abtn-ghost${savedIds.has(Number(p.property_id)) ? ' is-saved' : ''}" style="padding:9px 16px;font-size:12px" data-save="${Number(p.property_id)}" onclick="saveProperty(${Number(p.property_id)}, this)">${savedIds.has(Number(p.property_id)) ? '❤️ Saved' : '♡ Save'}</button>
+      </div><div id="dtContact"></div>`}`;
+  } catch (err) {
+    body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--gray)">Could not load this home.</div>';
+  }
+}
+function closeDetails() { document.getElementById('dtModal').classList.remove('open'); document.body.style.overflow = ''; }
 
 // ── BUDGET CALC ───────────────────────────────────
 function calcBudget() {

@@ -85,6 +85,13 @@ router.get('/:id', async (req, res) => {
     const [amenities] = await db.execute('SELECT amenity_name FROM property_amenities WHERE property_id = ?', [prop.property_id]);
     prop.amenities = amenities.map(a => a.amenity_name);
 
+    // All photos for the details popup (cover photo first)
+    const [images] = await db.execute(
+      'SELECT image_url FROM property_images WHERE property_id = ? ORDER BY is_cover DESC, image_id ASC',
+      [prop.property_id]
+    );
+    prop.images = images.map(i => i.image_url);
+
     return res.status(200).json({ success: true, data: prop });
   } catch (err) {
     return res.status(500).json({ success: false, message: 'Server error.' });

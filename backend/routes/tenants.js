@@ -32,11 +32,13 @@ router.get('/dashboard', protect, async (req, res) => {
 
     // Saved properties
     const [saved] = await db.execute(
-      `SELECT p.property_id, p.title, p.monthly_rent, l.city, l.state
+      `SELECT p.property_id, p.title, p.monthly_rent, l.city, l.state,
+              pi.image_url AS cover_image_url
        FROM saved_properties sp
        JOIN properties p ON sp.property_id = p.property_id
        JOIN locations l ON p.location_id = l.location_id
-       WHERE sp.tenant_id = ? ORDER BY sp.saved_at DESC LIMIT 5`,
+       LEFT JOIN property_images pi ON pi.property_id = p.property_id AND pi.is_cover = 1
+       WHERE sp.tenant_id = ? ORDER BY sp.saved_at DESC`,
       [req.user.user_id]
     );
 
